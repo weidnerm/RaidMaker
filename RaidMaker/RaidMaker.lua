@@ -42,6 +42,10 @@ local RaidMaker_RaidPlannerListDisplayActive = 0;
 local RaidMaker_GroupNumber_ButtonObject;
 local RaidMaker_GroupNumber_FontStringObject;
 local RaidMaker_currentGroupNumber = 1;
+local RaidMaker_LogTab_Loot_PlayerNameButtonObject;
+local RaidMaker_LogTab_Loot_RollValueButtonObject;
+local RaidMaker_LogTab_Loot_RollAgeButtonObject;
+local RaidMaker_lootLogSortList = {};
 
 -- change to use the array instead of these locals
 local classColorDeathKnight   = "|c00C41F3B";
@@ -101,6 +105,8 @@ function RaidMaker_OnLoad()
    SlashCmdList["RAIDMAKERMAINCOMMAND"] = RaidMaker_Handler;
    SLASH_RAIDMAKERCOMMAND1 = "/at";
    SLASH_RAIDMAKERMAINCOMMAND1 = "/rm";
+
+   RaidMaker_InitLootSortList();
 
    RaidMaker_SetUpGuiFields();
 
@@ -1030,6 +1036,112 @@ function RaidMaker_ascendGroupedStateOrder(a,b)
 end
 
 
+function RaidMaker_LootLog_ascendRollValue(a,b)
+   -- a,b are log index.
+
+   if ( RaidMaker_lootLogData[a].rollValue < RaidMaker_lootLogData[b].rollValue ) then
+      return true;
+   elseif ( RaidMaker_lootLogData[a].rollValue > RaidMaker_lootLogData[b].rollValue ) then
+      return false;
+   end
+
+   if ( RaidMaker_lootLogData[a].epocTime < RaidMaker_lootLogData[b].epocTime ) then
+      return true;
+   elseif ( RaidMaker_lootLogData[a].epocTime > RaidMaker_lootLogData[b].epocTime ) then
+      return false;
+   end
+
+   if ( RaidMaker_lootLogData[a].playerName < RaidMaker_lootLogData[b].playerName ) then
+      return true;
+   elseif ( RaidMaker_lootLogData[a].playerName > RaidMaker_lootLogData[b].playerName ) then
+      return false;
+   end
+
+   if ( RaidMaker_lootLogData[a].itemName < RaidMaker_lootLogData[b].itemName ) then
+      return true;
+   elseif ( RaidMaker_lootLogData[a].itemName > RaidMaker_lootLogData[b].itemName ) then
+      return false;
+   end
+
+   return true;
+end
+
+function RaidMaker_LootLog_ascendRollTime(a,b)
+   -- a,b are log index.
+
+   if ( RaidMaker_lootLogData[a].epocTime < RaidMaker_lootLogData[b].epocTime ) then
+      return true;
+   elseif ( RaidMaker_lootLogData[a].epocTime > RaidMaker_lootLogData[b].epocTime ) then
+      return false;
+   end
+
+   return true;
+end
+
+function RaidMaker_LootLog_ascendPlayerName(a,b)
+   -- a,b are log index.
+
+   if ( RaidMaker_lootLogData[a].playerName < RaidMaker_lootLogData[b].playerName ) then
+      return true;
+   elseif ( RaidMaker_lootLogData[a].playerName > RaidMaker_lootLogData[b].playerName ) then
+      return false;
+   end
+
+   if ( RaidMaker_lootLogData[a].itemName < RaidMaker_lootLogData[b].itemName ) then
+      return true;
+   elseif ( RaidMaker_lootLogData[a].itemName > RaidMaker_lootLogData[b].itemName ) then
+      return false;
+   end
+
+   if ( RaidMaker_lootLogData[a].epocTime < RaidMaker_lootLogData[b].epocTime ) then
+      return true;
+   elseif ( RaidMaker_lootLogData[a].epocTime > RaidMaker_lootLogData[b].epocTime ) then
+      return false;
+   end
+
+   if ( RaidMaker_lootLogData[a].rollValue < RaidMaker_lootLogData[b].rollValue ) then
+      return true;
+   elseif ( RaidMaker_lootLogData[a].rollValue > RaidMaker_lootLogData[b].rollValue ) then
+      return false;
+   end
+
+   return true;
+end
+
+function RaidMaker_LootLog_ascendItemName(a,b)
+   -- a,b are log index.
+
+   if ( RaidMaker_lootLogData[a].itemName < RaidMaker_lootLogData[b].itemName ) then
+      return true;
+   elseif ( RaidMaker_lootLogData[a].itemName > RaidMaker_lootLogData[b].itemName ) then
+      return false;
+   end
+
+   if ( RaidMaker_lootLogData[a].playerName < RaidMaker_lootLogData[b].playerName ) then
+      return true;
+   elseif ( RaidMaker_lootLogData[a].playerName > RaidMaker_lootLogData[b].playerName ) then
+      return false;
+   end
+
+   if ( RaidMaker_lootLogData[a].epocTime < RaidMaker_lootLogData[b].epocTime ) then
+      return true;
+   elseif ( RaidMaker_lootLogData[a].epocTime > RaidMaker_lootLogData[b].epocTime ) then
+      return false;
+   end
+
+   if ( RaidMaker_lootLogData[a].rollValue < RaidMaker_lootLogData[b].rollValue ) then
+      return true;
+   elseif ( RaidMaker_lootLogData[a].rollValue > RaidMaker_lootLogData[b].rollValue ) then
+      return false;
+   end
+
+   return true;
+end
+
+
+
+
+
 
 function RaidMaker_OnMouseWheel(self, delta)
    local current = RaidMaker_VSlider:GetValue()
@@ -1360,6 +1472,26 @@ function RaidMaker_ClickHandler_GroupedStateHeader()
       RaidMaker_TextTableUpdate(RaidMaker_VSlider:GetValue());
 end
 
+function RaidMaker_LootLog_ClickHandler_PlayerName()
+   table.sort(RaidMaker_lootLogSortList, RaidMaker_LootLog_ascendPlayerName);
+   RaidMaker_DisplayLootDatabase();
+end
+
+function RaidMaker_LootLog_ClickHandler_ItemName()
+   table.sort(RaidMaker_lootLogSortList, RaidMaker_LootLog_ascendItemName);
+   RaidMaker_DisplayLootDatabase();
+end
+
+function RaidMaker_LootLog_ClickHandler_RollValue()
+   table.sort(RaidMaker_lootLogSortList, RaidMaker_LootLog_ascendRollValue);
+   RaidMaker_DisplayLootDatabase();
+end
+
+function RaidMaker_LootLog_ClickHandler_RollAge()
+   table.sort(RaidMaker_lootLogSortList, RaidMaker_LootLog_ascendRollTime);
+   RaidMaker_DisplayLootDatabase();
+end
+
 function RaidMaker_handle_CHAT_MSG_LOOT(message, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter)
    local startIndex,endIndex,playerName,itemLink
 
@@ -1427,6 +1559,12 @@ function RaidMaker_addLootEntryToLootLog(playerName, itemId, itemLink)
    RaidMaker_ResetRolls(0);
 end
 
+function RaidMaker_InitLootSortList()
+   local index;
+   for index = 1,#RaidMaker_lootLogData do
+      RaidMaker_lootLogSortList[index] = index;
+   end
+end
 
 function RaidMaker_DisplayLootDatabase()
    local timeDeltaSeconds;
@@ -1435,40 +1573,51 @@ function RaidMaker_DisplayLootDatabase()
    local rollValueColor;
    local rollAgeColor;
    local currentTime = time();
+   local index;
+   local sortedTableInputIndex;
 
-
-
-   for index = 1,10 do
-      indexToDisplay = index+RaidMaker_LootLog_Slider:GetValue()-1; -- eventually make this the sorted index starting at the scroll bar position.
-
-      playerNameColor = white;
-      rollValueColor = yellow;
-      rollAgeColor = yellow;
-
-      if ( indexToDisplay<1 ) or ( #RaidMaker_lootLogData == 0 ) then
-         RaidMaker_LogTab_Loot_FieldNames[index+1]:SetText(" ");
-         RaidMaker_LogTab_Loot_FieldItemLinkButton[index+1]:SetText(" ");
-         RaidMaker_LogTab_Loot_FieldRollValues[index+1]:SetText(" ");
-         RaidMaker_LogTab_Loot_FieldRollAges[index+1]:SetText(" ");
-      else
-         timeDeltaSeconds = currentTime - RaidMaker_lootLogData[indexToDisplay].epocTime;
-
-         if ( timeDeltaSeconds > 14400 ) then -- 4 hours = 4*60*60
-            playerNameColor = mediumGrey;
-            rollValueColor = mediumGrey;
-            rollAgeColor = mediumGrey;
+  
+   if ( RaidMaker_lootLogData ~= nil ) then
+      for index = 1,10 do
+   --      indexToDisplay = index+RaidMaker_LootLog_Slider:GetValue()-1; -- eventually make this the sorted index starting at the scroll bar position.
+         sortedTableInputIndex = index+RaidMaker_LootLog_Slider:GetValue()-1;
+         if ( sortedTableInputIndex <= #RaidMaker_lootLogSortList ) then
+            indexToDisplay = RaidMaker_lootLogSortList[sortedTableInputIndex]; 
+         else
+            indexToDisplay = 0; 
          end
-
-         RaidMaker_LogTab_Loot_FieldNames[index+1]:SetText(playerNameColor..RaidMaker_lootLogData[indexToDisplay].playerName);
-         RaidMaker_LogTab_Loot_FieldItemLinkButton[index+1]:SetText(RaidMaker_lootLogData[indexToDisplay].itemLink);
-         RaidMaker_LogTab_Loot_FieldRollValues[index+1]:SetText(rollValueColor..RaidMaker_lootLogData[indexToDisplay].rollValue);
-         RaidMaker_LogTab_Loot_FieldRollAges[index+1]:SetText(rollAgeColor.. RaidMaker_getAgeText(timeDeltaSeconds) );
+   
+         playerNameColor = white;
+         rollValueColor = yellow;
+         rollAgeColor = yellow;
+   
+         if ( indexToDisplay == nil ) or 
+            ( indexToDisplay<1 ) or 
+            ( #RaidMaker_lootLogData == 0 ) then
+            RaidMaker_LogTab_Loot_FieldNames[index+1]:SetText(" ");
+            RaidMaker_LogTab_Loot_FieldItemLinkButton[index+1]:SetText(" ");
+            RaidMaker_LogTab_Loot_FieldRollValues[index+1]:SetText(" ");
+            RaidMaker_LogTab_Loot_FieldRollAges[index+1]:SetText(" ");
+         else
+            timeDeltaSeconds = currentTime - RaidMaker_lootLogData[indexToDisplay].epocTime;
+   
+            if ( timeDeltaSeconds > 14400 ) then -- 4 hours = 4*60*60
+               playerNameColor = mediumGrey;
+               rollValueColor = mediumGrey;
+               rollAgeColor = mediumGrey;
+            end
+   
+            RaidMaker_LogTab_Loot_FieldNames[index+1]:SetText(playerNameColor..RaidMaker_lootLogData[indexToDisplay].playerName);
+            RaidMaker_LogTab_Loot_FieldItemLinkButton[index+1]:SetText(RaidMaker_lootLogData[indexToDisplay].itemLink);
+            RaidMaker_LogTab_Loot_FieldRollValues[index+1]:SetText(rollValueColor..RaidMaker_lootLogData[indexToDisplay].rollValue);
+            RaidMaker_LogTab_Loot_FieldRollAges[index+1]:SetText(rollAgeColor.. RaidMaker_getAgeText(timeDeltaSeconds) );
+         end
       end
    end
 end
 
 function RaidMaker_getAgeText(ageInSeconds)
-local returnText;
+   local returnText;
 
    if ( ageInSeconds < 3600 ) then
       -- age is less than one hour. display in mins.
@@ -3419,6 +3568,22 @@ function RaidMaker_SetUpGuiFields()
       if ( index == 1 ) then
          item:SetPoint("TOPLEFT", RaidMaker_GroupLootFrame, "TOPLEFT", 5,-5);
          item:SetText("Player");
+         local myButton = CreateFrame("Button", "RaidMaker_LogTab_Loot_PlayerNameButton", RaidMaker_GroupLootFrame )
+         myButton:SetFontString( item )
+         myButton:SetWidth(100);
+         myButton:SetHeight(18);
+         myButton:SetPoint("TOPLEFT", RaidMaker_GroupLootFrame, "TOPLEFT", 5,-5);
+         myButton:SetScript("OnEnter",
+                  function(this)
+                     GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                     GameTooltip:SetText("Sort by player name.");
+                     GameTooltip:Show()
+                  end)
+         myButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+         myButton:SetScript("OnClick", function(self,button)
+            RaidMaker_LootLog_ClickHandler_PlayerName();
+            end)
+         RaidMaker_LogTab_Loot_PlayerNameButtonObject = myButton;
       else
          item:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldNames[index-1], "BOTTOMLEFT", 0,0);
          item:SetText(" ");
@@ -3431,7 +3596,6 @@ function RaidMaker_SetUpGuiFields()
 
    for index=1,11 do
       local myFontString = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_ItemLink"..index-1, "OVERLAY", "GameFontNormalSmall" )
-
       local myButton = CreateFrame("Button", "RaidMaker_LogTab_Loot_ItemLinkButton_"..index-1, RaidMaker_GroupRollFrame )
       myButton:SetFontString( myFontString )
       myButton:SetWidth(200);
@@ -3439,6 +3603,17 @@ function RaidMaker_SetUpGuiFields()
       if ( index == 1 ) then
          myButton:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldNames[1], "TOPRIGHT", 0,0);
          myButton:SetText("Item Name");
+
+         myButton:SetScript("OnEnter",
+                  function(this)
+                     GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                     GameTooltip:SetText("Sort by Item name.");
+                     GameTooltip:Show()
+                  end)
+         myButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+         myButton:SetScript("OnClick", function(self,button)
+            RaidMaker_LootLog_ClickHandler_ItemName();
+            end)
       else
          myButton:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldItemLinkButton[index-1], "BOTTOMLEFT", 0,0);
          myButton:SetText(" ");
@@ -3464,21 +3639,54 @@ function RaidMaker_SetUpGuiFields()
       item:SetWidth(100);
       item:SetHeight(18);
       if ( index == 1 ) then
-         item:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldItemLinkButton[1], "TOPRIGHT", 0,0);
          item:SetText("Roll Value");
+         local myButton = CreateFrame("Button", "RaidMaker_LogTab_Loot_RollValueButton", RaidMaker_GroupLootFrame )
+         myButton:SetFontString( item )
+         myButton:SetWidth(100);
+         myButton:SetHeight(18);
+
+         myButton:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldItemLinkButton[1], "TOPRIGHT", 0,0);
+         myButton:SetScript("OnEnter",
+                  function(this)
+                     GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                     GameTooltip:SetText("Sort by Roll Value name.");
+                     GameTooltip:Show()
+                  end)
+         myButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+         myButton:SetScript("OnClick", function(self,button)
+            RaidMaker_LootLog_ClickHandler_RollValue();
+            end)
+         RaidMaker_LogTab_Loot_RollValueButtonObject = myButton;
       else
          item:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldRollValues[index-1], "BOTTOMLEFT", 0,0);
          item:SetText(" ");
       end
       RaidMaker_LogTab_Loot_FieldRollValues[index] = item;
    end
+   
    for index=1,11 do
       local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_RollAges"..index-1, "OVERLAY", "GameFontNormalSmall" )
       item:SetWidth(100);
       item:SetHeight(18);
       if ( index == 1 ) then
-         item:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldRollValues[1], "TOPRIGHT", 0,0);
          item:SetText("Roll Age");
+         local myButton = CreateFrame("Button", "RaidMaker_LogTab_Loot_RollAgeButton", RaidMaker_GroupLootFrame )
+         myButton:SetFontString( item )
+         myButton:SetWidth(100);
+         myButton:SetHeight(18);
+
+         myButton:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldRollValues[1], "TOPRIGHT", 0,0);
+         myButton:SetScript("OnEnter",
+                  function(this)
+                     GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                     GameTooltip:SetText("Sort by Roll Age name.");
+                     GameTooltip:Show()
+                  end)
+         myButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+         myButton:SetScript("OnClick", function(self,button)
+            RaidMaker_LootLog_ClickHandler_RollAge();
+            end)
+         RaidMaker_LogTab_Loot_RollAgeButtonObject = myButton;
       else
          item:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldRollAges[index-1], "BOTTOMLEFT", 0,0);
          item:SetText(" ");
@@ -3658,11 +3866,6 @@ function RaidMaker_SetUpGuiFields()
    item:SetScript("OnLeave", function() GameTooltip:Hide() end)
    RaidMaker_GroupNumber_ButtonObject = item;
 
-
-
-
-
-
-
 end
+
 
