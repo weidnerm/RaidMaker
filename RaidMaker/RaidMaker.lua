@@ -16,8 +16,8 @@
 -- local CANCELMYAUCTIONSTEXT = "";
 
 -- * variables for RaidMaker_IsBuffActive and RaidMaker_SetSpellCast functions:
---	RaidMaker_buffspell = "";
---	local AT_buffname = "Prayer of Mending";
+--   RaidMaker_buffspell = "";
+--   local AT_buffname = "Prayer of Mending";
 local darkGrey   = "|c00252525";
 local mediumGrey = "|c00707070";
 local lightGrey  = "|c00a0a0a0";
@@ -33,7 +33,7 @@ local raidLootTypeArmedFlag = false;
 local numMembersToPromoteToAssist = 0;
 local guildRankAssistThreshold = 3;  -- 0=Guild Master. 1=Officer; 2=Lieutenant; etc...  Controls if officers get assist.
                                      -- set to 0 for no promote. 1 for GM only, 2 for Officers, GM, etc
-
+local scan_button
 
 
 -- change to use the array instead of these locals
@@ -61,10 +61,10 @@ local classColorWarrior       = "|c00C79C6E";
 -- * useful components: how to add load message, pop up error messages, and set slash commands
 --
 function RaidMaker_OnLoad()
-	if( DEFAULT_CHAT_FRAME ) then
-		DEFAULT_CHAT_FRAME:AddMessage("RaidMaker Loaded.");
-	end
-	UIErrorsFrame:AddMessage("RaidMaker Loaded.", 1.0, 1.0, 1.0, 1.0, UIERRORS_HOLD_TIME);
+   if( DEFAULT_CHAT_FRAME ) then
+      DEFAULT_CHAT_FRAME:AddMessage("RaidMaker Loaded.");
+   end
+   UIErrorsFrame:AddMessage("RaidMaker Loaded.", 1.0, 1.0, 1.0, 1.0, UIERRORS_HOLD_TIME);
 
 -- * The two lines below add an in-game Slash Command for the GUI function, reinstate if 
 -- * you are interested in using commands in the slash handler, including the mod's XML frames.
@@ -83,8 +83,8 @@ function RaidMaker_OnLoad()
 --  SLASH_TRACK_ITEM1 = "/ti";
 
 -- * These two lines make a slash command for the CancelMyAuctions function.
---	SlashCmdList["CANCEL_MY_AUCTIONS_COMMAND"] = CancelMyAuctionsCommand;
---	SLASH_CANCEL_MY_AUCTIONS_COMMAND1 = "/cma";
+--   SlashCmdList["CANCEL_MY_AUCTIONS_COMMAND"] = CancelMyAuctionsCommand;
+--   SLASH_CANCEL_MY_AUCTIONS_COMMAND1 = "/cma";
 
 -- * The line below adds a colored load message with instructions for use the Track Item function.
 --   DEFAULT_CHAT_FRAME:AddMessage("**To track an item, place it in slot 0,1 and use /ti to announce.**", 1.0, 0.35, 0.15);
@@ -96,7 +96,7 @@ end
 
 
 -- ****************************************************
---	* SLASH HANDLER * 
+--   * SLASH HANDLER * 
 -- ****************************************************
 -- * The slash handler acts as a link between slash commands and functions, reinstate if you are 
 -- * interested in seeing this mod's XML frames. If you have the frame code in the 
@@ -105,20 +105,20 @@ end
 -- * chat text, output text to chat frame, set variable via slash command and report the change in chat
 --
 function RaidMaker_Handler(msg) 
-	if (msg == "gui") then 
-		RaidMaker_MainForm:Show();
+   if (msg == "gui") then 
+      RaidMaker_MainForm:Show();
       
-	elseif (msg == "cal") then
-		RaidMaker_HandleFetchCalButton();
-		
-	elseif (msg == "toggle") then
-		if ( RaidMaker_MainForm:IsShown() == 1 ) then
-   		RaidMaker_MainForm:Hide();
-   	else
-   		RaidMaker_MainForm:Show();
-   	end
-		
-	elseif (msg == "text") then
+   elseif (msg == "cal") then
+      RaidMaker_HandleFetchCalButton();
+      
+   elseif (msg == "toggle") then
+      if ( RaidMaker_MainForm:IsShown() == 1 ) then
+         RaidMaker_MainForm:Hide();
+      else
+         RaidMaker_MainForm:Show();
+      end
+      
+   elseif (msg == "text") then
       -- for testing purposes. can be deleted.
       RaidMaker_TabPage1_SampleTextTab1_GroupedState_1:SetText(red.."not");
       RaidMaker_TabPage1_SampleTextTab1_OnlineState_1:SetText(green.."online");
@@ -129,21 +129,37 @@ function RaidMaker_Handler(msg)
       RaidMaker_TabPage1_SampleTextTab1_DpsFlag_1:SetText(yellow.."X");
       RaidMaker_TabPage1_SampleTextTab1_Class_1:SetText(yellow.."DRUID");
 
---	elseif (msg == "secure on") then 
---		RaidMaker_BuffFrame:Show();
---	elseif (msg == "secure off") then 
---		RaidMaker_BuffFrame:Hide();
---	elseif (msg == "") or (msg == "help") then 
---		DEFAULT_CHAT_FRAME:AddMessage(yellow.."RaidMaker: '/at gui on' to show GUI template");
---		DEFAULT_CHAT_FRAME:AddMessage(yellow.."RaidMaker: '/at secure on' to show secure button, '/at secure off' to hide");
---		DEFAULT_CHAT_FRAME:AddMessage(yellow.."RaidMaker: use '/click RaidMaker_BuffFrame' to activate the button via macro");
---	elseif (msg ~= "") then
---		AT_buffname = msg;
---		DEFAULT_CHAT_FRAME:AddMessage(yellow.."RaidMaker: will check for "..AT_buffname..".");
-	end
-	
-	
-	
+   scan_button:SetParent(TradeSkillFrame)
+--   scan_button:SetParent(RaidMaker_MainForm)
+--   scan_parent = scan_button:GetParent()
+
+   scan_button:ClearAllPoints()
+      
+   scan_button:SetPoint("RIGHT", TradeSkillFrameCloseButton, "LEFT",4,0)
+--   scan_button:SetPoint("TOPLEFT", RaidMaker_MainForm, "TOPRIGHT",5,-4)
+   scan_button:SetWidth(scan_button:GetTextWidth() + 10)
+
+--   scan_button:Enable()
+   scan_button:Show()
+
+
+
+
+--   elseif (msg == "secure on") then 
+--      RaidMaker_BuffFrame:Show();
+--   elseif (msg == "secure off") then 
+--      RaidMaker_BuffFrame:Hide();
+--   elseif (msg == "") or (msg == "help") then 
+--      DEFAULT_CHAT_FRAME:AddMessage(yellow.."RaidMaker: '/at gui on' to show GUI template");
+--      DEFAULT_CHAT_FRAME:AddMessage(yellow.."RaidMaker: '/at secure on' to show secure button, '/at secure off' to hide");
+--      DEFAULT_CHAT_FRAME:AddMessage(yellow.."RaidMaker: use '/click RaidMaker_BuffFrame' to activate the button via macro");
+--   elseif (msg ~= "") then
+--      AT_buffname = msg;
+--      DEFAULT_CHAT_FRAME:AddMessage(yellow.."RaidMaker: will check for "..AT_buffname..".");
+   end
+   
+   
+   
 end
 
 
@@ -161,21 +177,21 @@ end
 -- /cast [target=mouseover,help,exists,dead][target=target,help,dead] Resurrection
 
 --function ATRezFunction()
---	local c;
---	if (GetNumRaidMembers()>0) then
---		c="RAID";
---	elseif (GetNumPartyMembers()>0) then
---		c="PARTY";
---	else c="SAY";
---	end
---	R=R or CreateFrame("Frame")
---	R:RegisterEvent("UNIT_SPELLCAST_SENT")
---	R:SetScript("OnEvent",
---	function(R,E,C,T,K,T)
---		SendChatMessage(GetRandomArgument("Rezzing "..T..".","Anyone not surprised that "..T.." is getting rezzed... again?", "Ok, "..T..", but this had better not be another attempt to get mouth to mouth!", "I am resurrecting "..T..".", "Ressurecting "..T.." now.", "Oh no, you died, "..T.."!", "Let me fix that, "..T..".", "Stop slacking and get back to work, "..T.."!", "Bringing you back from the dead now, "..T..".", "Oh noes, "..T.."'s got a wittle booboo!"),c)
---		SendChatMessage("Rez incoming, please accept...", "WHISPER", nil, UnitName(T))
---		R:UnregisterEvent(E)
---	end)
+--   local c;
+--   if (GetNumRaidMembers()>0) then
+--      c="RAID";
+--   elseif (GetNumPartyMembers()>0) then
+--      c="PARTY";
+--   else c="SAY";
+--   end
+--   R=R or CreateFrame("Frame")
+--   R:RegisterEvent("UNIT_SPELLCAST_SENT")
+--   R:SetScript("OnEvent",
+--   function(R,E,C,T,K,T)
+--      SendChatMessage(GetRandomArgument("Rezzing "..T..".","Anyone not surprised that "..T.." is getting rezzed... again?", "Ok, "..T..", but this had better not be another attempt to get mouth to mouth!", "I am resurrecting "..T..".", "Ressurecting "..T.." now.", "Oh no, you died, "..T.."!", "Let me fix that, "..T..".", "Stop slacking and get back to work, "..T.."!", "Bringing you back from the dead now, "..T..".", "Oh noes, "..T.."'s got a wittle booboo!"),c)
+--      SendChatMessage("Rez incoming, please accept...", "WHISPER", nil, UnitName(T))
+--      R:UnregisterEvent(E)
+--   end)
 --end
 
 
@@ -189,27 +205,27 @@ end
 -- * useful components: de/buff iterator
 --
 --function RaidMaker_IsBuffActive()
---	if (UnitIsDeadOrGhost("target")) then return; end		-- * ...then dead
---	if (not UnitIsConnected("target")) then return; end		-- * ...then DC
---	local AT_testname;
---	local i=1;
---	AT_testname,_,_,_,_,_,_,_,_=UnitBuff("target",1); 	-- * buffs
---	while (AT_testname) do
---		if (AT_testname==AT_buffname) then 
---			return true;
---		end
---		i=i+1;
---		AT_testname,_,_,_,_,_,_,_,_=UnitBuff("target",i);
---	end
---	i=1;	-- * debuffs
---	AT_testname,_,_,_,_,_,_,_,_=UnitDebuff("target",1);
---	while (AT_testname) do
---		if (AT_testname==AT_buffname) then 
---			return true;
---		end
---		i=i+1;
---		AT_testname,_,_,_,_,_,_,_,_=UnitDebuff("target",i);
---	end
+--   if (UnitIsDeadOrGhost("target")) then return; end      -- * ...then dead
+--   if (not UnitIsConnected("target")) then return; end      -- * ...then DC
+--   local AT_testname;
+--   local i=1;
+--   AT_testname,_,_,_,_,_,_,_,_=UnitBuff("target",1);    -- * buffs
+--   while (AT_testname) do
+--      if (AT_testname==AT_buffname) then 
+--         return true;
+--      end
+--      i=i+1;
+--      AT_testname,_,_,_,_,_,_,_,_=UnitBuff("target",i);
+--   end
+--   i=1;   -- * debuffs
+--   AT_testname,_,_,_,_,_,_,_,_=UnitDebuff("target",1);
+--   while (AT_testname) do
+--      if (AT_testname==AT_buffname) then 
+--         return true;
+--      end
+--      i=i+1;
+--      AT_testname,_,_,_,_,_,_,_,_=UnitDebuff("target",i);
+--   end
 --end
 
 -- * This function queries RaidMaker_IsBuffActive to see if the target has the buff of interest;
@@ -218,12 +234,12 @@ end
 -- * useful components: if...then variable setting, play sound.
 --
 --function RaidMaker_SetSpellCast()
---	if RaidMaker_IsBuffActive() then
---			RaidMaker_buffspell = "";
---			PlaySoundFile("Sound\\interface\\FriendJoin.wav");
---	else
---			RaidMaker_buffspell = AT_buffname;
---	end
+--   if RaidMaker_IsBuffActive() then
+--         RaidMaker_buffspell = "";
+--         PlaySoundFile("Sound\\interface\\FriendJoin.wav");
+--   else
+--         RaidMaker_buffspell = AT_buffname;
+--   end
 --end
 
 
@@ -241,33 +257,33 @@ end
 -- * syntax: "/cma" for usage info
 --
 --function CancelMyAuctionsCommand(msg)
---	if (msg == "") then
---		DEFAULT_CHAT_FRAME:AddMessage("Usage: '/cma 'ItemName'",1,1,0);
---		DEFAULT_CHAT_FRAME:AddMessage("Example: '/cma Large Prismatic Shard'",1,1,0);
---		DEFAULT_CHAT_FRAME:AddMessage("Example: '/cma all' to activate, AH window must be open",1,1,0);
---		DEFAULT_CHAT_FRAME:AddMessage("Enter ItemName as a name, item link, or item string; works with one item at a time.",1,1,0);
---	else
---		if (msg == "all") then
---			CancelMyAuctions();
---		else
---			if (msg ~= "") then
---				local d,_,_,_,_,_,_,_,_,_=GetItemInfo(msg)
---				CANCELMYAUCTIONSTEXT = d;
---				DEFAULT_CHAT_FRAME:AddMessage("Will cancel all auctions for: "..CANCELMYAUCTIONSTEXT..".",1,1,0);
---			end
---		end
---	end
+--   if (msg == "") then
+--      DEFAULT_CHAT_FRAME:AddMessage("Usage: '/cma 'ItemName'",1,1,0);
+--      DEFAULT_CHAT_FRAME:AddMessage("Example: '/cma Large Prismatic Shard'",1,1,0);
+--      DEFAULT_CHAT_FRAME:AddMessage("Example: '/cma all' to activate, AH window must be open",1,1,0);
+--      DEFAULT_CHAT_FRAME:AddMessage("Enter ItemName as a name, item link, or item string; works with one item at a time.",1,1,0);
+--   else
+--      if (msg == "all") then
+--         CancelMyAuctions();
+--      else
+--         if (msg ~= "") then
+--            local d,_,_,_,_,_,_,_,_,_=GetItemInfo(msg)
+--            CANCELMYAUCTIONSTEXT = d;
+--            DEFAULT_CHAT_FRAME:AddMessage("Will cancel all auctions for: "..CANCELMYAUCTIONSTEXT..".",1,1,0);
+--         end
+--      end
+--   end
 --end
 --
 --function CancelMyAuctions()
---	local o="owner" p=GetNumAuctionItems(o) n=CANCELMYAUCTIONSTEXT;
---	for i=1,p do
---		local b,_,_,_,_,_,_,_,_=GetAuctionItemInfo(o,i);
---	    if (b==n) then
---	        CancelAuction(i);
---   			DEFAULT_CHAT_FRAME:AddMessage("Canceling all auctions for: "..n.."...",1,1,0);
---	    end
---	end
+--   local o="owner" p=GetNumAuctionItems(o) n=CANCELMYAUCTIONSTEXT;
+--   for i=1,p do
+--      local b,_,_,_,_,_,_,_,_=GetAuctionItemInfo(o,i);
+--       if (b==n) then
+--           CancelAuction(i);
+--            DEFAULT_CHAT_FRAME:AddMessage("Canceling all auctions for: "..n.."...",1,1,0);
+--       end
+--   end
 --end
 
 
@@ -283,19 +299,19 @@ end
 -- * /script sg("PutYourMessageHere"); 
 --
 -- function sg(m)
--- 	if (UnitName("raid1")) then
--- 		if ( IsRaidOfficer() ) then
+--    if (UnitName("raid1")) then
+--       if ( IsRaidOfficer() ) then
 --             SendChatMessage(m,"RAID_WARNING");
--- 			SendChatMessage(m,"RAID");
--- 		else
--- 			SendChatMessage(m,"RAID");
--- 		end
--- 	elseif (UnitName("party1")) then
+--          SendChatMessage(m,"RAID");
+--       else
+--          SendChatMessage(m,"RAID");
+--       end
+--    elseif (UnitName("party1")) then
 --      SendChatMessage(m,"RAID_WARNING");
--- 		SendChatMessage(m,"PARTY");
--- 	else
--- 		SendChatMessage(m,"SAY");
--- 	end
+--       SendChatMessage(m,"PARTY");
+--    else
+--       SendChatMessage(m,"SAY");
+--    end
 -- end
 
 
@@ -489,7 +505,7 @@ function RaidMaker_GuildRosterUpdate(flag)
             end
          end
          
-   		RaidMaker_DisplayDatabase();
+         RaidMaker_DisplayDatabase();
 
       end
       
@@ -1234,11 +1250,11 @@ function RaidMaker_HandleSendInvitesButton()
  end
 
 function RaidMaker_HandleFetchCalButton()
-	raidPlayerDatabase = RaidMaker_buildRaidList(raidPlayerDatabase);
-	if ( raidPlayerDatabase.title ~= nil ) then
-   	playerSortedList = RaidMaker_buildPlayerListSort(raidPlayerDatabase);
-   	table.sort(playerSortedList, RaidMaker_ascendInviteStatusOrder);
-   	RaidMaker_DisplayDatabase();
+   raidPlayerDatabase = RaidMaker_buildRaidList(raidPlayerDatabase);
+   if ( raidPlayerDatabase.title ~= nil ) then
+      playerSortedList = RaidMaker_buildPlayerListSort(raidPlayerDatabase);
+      table.sort(playerSortedList, RaidMaker_ascendInviteStatusOrder);
+      RaidMaker_DisplayDatabase();
    end
 end
 
@@ -1303,143 +1319,189 @@ function RaidMaker_SetUpClassIcons()
       -- take the Blizzard UI graphic with a grid of 4x4 class icons and crop out the desired class one at a time.
       
       -- Warrior
-	   CreateFrame("Frame", "RaidMaker_WarriorClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
-	   RaidMaker_WarriorClassPicture:SetWidth(25)
-	   RaidMaker_WarriorClassPicture:SetHeight(25)
-	   RaidMaker_WarriorClassPicture:SetPoint("TOPRIGHT", RaidMaker_WarriorCount, "TOPLEFT", 0,3)
-	   RaidMaker_WarriorClassPicture:CreateTexture("RaidMaker_WarriorClassPictureTexture")
-	   RaidMaker_WarriorClassPictureTexture:SetAllPoints()
-	   RaidMaker_WarriorClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
-	   RaidMaker_WarriorClassPictureTexture:SetTexCoord(0,0.25,0,0.25)
+      CreateFrame("Frame", "RaidMaker_WarriorClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
+      RaidMaker_WarriorClassPicture:SetWidth(25)
+      RaidMaker_WarriorClassPicture:SetHeight(25)
+      RaidMaker_WarriorClassPicture:SetPoint("TOPRIGHT", RaidMaker_WarriorCount, "TOPLEFT", 0,3)
+      RaidMaker_WarriorClassPicture:CreateTexture("RaidMaker_WarriorClassPictureTexture")
+      RaidMaker_WarriorClassPictureTexture:SetAllPoints()
+      RaidMaker_WarriorClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
+      RaidMaker_WarriorClassPictureTexture:SetTexCoord(0,0.25,0,0.25)
       -- mage
-	   CreateFrame("Frame", "RaidMaker_MageClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
-	   RaidMaker_MageClassPicture:SetWidth(25)
-	   RaidMaker_MageClassPicture:SetHeight(25)
-	   RaidMaker_MageClassPicture:SetPoint("TOPRIGHT", RaidMaker_MageCount, "TOPLEFT", 0,3)
-	   RaidMaker_MageClassPicture:CreateTexture("RaidMaker_MageClassPictureTexture")
-	   RaidMaker_MageClassPictureTexture:SetAllPoints()
-	   RaidMaker_MageClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
-	   RaidMaker_MageClassPictureTexture:SetTexCoord(.25,0.5,0,0.25)
+      CreateFrame("Frame", "RaidMaker_MageClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
+      RaidMaker_MageClassPicture:SetWidth(25)
+      RaidMaker_MageClassPicture:SetHeight(25)
+      RaidMaker_MageClassPicture:SetPoint("TOPRIGHT", RaidMaker_MageCount, "TOPLEFT", 0,3)
+      RaidMaker_MageClassPicture:CreateTexture("RaidMaker_MageClassPictureTexture")
+      RaidMaker_MageClassPictureTexture:SetAllPoints()
+      RaidMaker_MageClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
+      RaidMaker_MageClassPictureTexture:SetTexCoord(.25,0.5,0,0.25)
       -- rogue
-	   CreateFrame("Frame", "RaidMaker_RogueClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
-	   RaidMaker_RogueClassPicture:SetWidth(25)
-	   RaidMaker_RogueClassPicture:SetHeight(25)
-	   RaidMaker_RogueClassPicture:SetPoint("TOPRIGHT", RaidMaker_RogueCount, "TOPLEFT", 0,3)
-	   RaidMaker_RogueClassPicture:CreateTexture("RaidMaker_RogueClassPictureTexture")
-	   RaidMaker_RogueClassPictureTexture:SetAllPoints()
-	   RaidMaker_RogueClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
-	   RaidMaker_RogueClassPictureTexture:SetTexCoord(0.5,0.75,0,0.25)
+      CreateFrame("Frame", "RaidMaker_RogueClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
+      RaidMaker_RogueClassPicture:SetWidth(25)
+      RaidMaker_RogueClassPicture:SetHeight(25)
+      RaidMaker_RogueClassPicture:SetPoint("TOPRIGHT", RaidMaker_RogueCount, "TOPLEFT", 0,3)
+      RaidMaker_RogueClassPicture:CreateTexture("RaidMaker_RogueClassPictureTexture")
+      RaidMaker_RogueClassPictureTexture:SetAllPoints()
+      RaidMaker_RogueClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
+      RaidMaker_RogueClassPictureTexture:SetTexCoord(0.5,0.75,0,0.25)
       -- druid
-	   CreateFrame("Frame", "RaidMaker_DruidClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
-	   RaidMaker_DruidClassPicture:SetWidth(25)
-	   RaidMaker_DruidClassPicture:SetHeight(25)
-	   RaidMaker_DruidClassPicture:SetPoint("TOPRIGHT", RaidMaker_DruidCount, "TOPLEFT", 0,3)
-	   RaidMaker_DruidClassPicture:CreateTexture("RaidMaker_DruidClassPictureTexture")
-	   RaidMaker_DruidClassPictureTexture:SetAllPoints()
-	   RaidMaker_DruidClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
-	   RaidMaker_DruidClassPictureTexture:SetTexCoord(0.75,1.0,0,0.25)
+      CreateFrame("Frame", "RaidMaker_DruidClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
+      RaidMaker_DruidClassPicture:SetWidth(25)
+      RaidMaker_DruidClassPicture:SetHeight(25)
+      RaidMaker_DruidClassPicture:SetPoint("TOPRIGHT", RaidMaker_DruidCount, "TOPLEFT", 0,3)
+      RaidMaker_DruidClassPicture:CreateTexture("RaidMaker_DruidClassPictureTexture")
+      RaidMaker_DruidClassPictureTexture:SetAllPoints()
+      RaidMaker_DruidClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
+      RaidMaker_DruidClassPictureTexture:SetTexCoord(0.75,1.0,0,0.25)
       -- hunter
-	   CreateFrame("Frame", "RaidMaker_HunterClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
-	   RaidMaker_HunterClassPicture:SetWidth(25)
-	   RaidMaker_HunterClassPicture:SetHeight(25)
-	   RaidMaker_HunterClassPicture:SetPoint("TOPRIGHT", RaidMaker_HunterCount, "TOPLEFT", 0,3)
-	   RaidMaker_HunterClassPicture:CreateTexture("RaidMaker_HunterClassPictureTexture")
-	   RaidMaker_HunterClassPictureTexture:SetAllPoints()
-	   RaidMaker_HunterClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
-	   RaidMaker_HunterClassPictureTexture:SetTexCoord(0,0.25,0.25,0.5)
+      CreateFrame("Frame", "RaidMaker_HunterClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
+      RaidMaker_HunterClassPicture:SetWidth(25)
+      RaidMaker_HunterClassPicture:SetHeight(25)
+      RaidMaker_HunterClassPicture:SetPoint("TOPRIGHT", RaidMaker_HunterCount, "TOPLEFT", 0,3)
+      RaidMaker_HunterClassPicture:CreateTexture("RaidMaker_HunterClassPictureTexture")
+      RaidMaker_HunterClassPictureTexture:SetAllPoints()
+      RaidMaker_HunterClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
+      RaidMaker_HunterClassPictureTexture:SetTexCoord(0,0.25,0.25,0.5)
       -- shaman
-	   CreateFrame("Frame", "RaidMaker_ShamanClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
-	   RaidMaker_ShamanClassPicture:SetWidth(25)
-	   RaidMaker_ShamanClassPicture:SetHeight(25)
-	   RaidMaker_ShamanClassPicture:SetPoint("TOPRIGHT", RaidMaker_ShamanCount, "TOPLEFT", 0,3)
-	   RaidMaker_ShamanClassPicture:CreateTexture("RaidMaker_ShamanClassPictureTexture")
-	   RaidMaker_ShamanClassPictureTexture:SetAllPoints()
-	   RaidMaker_ShamanClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
-	   RaidMaker_ShamanClassPictureTexture:SetTexCoord(.25,0.5,0.25,0.5)
+      CreateFrame("Frame", "RaidMaker_ShamanClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
+      RaidMaker_ShamanClassPicture:SetWidth(25)
+      RaidMaker_ShamanClassPicture:SetHeight(25)
+      RaidMaker_ShamanClassPicture:SetPoint("TOPRIGHT", RaidMaker_ShamanCount, "TOPLEFT", 0,3)
+      RaidMaker_ShamanClassPicture:CreateTexture("RaidMaker_ShamanClassPictureTexture")
+      RaidMaker_ShamanClassPictureTexture:SetAllPoints()
+      RaidMaker_ShamanClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
+      RaidMaker_ShamanClassPictureTexture:SetTexCoord(.25,0.5,0.25,0.5)
       -- priest
-	   CreateFrame("Frame", "RaidMaker_PriestClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
-	   RaidMaker_PriestClassPicture:SetWidth(25)
-	   RaidMaker_PriestClassPicture:SetHeight(25)
-	   RaidMaker_PriestClassPicture:SetPoint("TOPRIGHT", RaidMaker_PriestCount, "TOPLEFT", 0,3)
-	   RaidMaker_PriestClassPicture:CreateTexture("RaidMaker_PriestClassPictureTexture")
-	   RaidMaker_PriestClassPictureTexture:SetAllPoints()
-	   RaidMaker_PriestClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
-	   RaidMaker_PriestClassPictureTexture:SetTexCoord(0.5,0.75,0.25,0.5)
+      CreateFrame("Frame", "RaidMaker_PriestClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
+      RaidMaker_PriestClassPicture:SetWidth(25)
+      RaidMaker_PriestClassPicture:SetHeight(25)
+      RaidMaker_PriestClassPicture:SetPoint("TOPRIGHT", RaidMaker_PriestCount, "TOPLEFT", 0,3)
+      RaidMaker_PriestClassPicture:CreateTexture("RaidMaker_PriestClassPictureTexture")
+      RaidMaker_PriestClassPictureTexture:SetAllPoints()
+      RaidMaker_PriestClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
+      RaidMaker_PriestClassPictureTexture:SetTexCoord(0.5,0.75,0.25,0.5)
       -- warlock
-	   CreateFrame("Frame", "RaidMaker_WarlockClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
-	   RaidMaker_WarlockClassPicture:SetWidth(25)
-	   RaidMaker_WarlockClassPicture:SetHeight(25)
-	   RaidMaker_WarlockClassPicture:SetPoint("TOPRIGHT", RaidMaker_WarlockCount, "TOPLEFT", 0,3)
-	   RaidMaker_WarlockClassPicture:CreateTexture("RaidMaker_WarlockClassPictureTexture")
-	   RaidMaker_WarlockClassPictureTexture:SetAllPoints()
-	   RaidMaker_WarlockClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
-	   RaidMaker_WarlockClassPictureTexture:SetTexCoord(0.75,1.0,0.25,0.5)
-      --	paladin
-	   CreateFrame("Frame", "RaidMaker_PaladinClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
-	   RaidMaker_PaladinClassPicture:SetWidth(25)
-	   RaidMaker_PaladinClassPicture:SetHeight(25)
-	   RaidMaker_PaladinClassPicture:SetPoint("TOPRIGHT", RaidMaker_PaladinCount, "TOPLEFT", 0,3)
-	   RaidMaker_PaladinClassPicture:CreateTexture("RaidMaker_PaladinClassPictureTexture")
-	   RaidMaker_PaladinClassPictureTexture:SetAllPoints()
-	   RaidMaker_PaladinClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
-	   RaidMaker_PaladinClassPictureTexture:SetTexCoord(0,0.25,0.5,0.75)
-      --	deathknight
-	   CreateFrame("Frame", "RaidMaker_DeathKnightClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
-	   RaidMaker_DeathKnightClassPicture:SetWidth(25)
-	   RaidMaker_DeathKnightClassPicture:SetHeight(25)
-	   RaidMaker_DeathKnightClassPicture:SetPoint("TOPRIGHT", RaidMaker_DeathknightCount, "TOPLEFT", 0,3)
-	   RaidMaker_DeathKnightClassPicture:CreateTexture("RaidMaker_DeathKnightClassPictureTexture")
-	   RaidMaker_DeathKnightClassPictureTexture:SetAllPoints()
-	   RaidMaker_DeathKnightClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
-	   RaidMaker_DeathKnightClassPictureTexture:SetTexCoord(.25,0.5,0.5,0.75)
+      CreateFrame("Frame", "RaidMaker_WarlockClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
+      RaidMaker_WarlockClassPicture:SetWidth(25)
+      RaidMaker_WarlockClassPicture:SetHeight(25)
+      RaidMaker_WarlockClassPicture:SetPoint("TOPRIGHT", RaidMaker_WarlockCount, "TOPLEFT", 0,3)
+      RaidMaker_WarlockClassPicture:CreateTexture("RaidMaker_WarlockClassPictureTexture")
+      RaidMaker_WarlockClassPictureTexture:SetAllPoints()
+      RaidMaker_WarlockClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
+      RaidMaker_WarlockClassPictureTexture:SetTexCoord(0.75,1.0,0.25,0.5)
+      --   paladin
+      CreateFrame("Frame", "RaidMaker_PaladinClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
+      RaidMaker_PaladinClassPicture:SetWidth(25)
+      RaidMaker_PaladinClassPicture:SetHeight(25)
+      RaidMaker_PaladinClassPicture:SetPoint("TOPRIGHT", RaidMaker_PaladinCount, "TOPLEFT", 0,3)
+      RaidMaker_PaladinClassPicture:CreateTexture("RaidMaker_PaladinClassPictureTexture")
+      RaidMaker_PaladinClassPictureTexture:SetAllPoints()
+      RaidMaker_PaladinClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
+      RaidMaker_PaladinClassPictureTexture:SetTexCoord(0,0.25,0.5,0.75)
+      --   deathknight
+      CreateFrame("Frame", "RaidMaker_DeathKnightClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
+      RaidMaker_DeathKnightClassPicture:SetWidth(25)
+      RaidMaker_DeathKnightClassPicture:SetHeight(25)
+      RaidMaker_DeathKnightClassPicture:SetPoint("TOPRIGHT", RaidMaker_DeathknightCount, "TOPLEFT", 0,3)
+      RaidMaker_DeathKnightClassPicture:CreateTexture("RaidMaker_DeathKnightClassPictureTexture")
+      RaidMaker_DeathKnightClassPictureTexture:SetAllPoints()
+      RaidMaker_DeathKnightClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
+      RaidMaker_DeathKnightClassPictureTexture:SetTexCoord(.25,0.5,0.5,0.75)
 
-	RaidMaker_FetchCalendarButton:SetScript("OnEnter",
-			      function(this)
-				      GameTooltip_SetDefaultAnchor(GameTooltip, this)
-				      GameTooltip:SetText("Fetches most recently opened calander and resets role selections.");
-				      GameTooltip:Show()
-			      end)
-	RaidMaker_FetchCalendarButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
-	
-	RaidMaker_SendAnnouncementButton:SetScript("OnEnter",
-			      function(this)
-				      GameTooltip_SetDefaultAnchor(GameTooltip, this)
-				      GameTooltip:SetText("Announces to /guild that invites will be coming soon.");
-				      GameTooltip:Show()
-			      end)
-	RaidMaker_SendAnnouncementButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
-	
-	RaidMaker_SendInvitesButton:SetScript("OnEnter",
-			      function(this)
-				      GameTooltip_SetDefaultAnchor(GameTooltip, this)
-				      GameTooltip:SetText("Sends group invites to all checked players and forms raid group.");
-				      GameTooltip:Show()
-			      end)
-	RaidMaker_SendInvitesButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
-	
-	RaidMaker_SendInvDoneMsgButton:SetScript("OnEnter",
-			      function(this)
-				      GameTooltip_SetDefaultAnchor(GameTooltip, this)
-				      GameTooltip:SetText("Sends msg to /guild indicating that all invites are sent.");
-				      GameTooltip:Show()
-			      end)
-	RaidMaker_SendInvDoneMsgButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+   RaidMaker_FetchCalendarButton:SetScript("OnEnter",
+               function(this)
+                  GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                  GameTooltip:SetText("Fetches most recently opened calander and resets role selections.");
+                  GameTooltip:Show()
+               end)
+   RaidMaker_FetchCalendarButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+   
+   RaidMaker_SendAnnouncementButton:SetScript("OnEnter",
+               function(this)
+                  GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                  GameTooltip:SetText("Announces to /guild that invites will be coming soon.");
+                  GameTooltip:Show()
+               end)
+   RaidMaker_SendAnnouncementButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+   
+   RaidMaker_SendInvitesButton:SetScript("OnEnter",
+               function(this)
+                  GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                  GameTooltip:SetText("Sends group invites to all checked players and forms raid group.");
+                  GameTooltip:Show()
+               end)
+   RaidMaker_SendInvitesButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+   
+   RaidMaker_SendInvDoneMsgButton:SetScript("OnEnter",
+               function(this)
+                  GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                  GameTooltip:SetText("Sends msg to /guild indicating that all invites are sent.");
+                  GameTooltip:Show()
+               end)
+   RaidMaker_SendInvDoneMsgButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-	RaidMaker_SendRolesButton:SetScript("OnEnter",
-			      function(this)
-				      GameTooltip_SetDefaultAnchor(GameTooltip, this)
-				      GameTooltip:SetText("Sends the list of tanks, healers, and dps to /raid.");
-				      GameTooltip:Show()
-			      end)
-	RaidMaker_SendRolesButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+   RaidMaker_SendRolesButton:SetScript("OnEnter",
+               function(this)
+                  GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                  GameTooltip:SetText("Sends the list of tanks, healers, and dps to /raid.");
+                  GameTooltip:Show()
+               end)
+   RaidMaker_SendRolesButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-	RaidMaker_MainFormButtonRefresh:SetScript("OnEnter",
-			      function(this)
-				      GameTooltip_SetDefaultAnchor(GameTooltip, this)
-				      GameTooltip:SetText("Forces refresh on player online status.  Throttled by server.");
-				      GameTooltip:Show()
-			      end)
-	RaidMaker_MainFormButtonRefresh:SetScript("OnLeave", function() GameTooltip:Hide() end)
+   RaidMaker_MainFormButtonRefresh:SetScript("OnEnter",
+               function(this)
+                  GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                  GameTooltip:SetText("Forces refresh on player online status.  Throttled by server.");
+                  GameTooltip:Show()
+               end)
+   RaidMaker_MainFormButtonRefresh:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+   -------------------------------------------------------------------------------
+   -- Create the scan button
+   -------------------------------------------------------------------------------
+   scan_button = CreateFrame("Button", nil, UIParent, "UIPanelButtonTemplate")
+   scan_button:SetHeight(20)
+
+   scan_button:RegisterForClicks("LeftButtonUp")
+   scan_button:SetScript("OnClick",
+               function(self, button, down)
+
+                  if RaidMaker_MainForm:IsVisible() then
+                     RaidMaker_MainForm:Hide()
+                  else
+                     RaidMaker_MainForm:Show()
+                  end
+               end)
+
+   scan_button:SetScript("OnEnter",
+               function(this)
+                  GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                  GameTooltip:SetText("show RaidMaker gui")
+                  GameTooltip:Show()
+               end)
+   scan_button:SetScript("OnLeave", function() GameTooltip:Hide() end)
+   scan_button:SetText("Mike")
 
 
+
+
+
+
+--end
+
+--function RaidMaker:OnEnable()
+   scan_button:SetParent(TradeSkillFrame)
+--   scan_button:SetParent(RaidMaker_MainForm)
+--   scan_parent = scan_button:GetParent()
+
+   scan_button:ClearAllPoints()
+      
+   scan_button:SetPoint("RIGHT", TradeSkillFrameCloseButton, "LEFT",4,0)
+--   scan_button:SetPoint("TOPLEFT", RaidMaker_MainForm, "TOPRIGHT",5,-4)
+   scan_button:SetWidth(scan_button:GetTextWidth() + 10)
+
+--   scan_button:Enable()
+   scan_button:Show()
 end
+
