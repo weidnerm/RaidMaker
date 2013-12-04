@@ -20,6 +20,7 @@ local raidMakerLaunchCalEditButton
 local raidMakerLaunchCalViewButton
 RaidMaker_lootLogData = {};
 RaidMaker_RaidParticipantLog = {};
+--RaidMaker_GuildRoster = {}
 local RaidMaker_testTrialNum = 1;
 local RaidMaker_RollLog = {};
 local RaidMaker_sortedRollList = {};
@@ -31,6 +32,7 @@ local RaidMaker_msgSequenceNumber = random(1,9999);
 local RaidMaker_appMessagePrefix = "DbtRm";
 local RaidMaker_appSyncPrefix = "DbtRs";
 local RaidMaker_sync_enabled;
+local previousGuildRosterUpdateTime = 0
 
 -- change to use the array instead of these locals
 local classColorDeathKnight   = "|c00C41F3B";
@@ -44,6 +46,30 @@ local classColorShaman        = "|c002459FF";
 local classColorWarlock       = "|c009482C9";
 local classColorWarrior       = "|c00C79C6E";
 
+local CALENDAR_FULLDATE_MONTH_NAMES = {
+	FULLDATE_MONTH_JANUARY,
+	FULLDATE_MONTH_FEBRUARY,
+	FULLDATE_MONTH_MARCH,
+	FULLDATE_MONTH_APRIL,
+	FULLDATE_MONTH_MAY,
+	FULLDATE_MONTH_JUNE,
+	FULLDATE_MONTH_JULY,
+	FULLDATE_MONTH_AUGUST,
+	FULLDATE_MONTH_SEPTEMBER,
+	FULLDATE_MONTH_OCTOBER,
+	FULLDATE_MONTH_NOVEMBER,
+	FULLDATE_MONTH_DECEMBER,
+};
+
+local CALENDAR_WEEKDAY_NAMES = {
+	WEEKDAY_SUNDAY,
+	WEEKDAY_MONDAY,
+	WEEKDAY_TUESDAY,
+	WEEKDAY_WEDNESDAY,
+	WEEKDAY_THURSDAY,
+	WEEKDAY_FRIDAY,
+	WEEKDAY_SATURDAY,
+};
 
 
 -- ****************************************************
@@ -105,41 +131,36 @@ function RaidMaker_Handler(msg)
    elseif (msg == "center") then
       RaidMaker_MainForm:ClearAllPoints()
       RaidMaker_MainForm:SetPoint("CENTER", UIParent, "CENTER",0,0)
-   elseif (msg == "test") then
-      local numSets = GetNumEquipmentSets()
-      local inSet = {}
-      
-      for i=1,numSets do
-         
-         local name, icon, setID = GetEquipmentSetInfo(i)
-         local items = GetEquipmentSetItemIDs(name)
-         for slot,item in pairs(items) do
-            if inSet[item] then
-               inSet[item] = inSet[item]..", "..name
-            else
-               inSet[item] = name
-            end
-         end
-      end
-      
-      local function OnTooltipSetItem(self)
-      local name,link = self:GetItem()
-         if name then
-            local equippable = IsEquippableItem(link)
-            local item = link:match("Hitem:(%d+)")
-            item = tonumber(item)
-            if not equippable then
-               -- Do nothing
-            elseif inSet[item] then
-               GameTooltip:AddLine("Equipment Set: ".. inSet[item],0.2,1,0.2)
-            else
-               GameTooltip:AddLine("Item not in an equipment set", 1, 0.2, 0.2)
-            end
-            cleared = true
-         end
-      end
-      GameTooltip:HookScript("OnTooltipSetItem", OnTooltipSetItem)
-      
+--   elseif (msg == "getroster") then
+--      local index;
+--      local name,rank,rankIndex,level,class,zone,note,officernote,online,status,classFileName;
+--      local numGuildMembers = GetNumGuildMembers(true); --includeOffline
+--
+--      for index=1,numGuildMembers do
+--         local tempLine = ""
+--         
+--         name, rank, rankIndex, level, class, zone, note, officernote, online, status, classFileName = GetGuildRosterInfo(index);
+--
+--         tempLine = name         
+--         tempLine = tempLine.."::"..rank         
+--         tempLine = tempLine.."::"..rankIndex    
+--         tempLine = tempLine.."::"..level        
+--         tempLine = tempLine.."::"..class        
+----         tempLine = tempLine.."::"..zone         
+--         tempLine = tempLine.."::"..note         
+--         tempLine = tempLine.."::"..officernote  
+----         tempLine = tempLine.."::"..online       
+----         tempLine = tempLine.."::"..status       
+--         tempLine = tempLine.."::"..classFileName
+--         RaidMaker_GuildRoster[index] = tempLine;
+--      end
+--   elseif (msg == "guildinfo") then
+--      local index;
+--      local numRanks = GuildControlGetNumRanks();
+--      
+--      for index=1,numRanks do
+--         print(index.." "..GuildControlGetRankName(index) )
+--      end
    elseif (msg == "text") then
       -- for testing purposes. can be deleted.
       RaidMaker_TabPage1_SampleTextTab1_GroupedState_1:SetText(red.."not");
@@ -295,6 +316,8 @@ function RaidMaker_buildRaidList(origDatabase)
 end
 
 function RaidMaker_GuildRosterUpdate(flag)
+   -- timestamp the update.
+   previousGuildRosterUpdateTime = time();
 
    if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
       if ( raidPlayerDatabase.playerInfo ~= nil ) then
@@ -1649,7 +1672,6 @@ function RaidMaker_handle_CHAT_MSG_SYSTEM(message, sender, language, channelStri
       end
    end
    
-   
 end
 
 
@@ -2216,14 +2238,26 @@ function RaidMaker_SetUpGuiFields()
                if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
                   if ( raidPlayerDatabase.playerInfo ~= nil ) then
                      if ( raidPlayerDatabase.playerInfo[playerName] ~= nil ) then
+                        local currentTime = time()
+                        if ( currentTime - previousGuildRosterUpdateTime > 15 ) then
+                           GuildRoster(); -- trigger a GUILD_ROSTER_UPDATE event so we can get the online/offline status of players.
+                        end
+
                         if ( raidPlayerDatabase.playerInfo[playerName].zone ~= nil ) then
                
---                           GameTooltip_SetDefaultAnchor(GameTooltip, self)
+                           local signupText = ""
                            GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT",0,0)
-                           GameTooltip:SetText(white..playerName..yellow.." last seen in "..green..raidPlayerDatabase.playerInfo[playerName].zone);
+                           if ( raidPlayerDatabase.playerInfo[playerName].indexInEvent ~= nil ) then
+
+                        		local weekday, month, day, year, hour, minute = CalendarEventGetInviteResponseTime(raidPlayerDatabase.playerInfo[playerName].indexInEvent);
+
+                              if ( weekday ~= nil ) and
+                                 ( weekday ~= 0 ) then
+                                 signupText = yellow.."\nResponded on:\n"..white..format(FULLDATE, CALENDAR_WEEKDAY_NAMES[weekday],CALENDAR_FULLDATE_MONTH_NAMES[month],day, year, month ).."\n"..GameTime_GetFormattedTime(hour, minute, true)
+                              end
+                           end
+                           GameTooltip:SetText(white..playerName..yellow.." last seen in "..green..raidPlayerDatabase.playerInfo[playerName].zone..signupText);
                            GameTooltip:Show()
-                        else
-                           GuildRoster(); -- trigger a GUILD_ROSTER_UPDATE event so we can get the online/offline status of players.
                         end
                      end
                   end
