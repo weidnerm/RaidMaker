@@ -88,9 +88,9 @@ local CALENDAR_WEEKDAY_NAMES = {
 --
 function RaidMaker_OnLoad()
    if( DEFAULT_CHAT_FRAME ) then
-      DEFAULT_CHAT_FRAME:AddMessage("RaidMaker Loaded.");
+--      DEFAULT_CHAT_FRAME:AddMessage("RaidMaker Loaded.");
    end
-   UIErrorsFrame:AddMessage("RaidMaker Loaded.", 1.0, 1.0, 1.0, 1.0, UIERRORS_HOLD_TIME);
+--   UIErrorsFrame:AddMessage("RaidMaker Loaded.", 1.0, 1.0, 1.0, 1.0, UIERRORS_HOLD_TIME);
 
    SlashCmdList["RAIDMAKERCOMMAND"] = RaidMaker_Handler;
    SlashCmdList["RAIDMAKERMAINCOMMAND"] = RaidMaker_Handler;
@@ -211,13 +211,8 @@ function RaidMaker_repeatLoggedRaid(historyIndex)
          if ( historyIndex <= #RaidMaker_RaidParticipantLog) then
             
             -- clear out our roles.
-            local charName,charFields
-            for charName,charFields in pairs(raidPlayerDatabase.playerInfo) do
-               raidPlayerDatabase.playerInfo[charName].tank = 0;
-               raidPlayerDatabase.playerInfo[charName].heals = 0;
-               raidPlayerDatabase.playerInfo[charName].mDps = 0;
-               raidPlayerDatabase.playerInfo[charName].rDps = 0;
-            end
+            RaidMaker_ClearAllRolesWithSync();
+
             
             local menuPlayerNameInfo
             for charName, menuPlayerNameInfo in pairs(RaidMaker_RaidParticipantLog[historyIndex].playerInfo) do
@@ -229,15 +224,19 @@ function RaidMaker_repeatLoggedRaid(historyIndex)
                   if ( raidPlayerDatabase.playerInfo[charName] ~= nil ) then
                      if ( menuPlayerNameInfo.tank == 1 ) then
                         raidPlayerDatabase.playerInfo[charName].tank = 1;
+                        RaidMaker_sendUpdateToRemoteApps(charName, "T");
                      end
                      if ( menuPlayerNameInfo.heals == 1 ) then
                         raidPlayerDatabase.playerInfo[charName].heals = 1;
+                        RaidMaker_sendUpdateToRemoteApps(charName, "H");
                      end
                      if ( menuPlayerNameInfo.mDps == 1 ) then
                         raidPlayerDatabase.playerInfo[charName].mDps = 1;
+                        RaidMaker_sendUpdateToRemoteApps(charName, "M");
                      end
                      if ( menuPlayerNameInfo.rDps == 1 ) then
                         raidPlayerDatabase.playerInfo[charName].rDps = 1;
+                        RaidMaker_sendUpdateToRemoteApps(charName, "R");
                      end
                      
 
@@ -2228,31 +2227,35 @@ end
 
 
 
+function RaidMaker_ClearAllRolesWithSync()
+   local charName,charFields
+   for charName,charFields in pairs(raidPlayerDatabase.playerInfo) do
+      if ( raidPlayerDatabase.playerInfo[charName].tank == 1 ) then
+         raidPlayerDatabase.playerInfo[charName].tank = 0;
+         RaidMaker_sendUpdateToRemoteApps(charName, "t");
+      end
+      if ( raidPlayerDatabase.playerInfo[charName].heals == 1 ) then
+         raidPlayerDatabase.playerInfo[charName].heals = 0;
+         RaidMaker_sendUpdateToRemoteApps(charName, "h");
+      end
+      if ( raidPlayerDatabase.playerInfo[charName].mDps == 1 ) then
+         raidPlayerDatabase.playerInfo[charName].mDps = 0;
+         RaidMaker_sendUpdateToRemoteApps(charName, "m");
+      end
+      if ( raidPlayerDatabase.playerInfo[charName].rDps == 1 ) then
+         raidPlayerDatabase.playerInfo[charName].rDps = 0;
+         RaidMaker_sendUpdateToRemoteApps(charName, "r");
+      end
+   end
+   
+   RaidMaker_DisplayDatabase();
+end
+
+
 function RaidMaker_HandleClearAllRolesButton()
    if ( raidPlayerDatabase ~= nil ) then
       if ( raidPlayerDatabase.playerInfo ~= nil ) then
-         
-         local charName,charFields
-         for charName,charFields in pairs(raidPlayerDatabase.playerInfo) do
-            if ( raidPlayerDatabase.playerInfo[charName].tank == 1 ) then
-               raidPlayerDatabase.playerInfo[charName].tank = 0;
-               RaidMaker_sendUpdateToRemoteApps(charName, "t");
-            end
-            if ( raidPlayerDatabase.playerInfo[charName].heals == 1 ) then
-               raidPlayerDatabase.playerInfo[charName].heals = 0;
-               RaidMaker_sendUpdateToRemoteApps(charName, "h");
-            end
-            if ( raidPlayerDatabase.playerInfo[charName].mDps == 1 ) then
-               raidPlayerDatabase.playerInfo[charName].mDps = 0;
-               RaidMaker_sendUpdateToRemoteApps(charName, "m");
-            end
-            if ( raidPlayerDatabase.playerInfo[charName].rDps == 1 ) then
-               raidPlayerDatabase.playerInfo[charName].rDps = 0;
-               RaidMaker_sendUpdateToRemoteApps(charName, "r");
-            end
-         end
-         
-         RaidMaker_DisplayDatabase();
+         RaidMaker_ClearAllRolesWithSync();
       end
    end
 end
