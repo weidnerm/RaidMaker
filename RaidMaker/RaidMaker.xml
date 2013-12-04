@@ -2398,6 +2398,65 @@
                      </OnClick>
                   </Scripts>
                </Button>
+               <Slider name="RaidMaker_LootLog_Slider" orientation="VERTICAL">
+                  <Size>
+                     <AbsDimension x="25" y="180"/>
+                  </Size>
+                  <Backdrop edgefile="Interface\Buttons\UI-SliderBar-Border"
+                     bgFile="Interface\Buttons\UI-SliderBar-Background" tile="true">
+                     <EdgeSize>
+                        <AbsValue val="8"/>
+                     </EdgeSize>
+                     <TileSize>
+                        <AbsValue val="8"/>
+                     </TileSize>
+                     <BackgroundInsets>
+                        <AbsInset left="3" right="3" top="6" bottom="6"/>
+                     </BackgroundInsets>
+                  </Backdrop>
+                  <Scripts>
+                     <OnLoad>
+                        self:SetMinMaxValues(1, 1)
+                        self:SetValueStep(1.0)
+                        self:SetValue(1)
+                     </OnLoad>
+                  </Scripts>
+                  <ThumbTexture name="$parentThumbTexture"
+                     file="Interface\Buttons\UI-ScrollBar-Knob">
+                     <Size x="25" y="25"/>
+                  </ThumbTexture>
+               </Slider>
+               <Slider name="RaidMaker_RollLog_Slider" orientation="VERTICAL">
+                 <Size>
+                   <AbsDimension x="25" y="180"/>
+                 </Size>
+                 <Anchors>
+                     <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeTo="RaidMaker_LogTab_Loot_RollAges1"/>
+                   </Anchors>
+                   <Backdrop edgefile="Interface\Buttons\UI-SliderBar-Border"
+                       bgFile="Interface\Buttons\UI-SliderBar-Background" tile="true">
+                     <EdgeSize>
+                         <AbsValue val="8"/>
+                     </EdgeSize>
+                     <TileSize>
+                         <AbsValue val="8"/>
+                     </TileSize>
+                     <BackgroundInsets>
+                         <AbsInset left="3" right="3" top="6" bottom="6"/>
+                     </BackgroundInsets>
+                   </Backdrop>
+                   <Scripts>
+                     <OnLoad>
+                         self:SetMinMaxValues(1, 1)
+                         self:SetValueStep(1.0)
+                         self:SetValue(1)
+                     </OnLoad>
+                   </Scripts>
+                   <ThumbTexture name="$parentThumbTexture"
+                                     file="Interface\Buttons\UI-ScrollBar-Knob">
+                     <Size x="25" y="25"/>
+                   </ThumbTexture>
+               </Slider>
 
             </Frames>   
        <!--end Background Frame-->

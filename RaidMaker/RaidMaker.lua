@@ -848,6 +848,27 @@ function RaidMaker_OnMouseWheel(self, delta)
 end
 
 
+function RaidMaker_OnMouseWheelRollLog(self, delta)
+   local current = RaidMaker_RollLog_Slider:GetValue()
+   
+   if (delta<0) and (current<#RaidMaker_sortedRollList-9) then
+      RaidMaker_RollLog_Slider:SetValue(current+1)
+   elseif (delta>0) and (current>1) then
+      RaidMaker_RollLog_Slider:SetValue(current-1)
+   end
+end
+
+function RaidMaker_OnMouseWheelLootLog(self, delta)
+   local current = RaidMaker_LootLog_Slider:GetValue()
+   
+   if (delta<0) and (current<#RaidMaker_lootLogData-9) then
+      RaidMaker_LootLog_Slider:SetValue(current+1)
+   elseif (delta>0) and (current>1) then
+      RaidMaker_LootLog_Slider:SetValue(current-1)
+   end
+end
+
+
 function RaidMaker_TextTableUpdate(startRow)
 
    local currentRow = 1;
@@ -1092,11 +1113,11 @@ function RaidMaker_handle_CHAT_MSG_LOOT(message, sender, language, channelString
    if (playerName ~= nil ) then
       local startIndex,endIndex,itemID = strfind(arg1, "(%d+):")
       local name, link, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(itemID);
---      if ( quality == 4  ) then -- epic(purple)=4;  superior(blue)=3;  green=2; white=1; grey=0
---         if ( GetNumRaidMembers() ~= 0 ) then -- only log it if we are in a raid. i.e. filter heroics
+      if ( quality == 4  ) then -- epic(purple)=4;  superior(blue)=3;  green=2; white=1; grey=0
+         if ( GetNumRaidMembers() ~= 0 ) then -- only log it if we are in a raid. i.e. filter heroics
             RaidMaker_addLootEntryToLootLog(playerName, itemID, itemLink);
- --        end
---      end
+         end
+      end
    end
 end
 
@@ -1251,6 +1272,13 @@ function RaidMaker_addRollEntryToRollLog(playerName, rollValue)
 
    -- need to resort and redisplay
    RaidMaker_resortRollsList();
+   
+   if ( #RaidMaker_RollLog <= 10 ) then
+      RaidMaker_RollLog_Slider:SetMinMaxValues(1,1);
+   else
+      RaidMaker_RollLog_Slider:SetMinMaxValues(1,#RaidMaker_RollLog-9);
+   end
+
    RaidMaker_DisplayRollsDatabase();
 
 end
@@ -1265,7 +1293,7 @@ function RaidMaker_DisplayRollsDatabase()
    local timeDeltaSeconds;
    
    for index = 1,10 do
-      indexToDisplay = RaidMaker_sortedRollList[index]; -- eventually make this the sorted index starting at the scroll bar position.
+      indexToDisplay = RaidMaker_sortedRollList[index + RaidMaker_RollLog_Slider:GetValue()-1]; -- eventually make this the sorted index starting at the scroll bar position.
 
       if ( index <= #RaidMaker_RollLog ) then
          -- It will fit on the screen and we are not past the end of the list.
@@ -1329,7 +1357,14 @@ function RaidMaker_ResetRolls(maxAge)
 
    RaidMaker_RollLog = newRaidMaker_RollLog; -- replace the roll log with the new shortened one.
    RaidMaker_resortRollsList();
-
+   
+   if ( #RaidMaker_RollLog <= 10 ) then
+      RaidMaker_RollLog_Slider:SetMinMaxValues(1,1);
+      RaidMaker_RollLog_Slider:SetValue(1);
+   else
+      RaidMaker_RollLog_Slider:SetMinMaxValues(1,#RaidMaker_RollLog-9);
+      RaidMaker_RollLog_Slider:SetValue(1);
+   end
    RaidMaker_DisplayRollsDatabase();
 end
 
@@ -2018,19 +2053,10 @@ function RaidMaker_SetUpClassIcons()
    --
    -- Set up the Lootlog slider
    --
-   CreateFrame("Slider", "RaidMaker_LootLog_Slider", RaidMaker_GroupLootFrame)
    RaidMaker_LootLog_Slider:SetPoint("TOPLEFT", "RaidMaker_LogTab_Loot_RollAges1", "TOPRIGHT", 0,0);
-   RaidMaker_LootLog_Slider:SetWidth(25);
-   RaidMaker_LootLog_Slider:SetHeight(180);
-   RaidMaker_LootLog_Slider:SetOrientation("VERTICAL");
-   RaidMaker_LootLog_Slider:SetThumbTexture("Interface\\Buttons\\UI-ScrollBar-Knob");
-   RaidMaker_LootLog_Slider:SetBackdrop({
-            bgFile = "Interface\\Buttons\\UI-SliderBar-Background",
-            edgefile = "Interface\\Buttons\\UI-SliderBar-Border",
-            tile=true, tileSize = 8, edgeSize = 8,
-            insets={ left = 3,right = 3,top = 6,bottom = 6 }});
-   RaidMaker_LootLog_Slider:SetValueStep(1);
    RaidMaker_LootLog_Slider:SetScript("OnValueChanged", RaidMaker_DisplayLootDatabase );
+   RaidMaker_LootLog_Slider:EnableMouseWheel(true);
+   RaidMaker_LootLog_Slider:SetScript("OnMouseWheel", function(self,delta) RaidMaker_OnMouseWheelLootLog(self, delta) end );
 
    if ( #RaidMaker_lootLogData <= 10 ) then
       RaidMaker_LootLog_Slider:SetMinMaxValues(1,1);
@@ -2040,5 +2066,16 @@ function RaidMaker_SetUpClassIcons()
       RaidMaker_LootLog_Slider:SetValue(#RaidMaker_lootLogData-9);
    end
 
+
+   --
+   -- Set up the Rolllog slider
+   --
+   RaidMaker_RollLog_Slider:SetPoint("TOPLEFT", "RaidMaker_LogTab_Rolls_RollAges1", "TOPRIGHT", 0,0);
+   RaidMaker_RollLog_Slider:SetScript("OnValueChanged", RaidMaker_DisplayRollsDatabase );
+   RaidMaker_RollLog_Slider:EnableMouseWheel(true);
+   RaidMaker_RollLog_Slider:SetScript("OnMouseWheel", function(self,delta) RaidMaker_OnMouseWheelRollLog(self, delta) end );
+
+   RaidMaker_RollLog_Slider:SetMinMaxValues(1,1);
+   RaidMaker_RollLog_Slider:SetValue(1);
 end
 
