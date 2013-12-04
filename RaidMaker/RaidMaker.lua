@@ -1,23 +1,6 @@
 -- ****************************************************
--- * ADDON TEMPLATE, CUSTOMIZE AT WILL *
--- ****************************************************
--- * NOTE: Any line with "--" in front of it will not be read by your computer.
--- * If you want any part of the code below to be read, remove the dashes, 
--- * or add dashes to comment out specific code. My commentary on functions etc.
--- * is prefaced with "-- *"
-
-
--- ****************************************************
 -- * DECLARE VARIABLES * 
 -- ****************************************************
--- * Add any variables you want available to functions here; for example,
---
--- * variable for CancelMyAuctions functions:
--- local CANCELMYAUCTIONSTEXT = "";
-
--- * variables for RaidMaker_IsBuffActive and RaidMaker_SetSpellCast functions:
---   RaidMaker_buffspell = "";
---   local AT_buffname = "Prayer of Mending";
 local darkGrey   = "|c00252525";
 local mediumGrey = "|c00707070";
 local lightGrey  = "|c00a0a0a0";
@@ -73,29 +56,11 @@ function RaidMaker_OnLoad()
    end
    UIErrorsFrame:AddMessage("RaidMaker Loaded.", 1.0, 1.0, 1.0, 1.0, UIERRORS_HOLD_TIME);
 
--- * The two lines below add an in-game Slash Command for the GUI function, reinstate if 
--- * you are interested in using commands in the slash handler, including the mod's XML frames.
    SlashCmdList["RAIDMAKERCOMMAND"] = RaidMaker_Handler;
    SlashCmdList["RAIDMAKERMAINCOMMAND"] = RaidMaker_Handler;
    SLASH_RAIDMAKERCOMMAND1 = "/at";
    SLASH_RAIDMAKERMAINCOMMAND1 = "/rm";
---   SLASH_RAIDMAKERCOMMAND2 = "/addontemplate";
 
--- * The two lines below add an in-game Slash Command for the LootDogNow1 function.
---   SlashCmdList["LOOT_DOG_NOW1"] = LootDogNow1;
---   SLASH_LOOT_DOG_NOW11 = "/dog1";
-
--- * These two lines make a slash command for the Track Item function.
---  SlashCmdList["TRACK_ITEM"] = TrackItem;
---  SLASH_TRACK_ITEM1 = "/ti";
-
--- * These two lines make a slash command for the CancelMyAuctions function.
---   SlashCmdList["CANCEL_MY_AUCTIONS_COMMAND"] = CancelMyAuctionsCommand;
---   SLASH_CANCEL_MY_AUCTIONS_COMMAND1 = "/cma";
-
--- * The line below adds a colored load message with instructions for use the Track Item function.
---   DEFAULT_CHAT_FRAME:AddMessage("**To track an item, place it in slot 0,1 and use /ti to announce.**", 1.0, 0.35, 0.15);
--- end;
    RaidMaker_SetUpGuiFields();
    
    RaidMaker_DisplayLootDatabase();
@@ -170,231 +135,10 @@ end
 
 
 
--- ****************************************************
--- * FUNCTIONS * 
--- ****************************************************
--- * Add your own functions in the section below. I've also included several basic but 
--- * useful functions below to get you started. 
-
-
--- function to announce rez in group-dependent chat and in whisper to target, used with the in-game macro below it works on allied/dead mouseover (takes priority if you have one) or current allied/dead target
--- in-game macro (adjust name of rez spell as necessary): 
--- /run ATRezFunction()
--- /cast [target=mouseover,help,exists,dead][target=target,help,dead] Resurrection
-
---function ATRezFunction()
---   local c;
---   if (GetNumRaidMembers()>0) then
---      c="RAID";
---   elseif (GetNumPartyMembers()>0) then
---      c="PARTY";
---   else c="SAY";
---   end
---   R=R or CreateFrame("Frame")
---   R:RegisterEvent("UNIT_SPELLCAST_SENT")
---   R:SetScript("OnEvent",
---   function(R,E,C,T,K,T)
---      SendChatMessage(GetRandomArgument("Rezzing "..T..".","Anyone not surprised that "..T.." is getting rezzed... again?", "Ok, "..T..", but this had better not be another attempt to get mouth to mouth!", "I am resurrecting "..T..".", "Ressurecting "..T.." now.", "Oh no, you died, "..T.."!", "Let me fix that, "..T..".", "Stop slacking and get back to work, "..T.."!", "Bringing you back from the dead now, "..T..".", "Oh noes, "..T.."'s got a wittle booboo!"),c)
---      SendChatMessage("Rez incoming, please accept...", "WHISPER", nil, UnitName(T))
---      R:UnregisterEvent(E)
---   end)
---end
-
-
-
--- ****************************************************
--- * IS DE/BUFF ACTIVE CHECKER AND RELATED FUNCTION * 
--- ****************************************************
--- * This function is good for checking to see if a target has a buff or debuff. In this example
--- * it checks the target to see if any of their buffs' names (AT_testname) matches the de/buff 
--- * we're looking for (AT_buffname)
--- * useful components: de/buff iterator
---
---function RaidMaker_IsBuffActive()
---   if (UnitIsDeadOrGhost("target")) then return; end      -- * ...then dead
---   if (not UnitIsConnected("target")) then return; end      -- * ...then DC
---   local AT_testname;
---   local i=1;
---   AT_testname,_,_,_,_,_,_,_,_=UnitBuff("target",1);    -- * buffs
---   while (AT_testname) do
---      if (AT_testname==AT_buffname) then 
---         return true;
---      end
---      i=i+1;
---      AT_testname,_,_,_,_,_,_,_,_=UnitBuff("target",i);
---   end
---   i=1;   -- * debuffs
---   AT_testname,_,_,_,_,_,_,_,_=UnitDebuff("target",1);
---   while (AT_testname) do
---      if (AT_testname==AT_buffname) then 
---         return true;
---      end
---      i=i+1;
---      AT_testname,_,_,_,_,_,_,_,_=UnitDebuff("target",i);
---   end
---end
-
--- * This function queries RaidMaker_IsBuffActive to see if the target has the buff of interest;
--- * if it is, it plays a little sound, if it isn't, it sets RaidMaker_buffspell to that 
--- * buffname where it can be cast by the secure XML frame.
--- * useful components: if...then variable setting, play sound.
---
---function RaidMaker_SetSpellCast()
---   if RaidMaker_IsBuffActive() then
---         RaidMaker_buffspell = "";
---         PlaySoundFile("Sound\\interface\\FriendJoin.wav");
---   else
---         RaidMaker_buffspell = AT_buffname;
---   end
---end
-
-
-
-
--- ****************************************************
--- * CANCEL MY AUCTIONS -- WITH INTERACTIVE FUNCTIONS * 
--- ****************************************************
--- * Functions to cancel all of your auctions named "FillInTheBlank"; set the item to be cancelled
--- * by activating and using the slash command above. Provides an example of AH scripting, 
--- * as well as a way to send a mod dynamic input via the chatline interface. Also shows how to strip
--- * the item name from an itemLink or itemString using GetItemInfo.
--- * syntax: "/cma Large Prismatic Shard" to set item to be cancelled
--- * syntax: "/cma all" to actually cancel those auctions
--- * syntax: "/cma" for usage info
---
---function CancelMyAuctionsCommand(msg)
---   if (msg == "") then
---      DEFAULT_CHAT_FRAME:AddMessage("Usage: '/cma 'ItemName'",1,1,0);
---      DEFAULT_CHAT_FRAME:AddMessage("Example: '/cma Large Prismatic Shard'",1,1,0);
---      DEFAULT_CHAT_FRAME:AddMessage("Example: '/cma all' to activate, AH window must be open",1,1,0);
---      DEFAULT_CHAT_FRAME:AddMessage("Enter ItemName as a name, item link, or item string; works with one item at a time.",1,1,0);
---   else
---      if (msg == "all") then
---         CancelMyAuctions();
---      else
---         if (msg ~= "") then
---            local d,_,_,_,_,_,_,_,_,_=GetItemInfo(msg)
---            CANCELMYAUCTIONSTEXT = d;
---            DEFAULT_CHAT_FRAME:AddMessage("Will cancel all auctions for: "..CANCELMYAUCTIONSTEXT..".",1,1,0);
---         end
---      end
---   end
---end
---
---function CancelMyAuctions()
---   local o="owner" p=GetNumAuctionItems(o) n=CANCELMYAUCTIONSTEXT;
---   for i=1,p do
---      local b,_,_,_,_,_,_,_,_=GetAuctionItemInfo(o,i);
---       if (b==n) then
---           CancelAuction(i);
---            DEFAULT_CHAT_FRAME:AddMessage("Canceling all auctions for: "..n.."...",1,1,0);
---       end
---   end
---end
-
-
-
-
--- ****************************************************
--- * AUTO-DIRECT CHAT MESSAGES * 
--- ****************************************************
--- * Function to auto-direct chat messages to say|party|raid|raidwarning channel depending on your 
--- * group status (all thanks to Thorbjorn, author of SendGroup)
--- * To use, uncomment the function below and for your ingame macros, use some version of the 
--- * following (English client, use single quotes for others): 
--- * /script sg("PutYourMessageHere"); 
---
--- function sg(m)
---    if (UnitName("raid1")) then
---       if ( IsRaidOfficer() ) then
---             SendChatMessage(m,"RAID_WARNING");
---          SendChatMessage(m,"RAID");
---       else
---          SendChatMessage(m,"RAID");
---       end
---    elseif (UnitName("party1")) then
---      SendChatMessage(m,"RAID_WARNING");
---       SendChatMessage(m,"PARTY");
---    else
---       SendChatMessage(m,"SAY");
---    end
--- end
-
-
-
-
--- ****************************************************
--- * TRACK ITEM AND ANNOUNCE * 
--- ****************************************************
--- * Put any item in the top left slot of your main backpack; when you call this function it counts
--- * the total number of the item you have in your bags and announces it to your party.
---
--- function TrackItem()
---    local itemLink = GetContainerItemLink(0,1); SendChatMessage("I have " .. GetItemCount(GetContainerItemLink(0,1)) .. "x" .. itemLink, "PARTY");
---  end
-
-
-
--- ****************************************************
--- * LOOT HAIKU * 
--- ****************************************************
--- * This function lets you send a haiku to a chat channel (here "raidchat", adjust as necessary)
--- * asking people to loot the dog, and adds a slash command "/dog1"(commented out, above) for 
--- * in-game use. Use with care, as too much haiku can be a dangerous thing!
--- 
--- function LootDogNow1()
---     SendChatMessage("Did you check for loot?", "CHANNEL", lang, GetChannelName("raidchat"));
---     SendChatMessage("Core Hounds carry things in the", "CHANNEL", lang, GetChannelName("raidchat"));
---     SendChatMessage("Strangest of places.", "CHANNEL", lang, GetChannelName("raidchat")); end
-
-
-
--- ****************************************************
--- * RANDOM PHRASE GENERATOR * 
--- ****************************************************
--- * This function lets you build a long list of phrases and then pick 
--- * one at random when casting a given spell or performing another action. 
--- * Note: replace the "Phrase #s" with your funny/cool sayings, and update 
--- * "random(1,6)" to reflect your final number of sayings ("1,50" for ex.).
--- * You can also substitute GUILD or RAID for SAY. English clients use double quotes ("),
--- * others use single quotes (') to separate phrases. All thanks to Tonukuropan for this code.
--- 
--- * In WoW, use the macro:
--- /cast YourDesiredSpellHere(Rank 1)
--- /script SendChatMessage(RandSay1(), "SAY") 
---
--- ***If you want to say something random a certain percent of the time, use the following in-game 
--- * macro instead. If you exclude "(Rank #)" it will automatically cast your highest rank of that spell. 
--- * This code will say something 1% of the time when casting; 
--- * changing the (100) to a (1) gives you 100%, or to (20) for 5% (or 1 time in 20):
--- * /cast YourDesiredSpellHere(Rank 1)
--- * /script if(math.random(100) == 1) then SendChatMessage(RandSay1(), "SAY") end
---
--- * To send the message to a non-standard channel, adapt the following in-game macro:
--- * /cast YourDesiredSpellHere(Rank 1)
--- * /script if(math.random(100) == 1) then SendChatMessage(RandSay1(), "CHANNEL", lang, GetChannelName("channelnamehere")) end
-
--- * Change the phrases below to whatever you want to say, and update the "6" in "random(1,6)" to 
--- * equal your final number of phrases. 
--- * Example phrases, with dynamic code:
--- * GetZoneText()..": You will never find a more wretched hive of scum and villainy. We must be cautious."
--- * "Resurrecting "..UnitName("target")..", please stand by..."
--- 
--- * To activate the addon uncomment the function below.
---
--- function RandSay1() 
---  local s = { 
---      "Phrase 1", "Phrase 2", 
---      "Phrase 3", "Phrase 4", 
---      "Phrase 5", "Phrase 6" 
---    }; 
---    local i = random(1,6); 
---    return s[i]; 
---  end; 
-
 function RaidMaker_buildRaidList(origDatabase) 
    -- start a new database from scratch
    local newRaidDatabase = {};
+   local copyRaidPlayerSettings = false;
    raidConvertArmedFlag = false;
    raidLootTypeArmedFlag = false;
    numMembersToPromoteToAssist = 0;
@@ -404,11 +148,30 @@ function RaidMaker_buildRaidList(origDatabase)
   
    if ( title ~= nil ) then
    
+
+      newRaidDatabase.month  = month;
+      newRaidDatabase.day    = day;
+      newRaidDatabase.year   = year;
+      newRaidDatabase.hour   = hour;
+      newRaidDatabase.minute = minute;
+
       newRaidDatabase.title = title;
       
       if ( eventType == 1 ) or ( eventType == 2 ) then -- 1=Raid dungeon; 2=Five-player dungeon
          local raidName, icon, expansion, players= select(1+4*(textureIndex-1), CalendarEventGetTextures(eventType));
          newRaidDatabase.title = newRaidDatabase.title.." - "..raidName.."("..players..")";
+      end
+      
+      if ( origDatabase ~= nil ) then
+         if ( newRaidDatabase.title  == origDatabase.title  ) and
+            ( newRaidDatabase.month  == origDatabase.month  ) and
+            ( newRaidDatabase.day    == origDatabase.day    ) and
+            ( newRaidDatabase.year   == origDatabase.year   ) and
+            ( newRaidDatabase.hour   == origDatabase.hour   ) and
+            ( newRaidDatabase.minute == origDatabase.minute ) then
+            -- the raid settings of the newly opened calendar match the current one. we should copy the role selections and online status.
+            copyRaidPlayerSettings = true;
+         end
       end
       
       newRaidDatabase.classCount = {};
@@ -435,8 +198,16 @@ function RaidMaker_buildRaidList(origDatabase)
          newRaidDatabase.playerInfo[name].tank = 0;
          newRaidDatabase.playerInfo[name].heals = 0;
          newRaidDatabase.playerInfo[name].dps = 0;
-   
          newRaidDatabase.playerInfo[name].online = 0;
+         if ( copyRaidPlayerSettings == true ) then
+            -- its the same calendar. copy the fields from the old one
+            if ( origDatabase.playerInfo[name] ~= nil ) then
+               newRaidDatabase.playerInfo[name].tank   = origDatabase.playerInfo[name].tank ;
+               newRaidDatabase.playerInfo[name].heals  = origDatabase.playerInfo[name].heals;
+               newRaidDatabase.playerInfo[name].dps    = origDatabase.playerInfo[name].dps  ;
+               newRaidDatabase.playerInfo[name].online = origDatabase.playerInfo[name].online;
+            end
+         end
    
          newRaidDatabase.playerInfo[name].inGroup = 0;
          if ( GetNumRaidMembers() == 0 ) then
@@ -1113,7 +884,9 @@ function RaidMaker_handle_CHAT_MSG_LOOT(message, sender, language, channelString
       local name, link, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(itemID);
       if ( quality == 4  ) then -- epic(purple)=4;  superior(blue)=3;  green=2; white=1; grey=0
          if ( GetNumRaidMembers() ~= 0 ) then -- only log it if we are in a raid. i.e. filter heroics
-            RaidMaker_addLootEntryToLootLog(playerName, itemID, itemLink);
+            if ( itemID ~= 49426 ) then -- filter Emblem of Frost
+               RaidMaker_addLootEntryToLootLog(playerName, itemID, itemLink);
+            end
          end
       end
    end
@@ -1652,11 +1425,11 @@ function RaidMaker_handle_PARTY_MEMBERS_CHANGED()
             -- update our party flags.
          end
       
-         -- loop through the raid members, promoting any tanks.
+         -- loop through the raid members, updating online status
          for memberIndex=1,numRaidMembers do
             
             local name, rank, subgroup, level, class, fileName, zone, online, isDead, role, isML = GetRaidRosterInfo(memberIndex);
-            -- promote any tanks who are not at the right level.
+            -- udpate status.
             if ( raidPlayerDatabase.playerInfo[name] ~= nil ) then
                if ( online == 1 ) then
                   raidPlayerDatabase.playerInfo[name].online = 1;
@@ -1806,7 +1579,6 @@ function RaidMaker_UpdatePlayerAttendanceLog()
       end
    end
 end
-
 
 
 function RaidMaker_HandleFetchCalButton()
@@ -2419,6 +2191,7 @@ function RaidMaker_SetUpGuiFields()
                      RaidMaker_MainForm:Hide()
                   else
                      RaidMaker_MainForm:Show()
+                     RaidMaker_HandleFetchCalButton()
                   end
                end)
 
@@ -2444,6 +2217,7 @@ function RaidMaker_SetUpGuiFields()
                      RaidMaker_MainForm:Hide()
                   else
                      RaidMaker_MainForm:Show()
+                     RaidMaker_HandleFetchCalButton()
                   end
                end)
 

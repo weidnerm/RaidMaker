@@ -1064,14 +1064,14 @@
             this:RegisterForDrag("LeftButton");
             tinsert(UISpecialFrames,"RaidMaker_MainForm");
             this.elapsed = 0;
-               PanelTemplates_SetNumTabs(RaidMaker_MainForm, 2);
-               PanelTemplates_SetTab(RaidMaker_MainForm, 1);
+            PanelTemplates_SetNumTabs(RaidMaker_MainForm, 2);
+            PanelTemplates_SetTab(RaidMaker_MainForm, 1);
            </OnLoad>
          <OnShow>
             PlaySound("UChatScrollButton");
-               PanelTemplates_SetTab(RaidMaker_MainForm, 1);
-               RaidMaker_TabPage1:Show();
-               RaidMaker_TabPage2:Hide();
+            PanelTemplates_SetTab(RaidMaker_MainForm, 1);
+            RaidMaker_TabPage1:Show();
+            RaidMaker_TabPage2:Hide();
          </OnShow>
          <OnDragStart>this:StartMoving();this.isMoving = true;</OnDragStart>
          <OnDragStop>this:StopMovingOrSizing();this.isMoving = false;</OnDragStop>
