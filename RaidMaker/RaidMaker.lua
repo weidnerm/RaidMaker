@@ -34,7 +34,9 @@ local RaidMaker_appSyncPrefix = "DbtRs";
 local RaidMaker_sync_enabled;
 local previousGuildRosterUpdateTime = 0
 local RaidMaker_syncIndexToNameTable = {};
-local RaidMaker_syncProtocolVersion = 2
+local RaidMaker_syncProtocolVersion = 3
+local RaidMaker_RaidPlannerList = {}
+local RaidMaker_RaidPlannerListDisplayActive = 0;
 
 -- change to use the array instead of these locals
 local classColorDeathKnight   = "|c00C41F3B";
@@ -379,6 +381,11 @@ function RaidMaker_buildRaidList(origDatabase)
       print(red.."RaidMaker error: "..white.."Must open an event through the Calendar first.");
    end
       
+   local selfName = GetUnitName("player",true);
+   RaidMaker_RaidPlannerList = {};  -- clear out the planner participant list.
+   RaidMaker_updateRaidPlannerList_seen(selfName)
+   RaidMaker_updateRaidPlannerList_active(selfName)
+   
    return newRaidDatabase;
 end
 
@@ -1352,6 +1359,9 @@ function RaidMaker_handle_CHAT_MSG_ADDON(prefix, message, channel, sender)
                         -- updates may have been made. update the display.
                         RaidMaker_DisplayDatabase();
                         
+                        -- track who has been contributing.
+                        RaidMaker_updateRaidPlannerList_seen(sender)
+                        
                      end
                   end
                end
@@ -1359,18 +1369,123 @@ function RaidMaker_handle_CHAT_MSG_ADDON(prefix, message, channel, sender)
          end
       elseif ( prefix == RaidMaker_appSyncPrefix ) then
          
-         local remoteAppInstanceId, msgFormat = strsplit(":",message, 2 );
-         if ( msgFormat ~= nil ) and 
-            ( remoteAppInstanceId ~= nil ) then
-            if ( tonumber(remoteAppInstanceId) ~= RaidMaker_appInstanceId ) then -- make sure its not our own broadcast.
-               if ( tonumber(msgFormat) == RaidMaker_syncProtocolVersion ) then -- only process messages if the protocol matches ours.
-                  -- we received a request for sync. send our database.
-                  RaidMaker_sendUpdateToRemoteApps("SYNCDB");
+         if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
+            local remoteAppInstanceId, msgFormat, opcode, raidId = strsplit(":",message, 4 );
+            if ( remoteAppInstanceId ~= nil ) and 
+               ( msgFormat ~= nil ) and
+               ( opcode ~= nil ) and
+               ( raidId ~= nil ) then
+               if ( tonumber(remoteAppInstanceId) ~= RaidMaker_appInstanceId ) then -- make sure its not our own broadcast.
+                  if ( tonumber(msgFormat) == RaidMaker_syncProtocolVersion ) then -- only process messages if the protocol matches ours.
+                     if ( tonumber(raidId) == tonumber(raidPlayerDatabase.textureIndex)  ) then -- only process messages if the raid matches ours.
+                        if ( opcode == "SyncReq" ) then
+                           -- we received a request for sync. send our database.
+                           RaidMaker_sendUpdateToRemoteApps("SYNCDB");
+
+                           -- track who has been contributing.
+                           RaidMaker_updateRaidPlannerList_seen(sender)
+
+                        elseif ( opcode == "PingReq" ) then
+                           -- We received a ping request. Handle it.
+                           RaidMaker_generatePingResponse()
+                           
+                           -- track who has been contributing.
+                           RaidMaker_updateRaidPlannerList_seen(sender)
+   
+                        elseif ( opcode == "PingResp" ) then
+                           -- track who has been contributing.
+                           RaidMaker_updateRaidPlannerList_seen(sender)
+                           RaidMaker_updateRaidPlannerList_active(sender)
+                           
+                           -- We received a ping response. Handle it.
+                           RaidMaker_handlePingResponse(sender)
+                        end
+   
+                     end
+                  end
                end
             end
          end
       end
    end
+end
+
+function RaidMaker_updateRaidPlannerList_seen(player)
+   if ( player ~= nil ) then
+      if ( RaidMaker_RaidPlannerList == nil ) then
+         RaidMaker_RaidPlannerList = {}
+      end
+      
+      if ( RaidMaker_RaidPlannerList[player] == nil ) then
+         RaidMaker_RaidPlannerList[player] = {}; -- create an entry for this player. havent seen them before
+      end
+      
+      RaidMaker_RaidPlannerList[player].seen = 1;
+   end
+end
+
+function RaidMaker_updateRaidPlannerList_active(player)
+   if ( player ~= nil ) then
+      if ( RaidMaker_RaidPlannerList == nil ) then
+         RaidMaker_RaidPlannerList = {}
+      end
+      
+      if ( RaidMaker_RaidPlannerList[player] == nil ) then
+         RaidMaker_RaidPlannerList[player] = {}; -- create an entry for this player. havent seen them before
+      end
+      
+      RaidMaker_RaidPlannerList[player].active = 1;
+   end
+end
+
+function RaidMaker_generatePingResponse()
+   if ( raidPlayerDatabase ~= nil ) then
+      SendAddonMessage(RaidMaker_appSyncPrefix, RaidMaker_appInstanceId..":"..
+                                                RaidMaker_syncProtocolVersion..":"..
+                                                "PingResp:"..
+                                                raidPlayerDatabase.textureIndex, "GUILD" );
+   end
+end
+
+function RaidMaker_generatePingRequest()
+   if ( raidPlayerDatabase ~= nil ) then
+      SendAddonMessage(RaidMaker_appSyncPrefix, RaidMaker_appInstanceId..":"..
+                                                RaidMaker_syncProtocolVersion..":"..
+                                                "PingReq:"..
+                                                raidPlayerDatabase.textureIndex, "GUILD" );
+   end
+end
+
+function RaidMaker_handlePingResponse( player )
+   RaidMaker_updateRaidPlannerList_seen(player)
+   
+   if ( RaidMaker_RaidPlannerListDisplayActive == 1 ) then
+      RaidMaker_updateRaidPlannerList_active(player)
+      
+      local tipText;
+      tipText = RaidMaker_buildRaidPlannerTooltipText()
+
+      GameTooltip:SetText(tipText);
+   end
+end
+
+function RaidMaker_buildRaidPlannerTooltipText()
+   local charName,charFields;
+   local tipText = "Raid Planners with Sync:";
+   if ( RaidMaker_RaidPlannerList ~= nil ) then
+      for charName,charFields in pairs(RaidMaker_RaidPlannerList) do
+         if ( charFields.active ~= nil ) and
+            ( charFields.active == 1 ) then
+            tipText = tipText..green;
+         else
+            tipText = tipText..mediumGrey;
+         end
+         
+         tipText = tipText.."\n"..charName;
+      end
+   end
+   
+   return tipText;
 end
 
 function RaidMaker_sendUpdateToRemoteApps(playerName, actionId)
@@ -3072,13 +3187,40 @@ function RaidMaker_SetUpGuiFields()
                   GameTooltip_SetDefaultAnchor(GameTooltip, this)
                   GameTooltip:SetText("Clicking checkbox will request raid configuration from other raid planners\nwho have sync enabled and will auto-sync further raid configuration edits.");
                   GameTooltip:Show()
+                  RaidMaker_RaidPlannerListDisplayActive = 1;
+
+                  if ( RaidMaker_sync_enabled == 1 ) then
+                     if ( RaidMaker_RaidPlannerList ~= nil ) then
+                        local charName,charFields;
+                        for charName,charFields in pairs(RaidMaker_RaidPlannerList) do
+                           RaidMaker_RaidPlannerList[charName].active = 0; -- clear out the database for a fresh ping result set
+                        end
+                        local selfName = GetUnitName("player",true);
+                        RaidMaker_updateRaidPlannerList_active(selfName)
+                     end
+                     RaidMaker_generatePingRequest()
+                     
+                     local tipText;
+                     tipText = RaidMaker_buildRaidPlannerTooltipText()
+                     GameTooltip:SetText(tipText);
+
+                  end
                end)
    frame:SetChecked( RaidMaker_sync_enabled == 1 )
-   frame:SetScript("OnLeave", function() GameTooltip:Hide() end)
+   frame:SetScript("OnLeave", function() 
+                                 GameTooltip:Hide()
+                                 RaidMaker_RaidPlannerListDisplayActive = 0;
+                              end)
    frame:SetScript("OnClick", function(self,button)
       if ( self:GetChecked() ) then
          RaidMaker_sync_enabled = 1
-         SendAddonMessage(RaidMaker_appSyncPrefix, RaidMaker_appInstanceId..":"..RaidMaker_syncProtocolVersion, "GUILD" );
+         if ( raidPlayerDatabase ~= nil ) and
+            ( raidPlayerDatabase.textureIndex ~= nil ) then
+            SendAddonMessage(RaidMaker_appSyncPrefix, RaidMaker_appInstanceId..":"..
+                                                      RaidMaker_syncProtocolVersion..":"..
+                                                      "SyncReq:"..
+                                                      raidPlayerDatabase.textureIndex, "GUILD" );
+         end
       else
          RaidMaker_sync_enabled = 0;
       end
