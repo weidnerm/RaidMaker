@@ -434,8 +434,10 @@ function RaidMaker_buildRaidList(origDatabase)
 
       -- set up ourself as dps as a default.
       local selfName = GetUnitName("player",true);
-      newRaidDatabase.playerInfo[selfName].rDps = 1;
-      newRaidDatabase.playerInfo[selfName].groupNum = RaidMaker_currentGroupNumber;
+      if ( newRaidDatabase.playerInfo[selfName] ~= nil ) then
+         newRaidDatabase.playerInfo[selfName].rDps = 1;
+         newRaidDatabase.playerInfo[selfName].groupNum = RaidMaker_currentGroupNumber;
+      end
 
       --
       -- build up sync list (alphabetical sorted list of names)
@@ -479,7 +481,10 @@ function RaidMaker_GuildRosterUpdate(flag)
             name, rank, rankIndex, level, class, zone, note, officernote, online, status, classFileName = GetGuildRosterInfo(index);
 
             -- build guild roster database so we can look up main chars
-            local startIndex,endIndex,nameOfMainChar = strfind(note, "%((.*)%)" );
+            local startIndex,endIndex,nameOfMainChar;
+            if ( note ~= nil ) then
+               startIndex,endIndex,nameOfMainChar = strfind(note, "%((.*)%)" );
+            end
             guildRosterInformation[name] = {}
             guildRosterInformation[name].rankIndex = rankIndex
             if ( online == 1 ) then
@@ -2431,22 +2436,24 @@ function RaidMaker_handle_PARTY_MEMBERS_CHANGED()
 
                   local role = UnitGroupRolesAssigned(name)
 
-                  if ( raidPlayerDatabase.playerInfo[name].tank == 1 ) and
-                     ( role ~= "TANK" ) then
-                     UnitSetRole(name,"TANK");
-                     allRolesCorrect = 0;
-                  elseif ( raidPlayerDatabase.playerInfo[name].heals == 1 ) and
-                         ( role ~= "HEALER" ) then
-                     UnitSetRole(name,"HEALER");
-                     allRolesCorrect = 0;
-                  elseif ( raidPlayerDatabase.playerInfo[name].mDps == 1 ) and
-                         ( role ~= "DAMAGER" ) then
-                     UnitSetRole(name,"DAMAGER");
-                     allRolesCorrect = 0;
-                  elseif ( raidPlayerDatabase.playerInfo[name].rDps == 1 ) and
-                         ( role ~= "DAMAGER" ) then
-                     UnitSetRole(name,"DAMAGER");
-                     allRolesCorrect = 0;
+                  if ( raidPlayerDatabase.playerInfo[name] ~= nil ) then
+                     if ( raidPlayerDatabase.playerInfo[name].tank == 1 ) and
+                        ( role ~= "TANK" ) then
+                        UnitSetRole(name,"TANK");
+                        allRolesCorrect = 0;
+                     elseif ( raidPlayerDatabase.playerInfo[name].heals == 1 ) and
+                            ( role ~= "HEALER" ) then
+                        UnitSetRole(name,"HEALER");
+                        allRolesCorrect = 0;
+                     elseif ( raidPlayerDatabase.playerInfo[name].mDps == 1 ) and
+                            ( role ~= "DAMAGER" ) then
+                        UnitSetRole(name,"DAMAGER");
+                        allRolesCorrect = 0;
+                     elseif ( raidPlayerDatabase.playerInfo[name].rDps == 1 ) and
+                            ( role ~= "DAMAGER" ) then
+                        UnitSetRole(name,"DAMAGER");
+                        allRolesCorrect = 0;
+                     end
                   end
                end
 
