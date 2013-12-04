@@ -1097,12 +1097,10 @@ RaidMaker_testTrialNum = RaidMaker_testTrialNum +1;
    -- Check if another player won something
    startIndex,endIndex,playerName,itemLink = strfind(message, "(%a+) receives loot: (.*)." );
    if (playerName == nil ) then
-print("not another player");
 
       -- wasnt someone else getting loot. check if it was us.
       startIndex,endIndex,itemLink = strfind(message, "You receive loot: (.*)." );
       if (itemLink ~= nil ) then
-print("itemLink not nil. its. "..itemLink);
          playerName = GetUnitName("player",true);
       end
    end
