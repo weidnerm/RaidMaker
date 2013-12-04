@@ -129,6 +129,9 @@ function RaidMaker_Handler(msg)
       RaidMaker_MainForm:Show();
    elseif (msg == "hide") then
       RaidMaker_MainForm:Hide();
+   elseif (msg == "center") then
+      RaidMaker_MainForm:ClearAllPoints()
+      RaidMaker_MainForm:SetPoint("CENTER", UIParent, "CENTER",0,0)
    elseif (msg == "text") then
       -- for testing purposes. can be deleted.
       RaidMaker_TabPage1_SampleTextTab1_GroupedState_1:SetText(red.."not");
@@ -1126,10 +1129,10 @@ end
 
 function RaidMaker_addLootEntryToLootLog(playerName, itemId, itemLink)
    local loggedEntryIndex;
-   local startIndex,endIndex,itemName strfind(itemLink,"%[(.*)%]");
-   local startIndex,endIndex,itemName strfind(itemLink,"(%d+):");
---print("itemLink="..itemLink)
---print("itemName="..itemName)
+   local startIndex1,endIndex1,itemNameText = strfind(itemLink, "%[(.*)%]");
+if (itemName1 ~= nil) then
+   print("itemName="..itemName1);
+end
 
    loggedEntryIndex = #RaidMaker_lootLogData+1;
    RaidMaker_lootLogData[loggedEntryIndex] = {};  -- make it a structure so we can put some fields in.
@@ -1137,7 +1140,7 @@ function RaidMaker_addLootEntryToLootLog(playerName, itemId, itemLink)
    RaidMaker_lootLogData[loggedEntryIndex].playerName = playerName;
    RaidMaker_lootLogData[loggedEntryIndex].epocTime = time();
    RaidMaker_lootLogData[loggedEntryIndex].itemId = tonumber( itemId );
-   RaidMaker_lootLogData[loggedEntryIndex].itemName = itemName;
+   RaidMaker_lootLogData[loggedEntryIndex].itemName = itemNameText;
    RaidMaker_lootLogData[loggedEntryIndex].rollValue = 0;
 --   RaidMaker_lootLogData[loggedEntryIndex].rollLog = RaidMaker_RollLog;
    
