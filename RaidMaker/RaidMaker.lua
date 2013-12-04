@@ -1,5 +1,5 @@
 -- ****************************************************
--- * DECLARE VARIABLES * 
+-- * DECLARE VARIABLES *
 -- ****************************************************
 local darkGrey   = "|c00252525";
 local mediumGrey = "|c00707070";
@@ -36,9 +36,12 @@ local RaidMaker_appSyncPrefix = "DbtRs";
 local RaidMaker_sync_enabled;
 local previousGuildRosterUpdateTime = 0
 local RaidMaker_syncIndexToNameTable = {};
-local RaidMaker_syncProtocolVersion = 3
+local RaidMaker_syncProtocolVersion = 4
 local RaidMaker_RaidPlannerList = {}
 local RaidMaker_RaidPlannerListDisplayActive = 0;
+local RaidMaker_GroupNumber_ButtonObject;
+local RaidMaker_GroupNumber_FontStringObject;
+local RaidMaker_currentGroupNumber = 1;
 
 -- change to use the array instead of these locals
 local classColorDeathKnight   = "|c00C41F3B";
@@ -79,12 +82,12 @@ local CALENDAR_WEEKDAY_NAMES = {
 
 
 -- ****************************************************
--- * ON_LOAD COMMANDS * 
+-- * ON_LOAD COMMANDS *
 -- ****************************************************
 -- * Add any code that needs to be read OnLoad in the section below; for example,
 -- * add or delete load messages, and add slash commands here.
 --
--- * The first function below prints a small notification in chat to 
+-- * The first function below prints a small notification in chat to
 -- * let you know that the addon successfully loaded.
 -- * useful components: how to add load message, pop up error messages, and set slash commands
 --
@@ -100,28 +103,28 @@ function RaidMaker_OnLoad()
    SLASH_RAIDMAKERMAINCOMMAND1 = "/rm";
 
    RaidMaker_SetUpGuiFields();
-   
+
    RaidMaker_DisplayLootDatabase();
 end
 
 
 
 -- ****************************************************
---   * SLASH HANDLER * 
+--   * SLASH HANDLER *
 -- ****************************************************
--- * The slash handler acts as a link between slash commands and functions, reinstate if you are 
--- * interested in seeing this mod's XML frames. If you have the frame code in the 
+-- * The slash handler acts as a link between slash commands and functions, reinstate if you are
+-- * interested in seeing this mod's XML frames. If you have the frame code in the
 -- * RaidMaker.xml file active (default), this command opens the GUI template when activated.
--- * useful components: strip/interpret command from slash input, activate GUI window, colorize 
+-- * useful components: strip/interpret command from slash input, activate GUI window, colorize
 -- * chat text, output text to chat frame, set variable via slash command and report the change in chat
 --
-function RaidMaker_Handler(msg) 
-   if (msg == "gui") then 
+function RaidMaker_Handler(msg)
+   if (msg == "gui") then
       RaidMaker_MainForm:Show();
-      
+
    elseif (msg == "cal") then
       RaidMaker_HandleFetchCalButton();
-      
+
    elseif (msg == "toggle") then
       if ( RaidMaker_MainForm:IsShown() == 1 ) then
          RaidMaker_MainForm:Hide();
@@ -144,26 +147,26 @@ function RaidMaker_Handler(msg)
 --
 --      for index=1,numGuildMembers do
 --         local tempLine = ""
---         
+--
 --         name, rank, rankIndex, level, class, zone, note, officernote, online, status, classFileName = GetGuildRosterInfo(index);
 --
---         tempLine = name         
---         tempLine = tempLine.."::"..rank         
---         tempLine = tempLine.."::"..rankIndex    
---         tempLine = tempLine.."::"..level        
---         tempLine = tempLine.."::"..class        
-----         tempLine = tempLine.."::"..zone         
---         tempLine = tempLine.."::"..note         
---         tempLine = tempLine.."::"..officernote  
-----         tempLine = tempLine.."::"..online       
-----         tempLine = tempLine.."::"..status       
+--         tempLine = name
+--         tempLine = tempLine.."::"..rank
+--         tempLine = tempLine.."::"..rankIndex
+--         tempLine = tempLine.."::"..level
+--         tempLine = tempLine.."::"..class
+----         tempLine = tempLine.."::"..zone
+--         tempLine = tempLine.."::"..note
+--         tempLine = tempLine.."::"..officernote
+----         tempLine = tempLine.."::"..online
+----         tempLine = tempLine.."::"..status
 --         tempLine = tempLine.."::"..classFileName
 --         RaidMaker_GuildRoster[index] = tempLine;
 --      end
 --   elseif (msg == "guildinfo") then
 --      local index;
 --      local numRanks = GuildControlGetNumRanks();
---      
+--
 --      for index=1,numRanks do
 --         print(index.." "..GuildControlGetRankName(index) )
 --      end
@@ -180,11 +183,11 @@ function RaidMaker_Handler(msg)
       RaidMaker_TabPage1_SampleTextTab1_rDpsButton_1:SetText(yellow.."X");
       RaidMaker_TabPage1_SampleTextTab1_Class_1:SetText(yellow.."DRUID");
 
---   elseif (msg == "secure on") then 
+--   elseif (msg == "secure on") then
 --      RaidMaker_BuffFrame:Show();
---   elseif (msg == "secure off") then 
+--   elseif (msg == "secure off") then
 --      RaidMaker_BuffFrame:Hide();
---   elseif (msg == "") or (msg == "help") then 
+--   elseif (msg == "") or (msg == "help") then
 --      DEFAULT_CHAT_FRAME:AddMessage(yellow.."RaidMaker: '/at gui on' to show GUI template");
 --      DEFAULT_CHAT_FRAME:AddMessage(yellow.."RaidMaker: '/at secure on' to show secure button, '/at secure off' to hide");
 --      DEFAULT_CHAT_FRAME:AddMessage(yellow.."RaidMaker: use '/click RaidMaker_BuffFrame' to activate the button via macro");
@@ -194,33 +197,33 @@ function RaidMaker_Handler(msg)
    elseif (msg == "test") then
       local tempPlayerName;
       local tempOnlineText;
-      
+
       tempPlayerName = "Artera";
       tempOnlineText = RaidMaker_GetOnlineStatusText(tempPlayerName);
       print(white..tempPlayerName.." is "..tempOnlineText);
-      
+
       tempPlayerName = "Sanydrewstg";
       tempOnlineText = RaidMaker_GetOnlineStatusText(tempPlayerName);
       print(white..tempPlayerName.." is "..tempOnlineText);
-      
+
       tempPlayerName = "Tyrlidd";
       tempOnlineText = RaidMaker_GetOnlineStatusText(tempPlayerName);
       print(white..tempPlayerName.." is "..tempOnlineText);
-      
+
       tempPlayerName = "Cherdrion";
       tempOnlineText = RaidMaker_GetOnlineStatusText(tempPlayerName);
       print(white..tempPlayerName.." is "..tempOnlineText);
-      
+
       tempPlayerName = "Falfurien";
       tempOnlineText = RaidMaker_GetOnlineStatusText(tempPlayerName);
       print(white..tempPlayerName.." is "..tempOnlineText);
-      
-      
-      
+
+
+
    elseif ( msg ~= nil ) then
       local tempOnlineText = RaidMaker_GetOnlineStatusText(msg);
       print(tempOnlineText);
-   else 
+   else
       print(green.."RaidMaker:"..white.." Arguments to "..yellow.."/rm");
       print(yellow.." show - "..white.."Shows the main window.");
       print(yellow.." hide - "..white.."Hides the main window.");
@@ -229,9 +232,9 @@ function RaidMaker_Handler(msg)
       print(yellow.." cal - "..white.."Fetches the most recently opened Calendar Event.");
       print(yellow.." atlog - "..white.."Manually record log of online player zones.");
    end
-   
-   
-   
+
+
+
 end
 
 function RaidMaker_repeatLoggedRaid(historyIndex)
@@ -239,18 +242,18 @@ function RaidMaker_repeatLoggedRaid(historyIndex)
    if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
       if ( raidPlayerDatabase.playerInfo ~= nil ) then
          if ( historyIndex <= #RaidMaker_RaidParticipantLog) then
-            
+
             -- clear out our roles.
             RaidMaker_ClearAllRolesWithSync();
 
-            
+
             local menuPlayerNameInfo
             for charName, menuPlayerNameInfo in pairs(RaidMaker_RaidParticipantLog[historyIndex].playerInfo) do
                if ( menuPlayerNameInfo.tank == 1 ) or
                   ( menuPlayerNameInfo.heals == 1 ) or
                   ( menuPlayerNameInfo.mDps == 1 ) or
                   ( menuPlayerNameInfo.rDps == 1 ) then
-      
+
                   if ( raidPlayerDatabase.playerInfo[charName] ~= nil ) then
                      if ( menuPlayerNameInfo.tank == 1 ) then
                         raidPlayerDatabase.playerInfo[charName].tank = 1;
@@ -268,12 +271,12 @@ function RaidMaker_repeatLoggedRaid(historyIndex)
                         raidPlayerDatabase.playerInfo[charName].rDps = 1;
                         RaidMaker_sendUpdateToRemoteApps(charName, "R");
                      end
-                     
+
 
                   end
                end
             end
-            
+
             RaidMaker_DisplayDatabase();
 
          end
@@ -282,7 +285,7 @@ function RaidMaker_repeatLoggedRaid(historyIndex)
 end
 
 
-function RaidMaker_buildRaidList(origDatabase) 
+function RaidMaker_buildRaidList(origDatabase)
    -- start a new database from scratch
    local newRaidDatabase = {};
    local copyRaidPlayerSettings = false;
@@ -291,9 +294,9 @@ function RaidMaker_buildRaidList(origDatabase)
 
    -- get the raid title
    local title, description, creator, eventType, repeatOption, maxSize, textureIndex, weekday, month, day, year, hour, minute, lockoutWeekday, lockoutMonth, lockoutDay, lockoutYear, lockoutHour, lockoutMinute, locked, autoApprove, pendingInvite, inviteStatus, inviteType, calendarType = CalendarGetEventInfo();
-  
+
    if ( title ~= nil ) then
-   
+
       newRaidDatabase.month  = month;
       newRaidDatabase.day    = day;
       newRaidDatabase.year   = year;
@@ -302,12 +305,12 @@ function RaidMaker_buildRaidList(origDatabase)
       newRaidDatabase.textureIndex = textureIndex;
 
       newRaidDatabase.title = title;
-      
+
       if ( eventType == 1 ) or ( eventType == 2 ) then -- 1=Raid dungeon; 2=Five-player dungeon
          local raidName, icon, expansion, players= select(1+4*(textureIndex-1), CalendarEventGetTextures(eventType));
          newRaidDatabase.title = newRaidDatabase.title.." - "..raidName.."("..players..")";
       end
-      
+
       if ( origDatabase ~= nil ) then
          if ( newRaidDatabase.title  == origDatabase.title  ) and
             ( newRaidDatabase.month  == origDatabase.month  ) and
@@ -319,36 +322,37 @@ function RaidMaker_buildRaidList(origDatabase)
             copyRaidPlayerSettings = true;
          end
       end
-      
+
       newRaidDatabase.classCount = {};
-      
+
       -- clear out the classcount field for all known classes (use RAID_CLASS_COLORS array for list of classes)
       local className, colorValue;
       for className,colorValue in pairs(RAID_CLASS_COLORS) do
-         newRaidDatabase.classCount[className] = 0;  
-      end   
-   
+         newRaidDatabase.classCount[className] = 0;
+      end
+
       local numInvites;
       numInvites = CalendarEventGetNumInvites();
-      
+
       newRaidDatabase.playerInfo = {}; -- create empty fields
-      
+
       local index;
       local name, level, className, classFileName, inviteStatus, modStatus, inviteIsMine, inviteType;
       for index=1,numInvites do
          name, level, className, classFileName, inviteStatus, modStatus, inviteIsMine, inviteType = CalendarEventGetInvite(index);
-   
+
          newRaidDatabase.playerInfo[name] = {}; -- create empty fields
          newRaidDatabase.playerInfo[name].inviteStatus = inviteStatus; -- INVITED = 1;ACCEPTED = 2;DECLINED = 3;CONFIRMED = 4;OUT = 5;STANDBY = 6;SIGNEDUP = 7;NOT_SIGNEDUP = 8;TENTATIVE = 9
          newRaidDatabase.playerInfo[name].classFilename = classFileName; -- "WARRIOR", "PRIEST", etc
-         
+
          newRaidDatabase.playerInfo[name].tank = 0;
          newRaidDatabase.playerInfo[name].heals = 0;
          newRaidDatabase.playerInfo[name].mDps = 0;
          newRaidDatabase.playerInfo[name].rDps = 0;
          newRaidDatabase.playerInfo[name].online = "";
          newRaidDatabase.playerInfo[name].syncIndex = 0;
-         
+         newRaidDatabase.playerInfo[name].groupNum = 255;
+
          local su_weekday, su_month, su_day, su_year, su_hour, su_minute = CalendarEventGetInviteResponseTime(index);
          newRaidDatabase.playerInfo[name].signupInfo = {};
 
@@ -369,7 +373,7 @@ function RaidMaker_buildRaidList(origDatabase)
                newRaidDatabase.playerInfo[name].online = origDatabase.playerInfo[name].online;
             end
          end
-   
+
          newRaidDatabase.playerInfo[name].inGroup = 0;
          if ( GetNumRaidMembers() == 0 ) then
             if (UnitInParty(name) ) then
@@ -380,18 +384,19 @@ function RaidMaker_buildRaidList(origDatabase)
                newRaidDatabase.playerInfo[name].inGroup = 1;
             end
          end
-         
+
          newRaidDatabase.playerInfo[name].guildRankIndex = 100; -- big number. means uninitialized
-         
+
          newRaidDatabase.playerInfo[name].partyInviteDeferred = 0; -- no party invite queued at this point.
-   
+
          RaidMaker_syncIndexToNameTable[index] = name; -- build up the list of names. will be sorted later.
       end
-      
+
       -- set up ourself as dps as a default.
       local selfName = GetUnitName("player",true);
       newRaidDatabase.playerInfo[selfName].rDps = 1;
-      
+      newRaidDatabase.playerInfo[selfName].groupNum = RaidMaker_currentGroupNumber;
+
       --
       -- build up sync list (alphabetical sorted list of names)
       --
@@ -404,18 +409,18 @@ function RaidMaker_buildRaidList(origDatabase)
       end
 
       GuildRoster(); -- trigger a GUILD_ROSTER_UPDATE event so we can get the online/offline status of players.
-   
+
       RaidMaker_GuildRosterUpdate(); -- try to querry database
-      
+
    else
       print(red.."RaidMaker error: "..white.."Must open an event through the Calendar first.");
    end
-      
+
    local selfName = GetUnitName("player",true);
    RaidMaker_RaidPlannerList = {};  -- clear out the planner participant list.
    RaidMaker_updateRaidPlannerList_seen(selfName)
    RaidMaker_updateRaidPlannerList_active(selfName)
-   
+
    return newRaidDatabase;
 end
 
@@ -423,16 +428,16 @@ function RaidMaker_GuildRosterUpdate(flag)
    -- timestamp the update.
    previousGuildRosterUpdateTime = time();
    guildRosterInformation = {}
-   
+
    if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
       if ( raidPlayerDatabase.playerInfo ~= nil ) then
-            
+
          local name,rank,rankIndex,level,class,zone,note,officernote,online,status,classFileName;
          local numGuildMembers = GetNumGuildMembers(true); --includeOffline
 
          for index=1,numGuildMembers do
             name, rank, rankIndex, level, class, zone, note, officernote, online, status, classFileName = GetGuildRosterInfo(index);
-            
+
             -- build guild roster database so we can look up main chars
             local startIndex,endIndex,nameOfMainChar = strfind(note, "%((.*)%)" );
             guildRosterInformation[name] = {}
@@ -443,7 +448,7 @@ function RaidMaker_GuildRosterUpdate(flag)
                guildRosterInformation[name].online = 0;
             end
             guildRosterInformation[name].nameOfMainChar = nameOfMainChar
-            
+
             -- update the raid database with this guild member information
             if ( raidPlayerDatabase.playerInfo[name] ~= nil ) then
                raidPlayerDatabase.playerInfo[name].zone           = zone;
@@ -456,7 +461,7 @@ function RaidMaker_GuildRosterUpdate(flag)
          for charName,charFields in pairs(guildRosterInformation) do
             if ( guildRosterInformation[charName] ~= nil ) then -- make sure the player is in the guild
                local nameOfMainChar = guildRosterInformation[charName].nameOfMainChar
-               
+
                if ( nameOfMainChar ~= nil ) then -- make sure the char has a main.
                   if ( guildRosterInformation[nameOfMainChar] ~= nil ) then -- make sure the main is in the guild (might be some other text)
 
@@ -475,40 +480,40 @@ function RaidMaker_GuildRosterUpdate(flag)
                         guildRosterInformation[nameOfMainChar].nameOfAlts = {}; -- guarantee that we have a structure to place our field
                      end
                      guildRosterInformation[nameOfMainChar].nameOfAlts[charName] = true;
-                     
+
                   end
                end
             end
          end
-         
+
          -- update online status text.
          for charName,charFields in pairs(raidPlayerDatabase.playerInfo) do
             raidPlayerDatabase.playerInfo[charName].online = RaidMaker_GetOnlineStatusText(charName);
          end
 
-         -- refresh screen         
+         -- refresh screen
          RaidMaker_DisplayDatabase();
 
       end
-      
+
    end
 
 end
 
 function RaidMaker_GetOnlineStatusText(player)
-   
+
 --( raidPlayerDatabase ~= nil ) and
 --      ( raidPlayerDatabase.playerInfo ~= nil ) and
 --      ( raidPlayerDatabase.playerInfo[player] ~= nil ) and
---         
-   
+--
+
    if ( guildRosterInformation ~= nil ) and
       ( guildRosterInformation[player] ~= nil ) then
       -- check if player to be checked is online (GREEN)
       if ( guildRosterInformation[player].online == 1 ) then
          return green.."online";
       end
-      
+
       -- check if player to be checked is on main (yellow)
       local nameOfMainChar = guildRosterInformation[player].nameOfMainChar
       if ( nameOfMainChar ~= nil ) then -- make sure the char has a main.
@@ -518,7 +523,7 @@ function RaidMaker_GetOnlineStatusText(player)
             end
          end
       end
-   
+
       -- check if player to be checked is alt logged in on alt (yellow)
       if ( guildRosterInformation[player] ~= nil ) then -- make sure the main is in the guild (might be some other text)
          if ( guildRosterInformation[player].nameOfAlts ~= nil ) then
@@ -530,12 +535,12 @@ function RaidMaker_GetOnlineStatusText(player)
             end
          end
       end
-      
+
       -- check if player to be checked is alt logged in on alt (yellow)
       local nameOfMainChar = guildRosterInformation[player].nameOfMainChar
       if ( nameOfMainChar ~= nil ) then -- make sure the char has a main.
          if ( guildRosterInformation[nameOfMainChar] ~= nil ) then -- make sure the main is in the guild (might be some other text)
-   
+
             if ( guildRosterInformation[nameOfMainChar].nameOfAlts ~= nil ) then
                local altName,charFields;
                for altName,charFields in pairs(guildRosterInformation[nameOfMainChar].nameOfAlts) do
@@ -547,9 +552,9 @@ function RaidMaker_GetOnlineStatusText(player)
          end
       end
    end
-   
+
    return mediumGrey.."offline";
-end 
+end
 
 
 function RaidMaker_DisplayDatabase()
@@ -560,9 +565,9 @@ function RaidMaker_DisplayDatabase()
    if ( raidPlayerDatabase.title ~= nil ) then
       RaidMaker_TabPage1_RaidIdText:SetText(white..raidPlayerDatabase.title);
    end
-   
+
    RaidMaker_TextTableUpdate(RaidMaker_VSlider:GetValue());
-   
+
    -- update the metrics.
    local groupedCountForRaid = 0;
    local onlineCountForRaid = 0;
@@ -571,14 +576,14 @@ function RaidMaker_DisplayDatabase()
    local mDpsCountForRaid = 0;
    local rDpsCountForRaid = 0;
    local playerCountForRaid = 0;
-   
+
    for className,colorValue in pairs(RAID_CLASS_COLORS) do
-      raidPlayerDatabase.classCount[className] = 0;  
-   end   
-   
+      raidPlayerDatabase.classCount[className] = 0;
+   end
+
    for rowIndex=1,#playerSortedList do
       charName = playerSortedList[rowIndex];
-      
+
       if ( raidPlayerDatabase.playerInfo[charName].tank == 1 ) or
          ( raidPlayerDatabase.playerInfo[charName].heals == 1 ) or
          ( raidPlayerDatabase.playerInfo[charName].mDps == 1 ) or
@@ -590,12 +595,12 @@ function RaidMaker_DisplayDatabase()
          end
 
          playerCountForRaid  = playerCountForRaid + 1;
-         
+
          if ( raidPlayerDatabase.playerInfo[charName].classFilename ~= nil) then
             raidPlayerDatabase.classCount[raidPlayerDatabase.playerInfo[charName].classFilename] =  -- add up our class totals
             raidPlayerDatabase.classCount[raidPlayerDatabase.playerInfo[charName].classFilename] + 1;
          end
-      end   
+      end
 
       if ( raidPlayerDatabase.playerInfo[charName].tank == 1 ) then
          tankCountForRaid  = tankCountForRaid + 1;
@@ -616,12 +621,12 @@ function RaidMaker_DisplayDatabase()
       if ( raidPlayerDatabase.playerInfo[charName].inGroup == 1 ) then
          groupedCountForRaid  = groupedCountForRaid + 1;
       end
-         
-          
+
+
    end
-   
-   
-   
+
+
+
    -- Put the various totals into the right boxes.
    if ( groupedCountForRaid == 10 ) or ( groupedCountForRaid == 25 ) then
       RaidMaker_TabPage1_SampleTextTab1_GroupedState_21:SetText(green..groupedCountForRaid);
@@ -644,7 +649,7 @@ function RaidMaker_DisplayDatabase()
    RaidMaker_TabPage1_SampleTextTab1_mDpsButton_21:SetText(mDpsCountForRaid);
    RaidMaker_TabPage1_SampleTextTab1_rDpsButton_21:SetText(rDpsCountForRaid);
    RaidMaker_TabPage1_SampleTextTab1_Class_21:SetText(" ");
-   
+
    -- update class count totals
    if ( raidPlayerDatabase.classCount["WARRIOR"] == 0) then
       RaidMaker_WarriorCount:SetText(mediumGrey..raidPlayerDatabase.classCount["WARRIOR"]);
@@ -671,45 +676,45 @@ function RaidMaker_DisplayDatabase()
    else
       RaidMaker_HunterCount:SetText(green..raidPlayerDatabase.classCount["HUNTER"]);
    end
-   
+
    if ( raidPlayerDatabase.classCount["SHAMAN"] == 0) then
       RaidMaker_ShamanCount:SetText(mediumGrey..raidPlayerDatabase.classCount["SHAMAN"]);
    else
       RaidMaker_ShamanCount:SetText(green..raidPlayerDatabase.classCount["SHAMAN"]);
    end
-   
+
    if ( raidPlayerDatabase.classCount["PRIEST"] == 0) then
       RaidMaker_PriestCount:SetText(mediumGrey..raidPlayerDatabase.classCount["PRIEST"]);
    else
       RaidMaker_PriestCount:SetText(green..raidPlayerDatabase.classCount["PRIEST"]);
    end
-   
+
    if ( raidPlayerDatabase.classCount["WARLOCK"] == 0) then
       RaidMaker_WarlockCount:SetText(mediumGrey..raidPlayerDatabase.classCount["WARLOCK"]);
    else
       RaidMaker_WarlockCount:SetText(green..raidPlayerDatabase.classCount["WARLOCK"]);
    end
-   
+
    if ( raidPlayerDatabase.classCount["PALADIN"] == 0) then
       RaidMaker_PaladinCount:SetText(mediumGrey..raidPlayerDatabase.classCount["PALADIN"]);
    else
       RaidMaker_PaladinCount:SetText(green..raidPlayerDatabase.classCount["PALADIN"]);
    end
-   
+
    if ( raidPlayerDatabase.classCount["DEATHKNIGHT"] == 0) then
       RaidMaker_DeathknightCount:SetText(mediumGrey..raidPlayerDatabase.classCount["DEATHKNIGHT"]);
    else
       RaidMaker_DeathknightCount:SetText(green..raidPlayerDatabase.classCount["DEATHKNIGHT"]);
    end
-   
-   
+
+
    local sliderLimit;
    if ( #playerSortedList < 20 ) then
       sliderLimit = 19;
    else
       sliderLimit = #playerSortedList-19;
    end
-   
+
    -- set up the slider to match the list length.
    RaidMaker_VSlider:SetMinMaxValues(1, sliderLimit);
 
@@ -719,42 +724,42 @@ end
 function RaidMaker_buildPlayerListSort(inputDatabase)
    local playerCount = 1;
    local playerList = {};
-   
+
    for charName,charFields in pairs(inputDatabase.playerInfo) do
       playerList[playerCount] = charName;
-      
+
       playerCount = playerCount + 1;
    end
 
    return playerList;
-   
+
 end
 
 
 -- table to help sort by acceptance level, i.e. ACCEPTED,CONFIRMED,SIGNEDUP first.  then STANDBY,TENTATIVE.  then INVITED,NOT_SIGNEDUP. etc.
-local inviteSortOrder = 
+local inviteSortOrder =
 {
-  3, -- INVITED     
-  1, -- ACCEPTED    
-  4, -- DECLINED    
-  1, -- CONFIRMED   
-  4, -- OUT         
-  2, -- STANDBY     
-  1, -- SIGNEDUP    
+  3, -- INVITED
+  1, -- ACCEPTED
+  4, -- DECLINED
+  1, -- CONFIRMED
+  4, -- OUT
+  2, -- STANDBY
+  1, -- SIGNEDUP
   3, -- NOT_SIGNEDUP
-  2, -- TENTATIVE   
+  2, -- TENTATIVE
 };
 
 
 function RaidMaker_ascendInviteStatusOrder(a,b)
    -- a,b are player names.
-   
+
    if ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] < inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
       return true;
    elseif ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] > inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
       return false;
    end
-   
+
    if ( raidPlayerDatabase.playerInfo[a].signupInfo.year < raidPlayerDatabase.playerInfo[b].signupInfo.year ) then
       return true;
    elseif ( raidPlayerDatabase.playerInfo[a].signupInfo.year > raidPlayerDatabase.playerInfo[b].signupInfo.year ) then
@@ -790,26 +795,32 @@ end
 
 function RaidMaker_ascendTankOrder(a,b)
    -- a,b are player names.
-   
+
+   if ( raidPlayerDatabase.playerInfo[a].groupNum < raidPlayerDatabase.playerInfo[b].groupNum ) then
+      return true;
+   elseif ( raidPlayerDatabase.playerInfo[a].groupNum > raidPlayerDatabase.playerInfo[b].groupNum ) then
+      return false;
+   end
+
    if ( raidPlayerDatabase.playerInfo[a].tank > raidPlayerDatabase.playerInfo[b].tank ) then
       return true;
    elseif ( raidPlayerDatabase.playerInfo[a].tank < raidPlayerDatabase.playerInfo[b].tank ) then
       return false;
    end
-      
+
    if ( raidPlayerDatabase.playerInfo[a].heals > raidPlayerDatabase.playerInfo[b].heals ) then
       return true;
    elseif ( raidPlayerDatabase.playerInfo[a].heals < raidPlayerDatabase.playerInfo[b].heals ) then
       return false;
    end
-         
+
    if ( raidPlayerDatabase.playerInfo[a].mDps > raidPlayerDatabase.playerInfo[b].mDps ) then
       return true;
    elseif ( raidPlayerDatabase.playerInfo[a].mDps < raidPlayerDatabase.playerInfo[b].mDps ) then
       return false;
    end
 
-   if ( raidPlayerDatabase.playerInfo[a].rDps > raidPlayerDatabase.playerInfo[b].rDps ) then 
+   if ( raidPlayerDatabase.playerInfo[a].rDps > raidPlayerDatabase.playerInfo[b].rDps ) then
       return true;
    elseif ( raidPlayerDatabase.playerInfo[a].rDps < raidPlayerDatabase.playerInfo[b].rDps ) then
       return false;
@@ -820,13 +831,19 @@ function RaidMaker_ascendTankOrder(a,b)
    elseif ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] > inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
       return false;
    end
-   
+
    return a<b;
 end
 
 function RaidMaker_ascendHealOrder(a,b)
    -- a,b are player names.
-   
+
+   if ( raidPlayerDatabase.playerInfo[a].groupNum < raidPlayerDatabase.playerInfo[b].groupNum ) then
+      return true;
+   elseif ( raidPlayerDatabase.playerInfo[a].groupNum > raidPlayerDatabase.playerInfo[b].groupNum ) then
+      return false;
+   end
+
    if ( raidPlayerDatabase.playerInfo[a].heals > raidPlayerDatabase.playerInfo[b].heals ) then
       return true;
    elseif ( raidPlayerDatabase.playerInfo[a].heals < raidPlayerDatabase.playerInfo[b].heals ) then
@@ -838,7 +855,7 @@ function RaidMaker_ascendHealOrder(a,b)
    elseif ( raidPlayerDatabase.playerInfo[a].tank < raidPlayerDatabase.playerInfo[b].tank ) then
       return false;
    end
-         
+
    if ( raidPlayerDatabase.playerInfo[a].mDps > raidPlayerDatabase.playerInfo[b].mDps ) then
       return true;
    elseif ( raidPlayerDatabase.playerInfo[a].mDps < raidPlayerDatabase.playerInfo[b].mDps ) then
@@ -862,7 +879,13 @@ end
 
 function RaidMaker_ascend_mDpsOrder(a,b)
    -- a,b are player names.
-   
+
+   if ( raidPlayerDatabase.playerInfo[a].groupNum < raidPlayerDatabase.playerInfo[b].groupNum ) then
+      return true;
+   elseif ( raidPlayerDatabase.playerInfo[a].groupNum > raidPlayerDatabase.playerInfo[b].groupNum ) then
+      return false;
+   end
+
    if ( raidPlayerDatabase.playerInfo[a].mDps > raidPlayerDatabase.playerInfo[b].mDps ) then
       return true;
    elseif ( raidPlayerDatabase.playerInfo[a].mDps < raidPlayerDatabase.playerInfo[b].mDps ) then
@@ -874,19 +897,19 @@ function RaidMaker_ascend_mDpsOrder(a,b)
    elseif ( raidPlayerDatabase.playerInfo[a].rDps < raidPlayerDatabase.playerInfo[b].rDps ) then
       return false;
    end
-   
+
    if ( raidPlayerDatabase.playerInfo[a].tank > raidPlayerDatabase.playerInfo[b].tank ) then
       return true;
    elseif ( raidPlayerDatabase.playerInfo[a].tank < raidPlayerDatabase.playerInfo[b].tank ) then
       return false;
    end
-   
+
    if ( raidPlayerDatabase.playerInfo[a].heals > raidPlayerDatabase.playerInfo[b].heals ) then
       return true;
    elseif ( raidPlayerDatabase.playerInfo[a].heals < raidPlayerDatabase.playerInfo[b].heals ) then
       return false;
    end
-   
+
    if ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] < inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
       return true;
    elseif ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] > inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
@@ -898,13 +921,19 @@ end
 
 function RaidMaker_ascend_rDpsOrder(a,b)
    -- a,b are player names.
-   
+
+   if ( raidPlayerDatabase.playerInfo[a].groupNum < raidPlayerDatabase.playerInfo[b].groupNum ) then
+      return true;
+   elseif ( raidPlayerDatabase.playerInfo[a].groupNum > raidPlayerDatabase.playerInfo[b].groupNum ) then
+      return false;
+   end
+
    if ( raidPlayerDatabase.playerInfo[a].rDps > raidPlayerDatabase.playerInfo[b].rDps ) then
       return true;
    elseif ( raidPlayerDatabase.playerInfo[a].rDps < raidPlayerDatabase.playerInfo[b].rDps ) then
       return false;
    end
-   
+
    if ( raidPlayerDatabase.playerInfo[a].mDps > raidPlayerDatabase.playerInfo[b].mDps ) then
       return true;
    elseif ( raidPlayerDatabase.playerInfo[a].mDps < raidPlayerDatabase.playerInfo[b].mDps ) then
@@ -916,13 +945,13 @@ function RaidMaker_ascend_rDpsOrder(a,b)
    elseif ( raidPlayerDatabase.playerInfo[a].tank < raidPlayerDatabase.playerInfo[b].tank ) then
       return false;
    end
-   
+
    if ( raidPlayerDatabase.playerInfo[a].heals > raidPlayerDatabase.playerInfo[b].heals ) then
       return true;
    elseif ( raidPlayerDatabase.playerInfo[a].heals < raidPlayerDatabase.playerInfo[b].heals ) then
       return false;
    end
-   
+
    if ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] < inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
       return true;
    elseif ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] > inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
@@ -934,13 +963,13 @@ end
 
 function RaidMaker_ascendClassOrder(a,b)
    -- a,b are player names.
-   
+
    if ( raidPlayerDatabase.playerInfo[a].classFilename < raidPlayerDatabase.playerInfo[b].classFilename ) then
       return true;
    elseif ( raidPlayerDatabase.playerInfo[a].classFilename > raidPlayerDatabase.playerInfo[b].classFilename ) then
       return false;
    end
-   
+
    return a<b;
 end
 
@@ -951,12 +980,12 @@ end
 
 function RaidMaker_ascendOnlineStateOrder(a,b)
    -- a,b are player names.
-   
+
 --   if ( guildRosterInformation[a] ~= nil ) and
 --      ( guildRosterInformation[b] ~= nil ) then
    local status_a = strsub(raidPlayerDatabase.playerInfo[a].online, 10 ); -- sort without the color information.
    local status_b = strsub(raidPlayerDatabase.playerInfo[b].online, 10 )
-   
+
       if ( status_a > status_b ) then
          return true;
       elseif ( status_a < status_b ) then
@@ -980,7 +1009,7 @@ end
 
 function RaidMaker_ascendGroupedStateOrder(a,b)
    -- a,b are player names.
-   
+
    if ( raidPlayerDatabase.playerInfo[a].inGroup > raidPlayerDatabase.playerInfo[b].inGroup ) then
       return true;
    elseif ( raidPlayerDatabase.playerInfo[a].inGroup < raidPlayerDatabase.playerInfo[b].inGroup ) then
@@ -1000,7 +1029,7 @@ end
 
 function RaidMaker_OnMouseWheel(self, delta)
    local current = RaidMaker_VSlider:GetValue()
-   
+
    if (delta<0) and (current<#playerSortedList-19) then
       RaidMaker_VSlider:SetValue(current+1)
    elseif (delta>0) and (current>1) then
@@ -1011,7 +1040,7 @@ end
 
 function RaidMaker_OnMouseWheelRollLog(self, delta)
    local current = RaidMaker_RollLog_Slider:GetValue()
-   
+
    if (delta<0) and (current<#RaidMaker_sortedRollList-9) then
       RaidMaker_RollLog_Slider:SetValue(current+1)
    elseif (delta>0) and (current>1) then
@@ -1021,7 +1050,7 @@ end
 
 function RaidMaker_OnMouseWheelLootLog(self, delta)
    local current = RaidMaker_LootLog_Slider:GetValue()
-   
+
    if (delta<0) and (current<#RaidMaker_lootLogData-9) then
       RaidMaker_LootLog_Slider:SetValue(current+1)
    elseif (delta>0) and (current>1) then
@@ -1045,14 +1074,14 @@ function RaidMaker_TextTableUpdate()
       else
          textBox:SetText(green.."Raid");
       end
-      
+
       local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_OnlineState_"..currentRow);
       if ( raidPlayerDatabase.playerInfo[charName].online ~= nil ) then
          textBox:SetText(raidPlayerDatabase.playerInfo[charName].online);
       else
          textBox:SetText(mediumGrey.."offline");
       end
-      
+
       local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_InviteStatus_"..currentRow);
       if ( raidPlayerDatabase.playerInfo[charName].inviteStatus == 1 ) then
          textBox:SetText(mediumGrey.."Invited");
@@ -1075,36 +1104,42 @@ function RaidMaker_TextTableUpdate()
       else
          textBox:SetText(darkGrey.."unknown");
       end
-      
+
       local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_PlayerName_"..currentRow);
       textBox:SetText(white..charName);
+
+      local playerSelectionText = "X";
+      if ( raidPlayerDatabase.playerInfo[charName].groupNum ~= nil ) and
+         ( raidPlayerDatabase.playerInfo[charName].groupNum ~= RaidMaker_currentGroupNumber ) then
+         playerSelectionText = raidPlayerDatabase.playerInfo[charName].groupNum;
+      end
 
       local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_TankButton_"..currentRow);
       if ( raidPlayerDatabase.playerInfo[charName].tank == 0 ) then
          textBox:SetText(" ");
       else
-         textBox:SetText(yellow.."X");
+         textBox:SetText(yellow..playerSelectionText);
       end
 
       local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_HealButton_"..currentRow);
       if ( raidPlayerDatabase.playerInfo[charName].heals == 0 ) then
          textBox:SetText(" ");
       else
-         textBox:SetText(yellow.."X");
+         textBox:SetText(yellow..playerSelectionText);
       end
 
       local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_mDpsButton_"..currentRow);
       if ( raidPlayerDatabase.playerInfo[charName].mDps == 0 ) then
          textBox:SetText(" ");
       else
-         textBox:SetText(yellow.."X");
+         textBox:SetText(yellow..playerSelectionText);
       end
 
       local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_rDpsButton_"..currentRow);
       if ( raidPlayerDatabase.playerInfo[charName].rDps == 0 ) then
          textBox:SetText(" ");
       else
-         textBox:SetText(yellow.."X");
+         textBox:SetText(yellow..playerSelectionText);
       end
 
       local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_Class_"..currentRow);
@@ -1139,39 +1174,60 @@ function RaidMaker_TextTableUpdate()
       end
 
    end
-   
+
    if ( currentRow <= 20 ) then
       for blankRowNum=currentRow,20 do
          -- clear out the text areas. we are past the end of the raid members.
          local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_GroupedState_"..blankRowNum);
          textBox:SetText(" ");
-         
+
          local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_OnlineState_"..blankRowNum);
          textBox:SetText(" ");
-         
+
          local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_InviteStatus_"..blankRowNum);
          textBox:SetText(" ");
-         
+
          local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_PlayerName_"..blankRowNum);
          textBox:SetText(" ");
-         
+
          local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_TankButton_"..blankRowNum);
          textBox:SetText(" ");
-         
+
          local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_HealButton_"..blankRowNum);
          textBox:SetText(" ");
-         
+
          local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_mDpsButton_"..blankRowNum);
          textBox:SetText(" ");
-         
+
          local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_rDpsButton_"..blankRowNum);
          textBox:SetText(" ");
-         
+
          local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_Class_"..blankRowNum);
          textBox:SetText(" ");
-      end 
-   end     
+      end
+   end
 end
+
+
+function RaidMaker_updateGroupNumber(playerName)
+
+--   if ( raidPlayerDatabase ~= nil ) and
+--      ( raidPlayerDatabase.playerInfo ~= nil ) and
+--      ( raidPlayerDatabase.playerInfo[player] ~= nil ) then
+   
+      if (raidPlayerDatabase.playerInfo[playerName].tank  == 1 ) or
+         (raidPlayerDatabase.playerInfo[playerName].heals == 1 ) or
+         (raidPlayerDatabase.playerInfo[playerName].mDps  == 1 ) or
+         (raidPlayerDatabase.playerInfo[playerName].rDps  == 1 ) then
+         raidPlayerDatabase.playerInfo[playerName].groupNum = RaidMaker_currentGroupNumber;
+      else
+         raidPlayerDatabase.playerInfo[playerName].groupNum = 255;
+      end
+
+--   end
+end
+
+
 
 
 function RaidMaker_ClickHandler_TankFlag(clickedRow)
@@ -1183,7 +1239,7 @@ function RaidMaker_ClickHandler_TankFlag(clickedRow)
       local actualRow = clickedRow + RaidMaker_VSlider:GetValue()-1;
       if ( actualRow <= #playerSortedList ) then
          local clickedCharName = playerSortedList[actualRow];
-         
+
          -- toggle the selection
          if ( raidPlayerDatabase.playerInfo[clickedCharName].tank == 1 ) then
             raidPlayerDatabase.playerInfo[clickedCharName].tank = 0;
@@ -1192,7 +1248,8 @@ function RaidMaker_ClickHandler_TankFlag(clickedRow)
             raidPlayerDatabase.playerInfo[clickedCharName].tank = 1;
             RaidMaker_sendUpdateToRemoteApps(clickedCharName, "T");
          end
-         
+         RaidMaker_updateGroupNumber(clickedCharName);
+
          RaidMaker_DisplayDatabase();
       end
    end
@@ -1206,7 +1263,7 @@ function RaidMaker_ClickHandler_HealFlag(clickedRow)
       local actualRow = clickedRow + RaidMaker_VSlider:GetValue()-1;
       if ( actualRow <= #playerSortedList ) then
          local clickedCharName = playerSortedList[actualRow];
-         
+
          -- toggle the selection
          if ( raidPlayerDatabase.playerInfo[clickedCharName].heals == 1 ) then
             raidPlayerDatabase.playerInfo[clickedCharName].heals = 0;
@@ -1215,7 +1272,8 @@ function RaidMaker_ClickHandler_HealFlag(clickedRow)
             raidPlayerDatabase.playerInfo[clickedCharName].heals = 1;
             RaidMaker_sendUpdateToRemoteApps(clickedCharName, "H");
          end
-         
+         RaidMaker_updateGroupNumber(clickedCharName);
+
          RaidMaker_DisplayDatabase();
       end
    end
@@ -1229,7 +1287,7 @@ function RaidMaker_ClickHandler_mDpsFlag(clickedRow)
       local actualRow = clickedRow + RaidMaker_VSlider:GetValue()-1;
       if ( actualRow <= #playerSortedList ) then
          local clickedCharName = playerSortedList[actualRow];
-         
+
          -- toggle the selection
          if ( raidPlayerDatabase.playerInfo[clickedCharName].mDps == 1 ) then
             raidPlayerDatabase.playerInfo[clickedCharName].mDps = 0;
@@ -1238,7 +1296,8 @@ function RaidMaker_ClickHandler_mDpsFlag(clickedRow)
             raidPlayerDatabase.playerInfo[clickedCharName].mDps = 1;
             RaidMaker_sendUpdateToRemoteApps(clickedCharName, "M");
          end
-         
+         RaidMaker_updateGroupNumber(clickedCharName);
+
          RaidMaker_DisplayDatabase();
       end
    end
@@ -1252,7 +1311,7 @@ function RaidMaker_ClickHandler_rDpsFlag(clickedRow)
       local actualRow = clickedRow + RaidMaker_VSlider:GetValue()-1;
       if ( actualRow <= #playerSortedList ) then
          local clickedCharName = playerSortedList[actualRow];
-         
+
          -- toggle the selection
          if ( raidPlayerDatabase.playerInfo[clickedCharName].rDps == 1 ) then
             raidPlayerDatabase.playerInfo[clickedCharName].rDps = 0;
@@ -1261,7 +1320,8 @@ function RaidMaker_ClickHandler_rDpsFlag(clickedRow)
             raidPlayerDatabase.playerInfo[clickedCharName].rDps = 1;
             RaidMaker_sendUpdateToRemoteApps(clickedCharName, "R");
          end
-         
+         RaidMaker_updateGroupNumber(clickedCharName);
+
          RaidMaker_DisplayDatabase();
       end
    end
@@ -1339,7 +1399,7 @@ function RaidMaker_addLootEntryToLootLog(playerName, itemId, itemLink)
    RaidMaker_lootLogData[loggedEntryIndex].itemName = itemNameText;
    RaidMaker_lootLogData[loggedEntryIndex].rollValue = 0;
 --   RaidMaker_lootLogData[loggedEntryIndex].rollLog = RaidMaker_RollLog;
-   
+
    -- find the roll value if its in the list
    local index;
    for index = 1,#RaidMaker_RollLog do
@@ -1347,7 +1407,7 @@ function RaidMaker_addLootEntryToLootLog(playerName, itemId, itemLink)
          RaidMaker_lootLogData[loggedEntryIndex].rollValue = tonumber(RaidMaker_RollLog[index].rollValue);
       end
    end
-   
+
    if ( #RaidMaker_lootLogData <= 10 ) then
       RaidMaker_LootLog_Slider:SetMinMaxValues(#RaidMaker_lootLogData-9,#RaidMaker_lootLogData-9);
       RaidMaker_LootLog_Slider:SetValue(#RaidMaker_lootLogData-9);
@@ -1367,9 +1427,9 @@ function RaidMaker_DisplayLootDatabase()
    local rollValueColor;
    local rollAgeColor;
    local currentTime = time();
-   
-   
-   
+
+
+
    for index = 1,10 do
       indexToDisplay = index+RaidMaker_LootLog_Slider:GetValue()-1; -- eventually make this the sorted index starting at the scroll bar position.
 
@@ -1381,20 +1441,20 @@ function RaidMaker_DisplayLootDatabase()
          RaidMaker_LogTab_Loot_FieldNames[index+1]:SetText(" ");
          RaidMaker_LogTab_Loot_FieldItemLinkButton[index+1]:SetText(" ");
          RaidMaker_LogTab_Loot_FieldRollValues[index+1]:SetText(" ");
-         RaidMaker_LogTab_Loot_FieldRollAges[index+1]:SetText(" ");   
+         RaidMaker_LogTab_Loot_FieldRollAges[index+1]:SetText(" ");
       else
          timeDeltaSeconds = currentTime - RaidMaker_lootLogData[indexToDisplay].epocTime;
-      
+
          if ( timeDeltaSeconds > 14400 ) then -- 4 hours = 4*60*60
             playerNameColor = mediumGrey;
             rollValueColor = mediumGrey;
             rollAgeColor = mediumGrey;
-         end      
-      
+         end
+
          RaidMaker_LogTab_Loot_FieldNames[index+1]:SetText(playerNameColor..RaidMaker_lootLogData[indexToDisplay].playerName);
          RaidMaker_LogTab_Loot_FieldItemLinkButton[index+1]:SetText(RaidMaker_lootLogData[indexToDisplay].itemLink);
          RaidMaker_LogTab_Loot_FieldRollValues[index+1]:SetText(rollValueColor..RaidMaker_lootLogData[indexToDisplay].rollValue);
-         RaidMaker_LogTab_Loot_FieldRollAges[index+1]:SetText(rollAgeColor.. RaidMaker_getAgeText(timeDeltaSeconds) );   
+         RaidMaker_LogTab_Loot_FieldRollAges[index+1]:SetText(rollAgeColor.. RaidMaker_getAgeText(timeDeltaSeconds) );
       end
    end
 end
@@ -1415,7 +1475,7 @@ local returnText;
       returnText = math.floor(ageInSeconds/86400);
       returnText = returnText.." days";
    end
-   
+
    return returnText;
 end
 
@@ -1437,29 +1497,29 @@ function RaidMaker_handle_CHAT_MSG_ADDON(prefix, message, channel, sender)
                if ( tonumber(msgFormat) == RaidMaker_syncProtocolVersion ) then -- only process messages if the protocol matches ours
                   if ( tonumber(RaidMaker_appInstanceId) ~= tonumber(appId) ) then -- only process messages from remote instances. Different id from ours.
                      if ( tonumber(raidPlayerDatabase.textureIndex) == tonumber(raidId) ) and -- make sure the remote person is on the same raid
-                        ( tonumber(raidPlayerDatabase.day         ) == tonumber(rxDay ) ) and -- and 
-                        ( tonumber(raidPlayerDatabase.hour        ) == tonumber(rxHour) ) and -- and 
-                        ( tonumber(raidPlayerDatabase.minute      ) == tonumber(rxMin ) ) then 
-                  
+                        ( tonumber(raidPlayerDatabase.day         ) == tonumber(rxDay ) ) and -- and
+                        ( tonumber(raidPlayerDatabase.hour        ) == tonumber(rxHour) ) and -- and
+                        ( tonumber(raidPlayerDatabase.minute      ) == tonumber(rxMin ) ) then
+
       --                  if ( RaidMaker_msgSequenceNumber+1 == tonumber(msgSeqNum) ) or -- remote seq number is one more than ours. its a remote update of a click.
                         if ( RaidMaker_msgSequenceNumber   == tonumber(msgSeqNum) ) then -- remote seq number matches ours. There was probably a collision. only accept the remote change. discard the database.
                            local startIndex1,endIndex1,playerIndex,playerAction = strfind(remoteAction, "(%d+)(%a+)" );
-                       
-                           if ( playerIndex ~= nil ) and 
+
+                           if ( playerIndex ~= nil ) and
                               ( playerAction ~= nil ) then
                               local name = RaidMaker_syncIndexToNameTable[tonumber(playerIndex)];
-                              
+
                               if ( name ~= nil ) then
                                  RaidMaker_processRemoteTransaction(name,playerAction)
                               end
                            end
-      
+
                            RaidMaker_msgSequenceNumber = tonumber(msgSeqNum);
-                        else 
+                        else
                            --
                            -- remote number is totally different.  Sync up with them.
                            --
-      
+
                            -- clear out our roles.
                            for charName,charFields in pairs(raidPlayerDatabase.playerInfo) do
                               raidPlayerDatabase.playerInfo[charName].tank = 0;
@@ -1467,54 +1527,54 @@ function RaidMaker_handle_CHAT_MSG_ADDON(prefix, message, channel, sender)
                               raidPlayerDatabase.playerInfo[charName].mDps = 0;
                               raidPlayerDatabase.playerInfo[charName].rDps = 0;
                            end
-      
+
                            local workingDatabase = remoteDataBase;
-                           
+
                            while true do
                               local currentAction
-      
+
                               if ( workingDatabase == nil ) then
                                  break;
                               end
-                              
+
                               currentAction, workingDatabase = strsplit(":",workingDatabase, 2 );
-                              
+
                               if ( currentAction == nil ) then
                                  break;
                               else
                                  local startIndex1,endIndex1,playerIndex,playerAction = strfind(currentAction, "(%d+)(%a+)" );
-                             
-                                 if ( playerIndex ~= nil ) and 
+
+                                 if ( playerIndex ~= nil ) and
                                     ( playerAction ~= nil ) then
                                     local name = RaidMaker_syncIndexToNameTable[tonumber(playerIndex)];
-   
+
                                     if ( name ~= nil ) then
                                        RaidMaker_processRemoteTransaction(name,playerAction)
                                     end
                                  end
                               end
                            end
-      
+
                            -- set our local seq number to that in the message.
                            RaidMaker_msgSequenceNumber = tonumber(msgSeqNum);
                         end
-                        
+
                         -- updates may have been made. update the display.
                         RaidMaker_DisplayDatabase();
-                        
+
                         -- track who has been contributing.
                         RaidMaker_updateRaidPlannerList_seen(sender)
-                        
+
                      end
                   end
                end
             end
          end
       elseif ( prefix == RaidMaker_appSyncPrefix ) then
-         
+
          if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
             local remoteAppInstanceId, msgFormat, opcode, raidId = strsplit(":",message, 4 );
-            if ( remoteAppInstanceId ~= nil ) and 
+            if ( remoteAppInstanceId ~= nil ) and
                ( msgFormat ~= nil ) and
                ( opcode ~= nil ) and
                ( raidId ~= nil ) then
@@ -1531,19 +1591,19 @@ function RaidMaker_handle_CHAT_MSG_ADDON(prefix, message, channel, sender)
                         elseif ( opcode == "PingReq" ) then
                            -- We received a ping request. Handle it.
                            RaidMaker_generatePingResponse()
-                           
+
                            -- track who has been contributing.
                            RaidMaker_updateRaidPlannerList_seen(sender)
-   
+
                         elseif ( opcode == "PingResp" ) then
                            -- track who has been contributing.
                            RaidMaker_updateRaidPlannerList_seen(sender)
                            RaidMaker_updateRaidPlannerList_active(sender)
-                           
+
                            -- We received a ping response. Handle it.
                            RaidMaker_handlePingResponse(sender)
                         end
-   
+
                      end
                   end
                end
@@ -1558,11 +1618,11 @@ function RaidMaker_updateRaidPlannerList_seen(player)
       if ( RaidMaker_RaidPlannerList == nil ) then
          RaidMaker_RaidPlannerList = {}
       end
-      
+
       if ( RaidMaker_RaidPlannerList[player] == nil ) then
          RaidMaker_RaidPlannerList[player] = {}; -- create an entry for this player. havent seen them before
       end
-      
+
       RaidMaker_RaidPlannerList[player].seen = 1;
    end
 end
@@ -1572,11 +1632,11 @@ function RaidMaker_updateRaidPlannerList_active(player)
       if ( RaidMaker_RaidPlannerList == nil ) then
          RaidMaker_RaidPlannerList = {}
       end
-      
+
       if ( RaidMaker_RaidPlannerList[player] == nil ) then
          RaidMaker_RaidPlannerList[player] = {}; -- create an entry for this player. havent seen them before
       end
-      
+
       RaidMaker_RaidPlannerList[player].active = 1;
    end
 end
@@ -1601,10 +1661,10 @@ end
 
 function RaidMaker_handlePingResponse( player )
    RaidMaker_updateRaidPlannerList_seen(player)
-   
+
    if ( RaidMaker_RaidPlannerListDisplayActive == 1 ) then
       RaidMaker_updateRaidPlannerList_active(player)
-      
+
       local tipText;
       tipText = RaidMaker_buildRaidPlannerTooltipText()
 
@@ -1623,22 +1683,22 @@ function RaidMaker_buildRaidPlannerTooltipText()
          else
             tipText = tipText..mediumGrey;
          end
-         
+
          tipText = tipText.."\n"..charName;
       end
    end
-   
+
    return tipText;
 end
 
 function RaidMaker_sendUpdateToRemoteApps(playerName, actionId)
    if ( RaidMaker_sync_enabled == 1 ) then
-      
+
       local transaction = nil
-      
+
       RaidMaker_msgSequenceNumber = RaidMaker_msgSequenceNumber + 1; -- increment the global sequence number
-   
-      if ( playerName == "SYNCDB" ) then 
+
+      if ( playerName == "SYNCDB" ) then
          transaction = ""; -- leave transaction field blank since we just need to push database state.
       elseif ( playerName ~= nil ) then
          if ( raidPlayerDatabase ~= nil ) then
@@ -1649,10 +1709,10 @@ function RaidMaker_sendUpdateToRemoteApps(playerName, actionId)
             end
          end
       end
-      
+
       if ( transaction ~= nil ) then
          local txMsg = "";
-         
+
          txMsg = txMsg..raidPlayerDatabase.textureIndex..":"; -- Raid Id
          txMsg = txMsg..RaidMaker_syncProtocolVersion..":";                          -- version
          txMsg = txMsg..raidPlayerDatabase.day..":";
@@ -1660,35 +1720,35 @@ function RaidMaker_sendUpdateToRemoteApps(playerName, actionId)
          txMsg = txMsg..raidPlayerDatabase.minute..":";
          txMsg = txMsg..RaidMaker_appInstanceId..":";      -- id of this instance of the app
          txMsg = txMsg..RaidMaker_msgSequenceNumber..":";
-         
+
          txMsg = txMsg..transaction
-   
+
          for charName,charFields in pairs(raidPlayerDatabase.playerInfo) do
             if ( charFields.tank   == 1 ) or
                ( charFields.heals  == 1 ) or
                ( charFields.mDps   == 1 ) or
                ( charFields.rDps   == 1 ) then
-                  
+
                txMsg = txMsg..":"..raidPlayerDatabase.playerInfo[charName].syncIndex;
-                  
+
                if ( charFields.tank   == 1 ) then
                   txMsg = txMsg.."T";
                end
-                  
+
                if ( charFields.heals  == 1 ) then
                   txMsg = txMsg.."H";
                end
-   
+
                if ( charFields.mDps   == 1 ) then
                   txMsg = txMsg.."M";
                end
-   
+
                if ( charFields.rDps   == 1 ) then
                   txMsg = txMsg.."R";
                end
             end
          end
-         
+
          SendAddonMessage(RaidMaker_appMessagePrefix, txMsg, "GUILD" );
       end
    end
@@ -1698,12 +1758,12 @@ end
 
 function RaidMaker_processRemoteTransaction(name,playerAction)
    local length, singleAction, index
-   
+
    length = strlen(playerAction)
-   
+
    for index = 1,10 do
       singleAction = strsub(playerAction, index,index)
-      
+
       if ( singleAction == "T" ) then
          raidPlayerDatabase.playerInfo[name].tank = 1;
       elseif ( singleAction == "t" ) then
@@ -1769,7 +1829,7 @@ end
 
 function RaidMaker_addRollEntryToRollLog(playerName, rollValue)
    local loggedEntryIndex;
-   
+
    loggedEntryIndex = #RaidMaker_RollLog+1;
    RaidMaker_RollLog[loggedEntryIndex] = {};  -- make it a structure so we can put some fields in.
    RaidMaker_RollLog[loggedEntryIndex].rollValue = rollValue;
@@ -1778,7 +1838,7 @@ function RaidMaker_addRollEntryToRollLog(playerName, rollValue)
 
    -- need to resort and redisplay
    RaidMaker_resortRollsList();
-   
+
    if ( #RaidMaker_RollLog <= 10 ) then
       RaidMaker_RollLog_Slider:SetMinMaxValues(1,1);
    else
@@ -1790,44 +1850,44 @@ function RaidMaker_addRollEntryToRollLog(playerName, rollValue)
 end
 
 function RaidMaker_DisplayRollsDatabase()
-   
+
    local indexToDisplay;
    local playerNameColor;
    local rollValueColor;
    local rollAgeColor;
    local currentTime = time();
    local timeDeltaSeconds;
-   
+
    for index = 1,10 do
       indexToDisplay = RaidMaker_sortedRollList[index + RaidMaker_RollLog_Slider:GetValue()-1]; -- eventually make this the sorted index starting at the scroll bar position.
 
       if ( index <= #RaidMaker_RollLog ) then
          -- It will fit on the screen and we are not past the end of the list.
-         
+
          playerNameColor = white;
          rollValueColor = yellow;
          rollAgeColor = yellow;
-         
+
          timeDeltaSeconds = currentTime - RaidMaker_RollLog[indexToDisplay].epocTime;
-         
+
          if ( RaidMaker_RollLog[indexToDisplay].rollValue == RaidMaker_highestRoll ) then
             playerNameColor = green;
             rollValueColor = green;
             rollAgeColor = green;
          end
-         
+
          if ( timeDeltaSeconds > (2*60) ) then -- roll is old. color the entry grey
             playerNameColor = mediumGrey;
             rollValueColor = mediumGrey;
             rollAgeColor = mediumGrey;
          end
-         
+
          if ( RaidMaker_RollLog[indexToDisplay].preceedingRolls ~= 0 ) then -- roll is a duplicate color the entry grey
             playerNameColor = mediumGrey;
             rollValueColor = mediumGrey;
             rollAgeColor = mediumGrey;
          end
-         
+
          -- display player name
          RaidMaker_LogTab_Rolls_FieldPlayerNames[index+1]:SetText(playerNameColor..RaidMaker_RollLog[indexToDisplay].playerName);
 
@@ -1843,7 +1903,7 @@ function RaidMaker_DisplayRollsDatabase()
             rollText = rollText.." #"..rollCount;
          end
          RaidMaker_LogTab_Rolls_FieldRollValues[index+1]:SetText(rollValueColor..rollText);
-         
+
          -- display roll age
          RaidMaker_LogTab_Rolls_FieldRollAges[index+1]:SetText(rollAgeColor.. RaidMaker_getAgeText(timeDeltaSeconds));
       else
@@ -1864,7 +1924,7 @@ function RaidMaker_ResetRolls(maxAge)
    local writeIndex = 1;
    local timeCutoff = time()-maxAge;
    local newRaidMaker_RollLog = {}; -- create a blank array
-   
+
    for readIndex = 1,#RaidMaker_RollLog do
       if ( timeCutoff < RaidMaker_RollLog[readIndex].epocTime ) then
          newRaidMaker_RollLog[writeIndex] = RaidMaker_RollLog[readIndex]; -- copy over all the fields
@@ -1874,7 +1934,7 @@ function RaidMaker_ResetRolls(maxAge)
 
    RaidMaker_RollLog = newRaidMaker_RollLog; -- replace the roll log with the new shortened one.
    RaidMaker_resortRollsList();
-   
+
    if ( #RaidMaker_RollLog <= 10 ) then
       RaidMaker_RollLog_Slider:SetMinMaxValues(1,1);
       RaidMaker_RollLog_Slider:SetValue(1);
@@ -1889,28 +1949,28 @@ function RaidMaker_resortRollsList()
    local index
 
    RaidMaker_sortedRollList = {}; -- start with a blank array.
-   
+
    for index = 1,#RaidMaker_RollLog do
-      RaidMaker_sortedRollList[index] = index; -- pre-fill the sorting array 
-      
+      RaidMaker_sortedRollList[index] = index; -- pre-fill the sorting array
+
       RaidMaker_RollLog[index].preceedingRolls = 0; -- clear out the scratch fields.
       RaidMaker_RollLog[index].highestPrimaryRoll = 0; -- clear out the scratch fields.
    end
-   
+
    if ( #RaidMaker_RollLog > 1 ) then -- only look for duplicates if there is more than one roll in the db.
-      
+
       -- sort according to the player name and then roll age so we can figure out which is the primary roll for each person.
       table.sort(RaidMaker_sortedRollList, RaidMaker_RollDisplay_ascendPlayerNameOrder);
-   
+
       -- find all the duplicate rolls and number them.  table is sorted by player then roll age.
       for index = 1,#RaidMaker_RollLog-1 do
-         if ( RaidMaker_RollLog[RaidMaker_sortedRollList[index+0]].playerName ==  
+         if ( RaidMaker_RollLog[RaidMaker_sortedRollList[index+0]].playerName ==
               RaidMaker_RollLog[RaidMaker_sortedRollList[index+1]].playerName ) then
-            -- name matches, so there is a duplicate roll. 
+            -- name matches, so there is a duplicate roll.
             RaidMaker_RollLog[RaidMaker_sortedRollList[index+1]].preceedingRolls = RaidMaker_RollLog[RaidMaker_sortedRollList[index+0]].preceedingRolls + 1;
          end
       end
-      
+
       -- find the highest roll
       RaidMaker_highestRoll = 0;
       for index = 1,#RaidMaker_RollLog do
@@ -1938,7 +1998,7 @@ end
 
 function RaidMaker_RollDisplay_descendRollOrder(a,b)
    -- a,b are indexes into the roll table.
-   
+
    -- primary sort key
    if ( RaidMaker_RollLog[a].rollValue > RaidMaker_RollLog[b].rollValue ) then
       return true;
@@ -1952,14 +2012,14 @@ function RaidMaker_RollDisplay_descendRollOrder(a,b)
    elseif ( RaidMaker_RollLog[a].epocTime > RaidMaker_RollLog[b].epocTime ) then
       return false;
    end
-   
+
    -- third level sort key
    return RaidMaker_RollLog[a].playerName < RaidMaker_RollLog[a].playerName;
 end
 
 function RaidMaker_RollDisplay_ascendRollAgeOrder(a,b)
    -- a,b are indexes into the roll table.
-   
+
    -- primary sort key
    if ( RaidMaker_RollLog[a].epocTime < RaidMaker_RollLog[b].epocTime ) then
       return true;
@@ -1973,7 +2033,7 @@ function RaidMaker_RollDisplay_ascendRollAgeOrder(a,b)
    elseif ( RaidMaker_RollLog[a].rollValue < RaidMaker_RollLog[b].rollValue ) then
       return false;
    end
-   
+
    -- third level sort key
    return RaidMaker_RollLog[a].playerName < RaidMaker_RollLog[a].playerName;
 
@@ -1987,7 +2047,7 @@ function RaidMaker_RollDisplay_ascendPlayerNameOrder(a,b)
    elseif ( RaidMaker_RollLog[a].playerName > RaidMaker_RollLog[b].playerName ) then
       return false;
    end
-   
+
    if ( RaidMaker_RollLog[a].epocTime < RaidMaker_RollLog[b].epocTime ) then
       return true;
    elseif ( RaidMaker_RollLog[a].epocTime > RaidMaker_RollLog[b].epocTime ) then
@@ -2007,7 +2067,7 @@ function RaidMaker_handle_CHAT_MSG_SYSTEM(message, sender, language, channelStri
       -- roll event detected.
       RaidMaker_addRollEntryToRollLog(playerName, tonumber(rollValue) );
    end
-   
+
 --   startIndex,endIndex,playerName = strfind(message, "%[(.*)%]|h has come online." );
 --   if ( playerName ~= nil ) then
 --      -- player online status.
@@ -2020,7 +2080,7 @@ function RaidMaker_handle_CHAT_MSG_SYSTEM(message, sender, language, channelStri
 --         end
 --      end
 --   end
---   
+--
 --   startIndex,endIndex,playerName = strfind(message, "^(.*) has gone offline." );
 --   if ( playerName ~= nil ) then
 --      -- player offline status.
@@ -2033,7 +2093,7 @@ function RaidMaker_handle_CHAT_MSG_SYSTEM(message, sender, language, channelStri
 --         end
 --      end
 --   end
-   
+
 end
 
 
@@ -2041,15 +2101,15 @@ end
 
 function RaidMaker_handle_CALENDAR_OPEN_EVENT(selection)
    if ( selection == "PLAYER" ) then
-   
+
       raidMakerLaunchCalEditButton:SetParent(CalendarCreateEventFrame)
       raidMakerLaunchCalEditButton:ClearAllPoints()
       raidMakerLaunchCalEditButton:SetPoint("RIGHT", CalendarCreateEventCloseButton, "LEFT",4,0)
       raidMakerLaunchCalEditButton:SetWidth(raidMakerLaunchCalEditButton:GetTextWidth() + 10)
       raidMakerLaunchCalEditButton:Enable()
       raidMakerLaunchCalEditButton:Show()
-      
-      
+
+
       raidMakerLaunchCalViewButton:SetParent(CalendarViewEventFrame)
       raidMakerLaunchCalViewButton:ClearAllPoints()
       raidMakerLaunchCalViewButton:SetPoint("RIGHT", CalendarViewEventCloseButton, "LEFT",4,0)
@@ -2066,25 +2126,25 @@ function RaidMaker_handle_PARTY_MEMBERS_CHANGED()
 
          -- only set up the group if the user has selected the feature.
          if ( raidSetupArmedFlag == true ) then
-            
+
             local method, partyMaster, raidMaster
             local numRaidMembers
-            
+
             lootMethod, partyMaster, raidMaster = GetLootMethod()
             numRaidMembers = GetNumRaidMembers()
             lootThreshold = GetLootThreshold()
-            
+
             if ( numRaidMembers == 0 ) then
                -- we are not in a raid. might need to convert it to one
-                        
+
                if ( GetNumPartyMembers() > 0 ) then
                   -- we are in a party. lets convert it to a raid.
                   ConvertToRaid();
                end
                pendingInvitesReadyArmedFlag = true
-               
+
             elseif ( pendingInvitesReadyArmedFlag == true ) then
-               
+
                -- invite the pending players
                for rowIndex=1,#playerSortedList do
                   charName = playerSortedList[rowIndex];
@@ -2094,38 +2154,38 @@ function RaidMaker_handle_PARTY_MEMBERS_CHANGED()
                      InviteUnit(charName);
                   end
                end
-               pendingInvitesReadyArmedFlag = false   
-               
+               pendingInvitesReadyArmedFlag = false
+
             elseif ( lootMethod ~= "master" ) then
                -- raid is not yet configured for master looter.  lets set that up.
-               
+
                -- set master looter
                local selfName = GetUnitName("player",true); -- get the raid leader name (one running this)
                SetLootMethod("master", selfName);
-               
+
             elseif ( lootThreshold ~= 4 ) then
                -- loot threshold is not yet set to epic.  configure it.
-               
+
                -- set loot to epic
                SetLootThreshold(4);  -- set the threshold to epic.
-            
-            
+
+
             else
                -- raid setup is complete.  all checks passed.
                raidSetupArmedFlag = false
 
             end
          end
-      
+
          if ( numMembersToPromoteToAssist > 0 ) then -- do we have some assists left to promote
-            
+
             local numRaidMembers = GetNumRaidMembers();
-            
+
             if ( numRaidMembers > 0 ) then -- make sure we are in a raid already.
-      
+
                -- loop through the raid members, promoting any tanks.
                for memberIndex=1,numRaidMembers do
-               
+
                   local name, rank, subgroup, level, class, fileName, zone, online, isDead, role, isML = GetRaidRosterInfo(memberIndex);
                   -- promote any tanks who are not at the right level.
                   if (rank == 0 ) and -- 0 raid member;  1 raid assistant; 2 raid leader
@@ -2142,62 +2202,62 @@ function RaidMaker_handle_PARTY_MEMBERS_CHANGED()
                end
             end
          end
-                  
-                  
+
+
          if ( isRoleUpdateArmed == true ) then -- do we have some assists left to promote
 
             local numRaidMembers = GetNumRaidMembers();
-            
+
             if ( numRaidMembers > 0 ) then -- make sure we are in a raid already.
                local allRolesCorrect = 1;
-      
+
                -- loop through the raid members, promoting any tanks.
                for memberIndex=1,numRaidMembers do
-               
+
                   local name, rank, subgroup, level, class, fileName, zone, online, isDead, role, isML = GetRaidRosterInfo(memberIndex);
-      
+
                   local role = UnitGroupRolesAssigned(name)
-                  
-                  if ( raidPlayerDatabase.playerInfo[name].tank == 1 ) and 
+
+                  if ( raidPlayerDatabase.playerInfo[name].tank == 1 ) and
                      ( role ~= "TANK" ) then
                      UnitSetRole(name,"TANK");
                      allRolesCorrect = 0;
-                  elseif ( raidPlayerDatabase.playerInfo[name].heals == 1 ) and 
+                  elseif ( raidPlayerDatabase.playerInfo[name].heals == 1 ) and
                          ( role ~= "HEALER" ) then
                      UnitSetRole(name,"HEALER");
                      allRolesCorrect = 0;
-                  elseif ( raidPlayerDatabase.playerInfo[name].mDps == 1 ) and 
+                  elseif ( raidPlayerDatabase.playerInfo[name].mDps == 1 ) and
                          ( role ~= "DAMAGER" ) then
                      UnitSetRole(name,"DAMAGER");
                      allRolesCorrect = 0;
-                  elseif ( raidPlayerDatabase.playerInfo[name].rDps == 1 ) and 
+                  elseif ( raidPlayerDatabase.playerInfo[name].rDps == 1 ) and
                          ( role ~= "DAMAGER" ) then
                      UnitSetRole(name,"DAMAGER");
                      allRolesCorrect = 0;
                   end
-               end 
-               
+               end
+
                if ( allRolesCorrect == 1 ) and
                   ( numRaidMembers == numMembersWithRoles ) then -- make sure all roles are set and raid is fully present
-                  isRoleUpdateArmed = false; 
+                  isRoleUpdateArmed = false;
                end
-            
+
             end
          end
-         
+
          -- update the database with online status and in group status
-         
+
          for rowIndex=1,#playerSortedList do
             charName = playerSortedList[rowIndex];
             if (raidPlayerDatabase.playerInfo[charName] ~= nil ) then
                raidPlayerDatabase.playerInfo[charName].inGroup = 0;  -- clear everyone's status.  We'll update next.
             end
          end
-         
+
          local numRaidMembers = GetNumRaidMembers();
-            
+
          if ( numRaidMembers == 0 ) then -- make sure we are in a raid already.
-            -- we are by ourself. set our flag only. 
+            -- we are by ourself. set our flag only.
             local selfName = GetUnitName("player",true); -- get the raid leader name (one running this)
             if ( raidPlayerDatabase.playerInfo[selfName] ~= nil ) then
                raidPlayerDatabase.playerInfo[selfName].inGroup = 1;
@@ -2205,10 +2265,10 @@ function RaidMaker_handle_PARTY_MEMBERS_CHANGED()
          else
             -- update our party flags.
          end
-      
+
          -- loop through the raid members, updating online status
          for memberIndex=1,numRaidMembers do
-            
+
             local name, rank, subgroup, level, class, fileName, zone, online, isDead, role, isML = GetRaidRosterInfo(memberIndex);
             -- udpate status.
             if ( raidPlayerDatabase.playerInfo[name] ~= nil ) then
@@ -2220,7 +2280,7 @@ function RaidMaker_handle_PARTY_MEMBERS_CHANGED()
                raidPlayerDatabase.playerInfo[name].inGroup = 1;
             end
          end
-         
+
          RaidMaker_DisplayDatabase();
       end
    end
@@ -2233,8 +2293,8 @@ function RaidMaker_HandleSendInvitesButton()
    local numInvitesToSendHere = 4 - GetNumPartyMembers();
    local rowIndex;
    local charName;
-   
-   
+
+
    for rowIndex=1,#playerSortedList do
       charName = playerSortedList[rowIndex];
 
@@ -2243,11 +2303,11 @@ function RaidMaker_HandleSendInvitesButton()
          ( raidPlayerDatabase.playerInfo[charName].heals == 1 ) or
          ( raidPlayerDatabase.playerInfo[charName].mDps == 1 ) or
          ( raidPlayerDatabase.playerInfo[charName].rDps == 1) then
-            
+
          numMembersWithRoles = numMembersWithRoles + 1;
 
          if ( selfName ~= charName ) then -- invite everyone but ourself
-            
+
             if ( raidPlayerDatabase.playerInfo[charName].tank == 1 ) or -- prepare to promote them when they join group.
                (raidPlayerDatabase.playerInfo[charName].guildRankIndex < guildRankAssistThreshold ) then
                numMembersToPromoteToAssist = numMembersToPromoteToAssist +1;
@@ -2255,13 +2315,13 @@ function RaidMaker_HandleSendInvitesButton()
 
             if ( UnitInRaid(charName) == nil ) then -- player isnt in raid already. need to bring them in.
                if ( numInvitesToSendHere >= 1 ) then
-                  
-                  
+
+
                   numInvitesToSendHere = numInvitesToSendHere - 1;
-                  
+
                   InviteUnit(charName);
-   
-   
+
+
                else
                   -- need to defer the invitation.
                   raidPlayerDatabase.playerInfo[charName].partyInviteDeferred = 1;
@@ -2273,9 +2333,9 @@ function RaidMaker_HandleSendInvitesButton()
    end
    raidSetupArmedFlag = true; -- indicate that on subsequent party change event we might need to convert to raid and configure looting.
    isRoleUpdateArmed = true; -- indicate that we should update assigned roles.
-   
+
    RaidMaker_UpdatePlayerAttendanceLog();
-   
+
 end
 
 function RaidMaker_UpdatePlayerAttendanceLog()
@@ -2283,7 +2343,7 @@ function RaidMaker_UpdatePlayerAttendanceLog()
    local rowIndex;
    local charName;
    local currentIndex;
-   
+
    if ( RaidMaker_RaidParticipantLog == nil ) then -- create the database if it doesnt exist
       RaidMaker_RaidParticipantLog = {}
    end
@@ -2291,14 +2351,14 @@ function RaidMaker_UpdatePlayerAttendanceLog()
    if ( raidPlayerDatabase ~= nil ) and -- only process if there is a database to parse.
       ( guildRosterInformation ~= nil ) then -- only process if there is a database to parse.
       if ( raidPlayerDatabase.playerInfo ~= nil ) then
-   
+
          -- get the raid date and other info
          local title, description, creator, eventType, repeatOption, maxSize, textureIndex, weekday, month, day, year, hour, minute, lockoutWeekday, lockoutMonth, lockoutDay, lockoutYear, lockoutHour, lockoutMinute, locked, autoApprove, pendingInvite, inviteStatus, inviteType, calendarType = CalendarGetEventInfo();
-        
+
          if ( title ~= nil ) then -- only continue if there is an open calendar entry.
-         
-         
-         
+
+
+
             if ( #RaidMaker_RaidParticipantLog == 0 ) then
                -- its a new raid event. we havent logged it before. make a new entry.
                currentIndex = #RaidMaker_RaidParticipantLog+1;
@@ -2318,55 +2378,55 @@ function RaidMaker_UpdatePlayerAttendanceLog()
                   currentIndex = #RaidMaker_RaidParticipantLog;
                end
             end
-         
-         
-         
+
+
+
             RaidMaker_RaidParticipantLog[currentIndex].title = title;
-            
+
             if ( eventType == 1 ) or ( eventType == 2 ) then -- 1=Raid dungeon; 2=Five-player dungeon
                local raidName, icon, expansion, players= select(1+4*(textureIndex-1), CalendarEventGetTextures(eventType));
                RaidMaker_RaidParticipantLog[currentIndex].zone = raidName.."("..players..")";
             end
-   
+
             RaidMaker_RaidParticipantLog[currentIndex].year    = year;
             RaidMaker_RaidParticipantLog[currentIndex].month   = month;
             RaidMaker_RaidParticipantLog[currentIndex].day     = day;
             RaidMaker_RaidParticipantLog[currentIndex].hour    = hour;
             RaidMaker_RaidParticipantLog[currentIndex].minute  = minute;
             RaidMaker_RaidParticipantLog[currentIndex].weekday = weekday;
-      
+
             RaidMaker_RaidParticipantLog[currentIndex].playerInfo = {}; -- create the structure
-   
+
             local charFields;
             for charName,charFields in pairs(raidPlayerDatabase.playerInfo) do
 
 --            for rowIndex=1,#playerSortedList do
 --               charName = playerSortedList[rowIndex];
-        
+
                local inviteStatus;
                inviteStatus = raidPlayerDatabase.playerInfo[charName].inviteStatus;
-   
-               if (inviteStatus == 2 ) or   -- ACCEPTED     
-                  (inviteStatus == 4 ) or   -- CONFIRMED    
-                  (inviteStatus == 6 ) or   -- STANDBY      
-                  (inviteStatus == 7 ) or   -- SIGNEDUP     
+
+               if (inviteStatus == 2 ) or   -- ACCEPTED
+                  (inviteStatus == 4 ) or   -- CONFIRMED
+                  (inviteStatus == 6 ) or   -- STANDBY
+                  (inviteStatus == 7 ) or   -- SIGNEDUP
                   (inviteStatus == 9 ) or   -- TENTATIVE
                   (raidPlayerDatabase.playerInfo[charName].tank  == 1 ) or
                   (raidPlayerDatabase.playerInfo[charName].mDps  == 1 ) or
                   (raidPlayerDatabase.playerInfo[charName].rDps  == 1 ) or
                   (raidPlayerDatabase.playerInfo[charName].heals == 1 ) or
                   ( (guildRosterInformation[charName] ~= nil ) and (guildRosterInformation[charName].online == 1 )) then
-                  
+
                   -- player has indicated acceptance of the raid.  add them to the log.
                   RaidMaker_RaidParticipantLog[currentIndex].playerInfo[charName] = {}; -- create the empty structure.
-                  RaidMaker_RaidParticipantLog[currentIndex].playerInfo[charName].tank         = raidPlayerDatabase.playerInfo[charName].tank; 
+                  RaidMaker_RaidParticipantLog[currentIndex].playerInfo[charName].tank         = raidPlayerDatabase.playerInfo[charName].tank;
                   RaidMaker_RaidParticipantLog[currentIndex].playerInfo[charName].mDps         = raidPlayerDatabase.playerInfo[charName].mDps;
                   RaidMaker_RaidParticipantLog[currentIndex].playerInfo[charName].rDps         = raidPlayerDatabase.playerInfo[charName].rDps;
                   RaidMaker_RaidParticipantLog[currentIndex].playerInfo[charName].heals        = raidPlayerDatabase.playerInfo[charName].heals;
                   RaidMaker_RaidParticipantLog[currentIndex].playerInfo[charName].online       = raidPlayerDatabase.playerInfo[charName].online;
                   RaidMaker_RaidParticipantLog[currentIndex].playerInfo[charName].inviteStatus = raidPlayerDatabase.playerInfo[charName].inviteStatus
                   RaidMaker_RaidParticipantLog[currentIndex].playerInfo[charName].zone         = raidPlayerDatabase.playerInfo[charName].zone;
-   
+
                end
             end
          end
@@ -2396,7 +2456,7 @@ function RaidMaker_ClearAllRolesWithSync()
          RaidMaker_sendUpdateToRemoteApps(charName, "r");
       end
    end
-   
+
    RaidMaker_DisplayDatabase();
 end
 
@@ -2442,7 +2502,7 @@ function RaidMaker_HandleSendRolesToRaidButton()
    local healCount = 0;
    local mDpsCount = 0;
    local rDpsCount = 0;
-   
+
 
    for rowIndex=1,#playerSortedList do
       charName = playerSortedList[rowIndex];
@@ -2480,22 +2540,34 @@ function RaidMaker_HandleSendRolesToRaidButton()
          UnitSetRole(charName,"DAMAGER");
       end
    end
-   
+
    SendChatMessage("Roles for the raid are:", "RAID" );
    SendChatMessage("   Tanks: "..tankList , "RAID" );
    SendChatMessage("   Healers: "..healList , "RAID" );
    SendChatMessage("   Melee DPS: "..mDpslist , "RAID" );
    SendChatMessage("   Ranged DPS: "..rDpslist , "RAID" );
-   
+
 end
+
+function RaidMaker_SetGroupNumber(newGroupNumber)
+   RaidMaker_currentGroupNumber = newGroupNumber;
+
+   RaidMaker_GroupNumber_ButtonObject:SetText("Group "..newGroupNumber);
+
+   if ( raidPlayerDatabase ~= nil ) then
+      RaidMaker_DisplayDatabase();
+   end
+end
+
+
 
 function RaidMaker_SetUpGuiFields()
    local index;
 
-   -- 
+   --
    -- Set up the Main Field grid
    --
-   
+
    RaidMaker_TabPage1_SampleTextTab1_GroupedState_Objects = {};
    for index=1,22 do
       local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_GroupedState_"..index-1, "OVERLAY", "GameFontNormalSmall" )
@@ -2656,7 +2728,7 @@ function RaidMaker_SetUpGuiFields()
 
 
    --
-   -- Set up player name buttons 
+   -- Set up player name buttons
    --
 
 
@@ -2671,13 +2743,13 @@ function RaidMaker_SetUpGuiFields()
          notCheckable = true,
          func = function(self)
             InviteUnit(RaidMaker_menu_playerName);
-            end, 
+            end,
       },
       {
          text = "Whisper",
          notCheckable = true,
          func = function()
-            print(red.."whisper "..white..RaidMaker_menu_playerName..red.." not yet implemented.") end, 
+            print(red.."whisper "..white..RaidMaker_menu_playerName..red.." not yet implemented.") end,
       },
       {
          text = "Raid History",
@@ -2694,8 +2766,8 @@ function RaidMaker_SetUpGuiFields()
    --
    -- build raid history menu
    --
-   
-   
+
+
    local numMenuEntries, menuIndex;
    if ( RaidMaker_RaidParticipantLog ~= nil ) then
       numMenuEntries = #RaidMaker_RaidParticipantLog
@@ -2703,8 +2775,8 @@ function RaidMaker_SetUpGuiFields()
          numMenuEntries = 5; -- limit the number of histories to 10.
       end
       local raidIndexOffset = #RaidMaker_RaidParticipantLog-numMenuEntries;  -- difference in index between menu and corresponding history entry
-      
-      
+
+
       local tempMenuList = {};
       for menuIndex=1,numMenuEntries do
          tempMenuList[menuIndex] = {};
@@ -2716,7 +2788,7 @@ function RaidMaker_SetUpGuiFields()
             RaidMaker_repeatLoggedRaid(arg);
             end
 
-         
+
 
          local tempPlayerList = {};
          local currentPlayerIndex = 1;
@@ -2726,8 +2798,8 @@ function RaidMaker_SetUpGuiFields()
                ( menuPlayerNameInfo.heals == 1 ) or
                ( menuPlayerNameInfo.mDps == 1 ) or
                ( menuPlayerNameInfo.rDps == 1 ) then
-   
-               
+
+
                tempPlayerList[currentPlayerIndex] = {};
                tempPlayerList[currentPlayerIndex].hasArrow = false;
                tempPlayerList[currentPlayerIndex].notCheckable = true;
@@ -2746,7 +2818,7 @@ function RaidMaker_SetUpGuiFields()
                   tempPlayerList[currentPlayerIndex].text = tempPlayerList[currentPlayerIndex].text.." rDps"
                end
                tempPlayerList[currentPlayerIndex].text = tempPlayerList[currentPlayerIndex].text.."  - "..white..menuPlayerName
-               
+
                currentPlayerIndex = currentPlayerIndex + 1;
             end
          end
@@ -2755,16 +2827,16 @@ function RaidMaker_SetUpGuiFields()
 
       end
 --         xxx = yellow.."\nResponded on:\n"..white..format(FULLDATE, CALENDAR_WEEKDAY_NAMES[weekday],CALENDAR_FULLDATE_MONTH_NAMES[month],day, year, month ).."\n"..GameTime_GetFormattedTime(hour, minute, true)
-      
-      
-   
+
+
+
       menuTbl[4].menuList = tempMenuList;
    end
 
    --
    -- set up player name menu
    --
-   
+
    RaidMaker_PlayerName_Button_Objects = {};
    for index=1,20 do
       local item = CreateFrame("Button", "RaidMaker_PlayerName_Button_"..index-1, RaidMaker_TabPage1_SampleTextTab1 )
@@ -2796,11 +2868,11 @@ function RaidMaker_SetUpGuiFields()
                         end
 
                         if ( raidPlayerDatabase.playerInfo[playerName].zone ~= nil ) then
-               
+
                            local signupText = ""
                            GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT",0,0)
                            if ( raidPlayerDatabase.playerInfo[playerName].signupInfo ~= nil ) then
-                              
+
                               local weekday = raidPlayerDatabase.playerInfo[playerName].signupInfo.weekday;
                               local month   = raidPlayerDatabase.playerInfo[playerName].signupInfo.month  ;
                               local day     = raidPlayerDatabase.playerInfo[playerName].signupInfo.day    ;
@@ -2826,8 +2898,8 @@ function RaidMaker_SetUpGuiFields()
 
 
       RaidMaker_PlayerName_Button_Objects[index] = item;
-      
-      
+
+
    end
 
 
@@ -2835,7 +2907,7 @@ function RaidMaker_SetUpGuiFields()
    --
    -- Set up class totals text fields.
    --
-   
+
    RaidMaker_WarriorCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_WarriorCount", "OVERLAY", "GameFontNormalSmall" )
    RaidMaker_WarriorCount_Object:SetWidth(18);
    RaidMaker_WarriorCount_Object:SetHeight(18);
@@ -2877,29 +2949,29 @@ function RaidMaker_SetUpGuiFields()
    RaidMaker_PriestCount_Object:SetHeight(18);
    RaidMaker_PriestCount_Object:SetPoint("TOPLEFT", RaidMaker_ShamanCount_Object, "BOTTOMLEFT", 0,-18);
    RaidMaker_PriestCount_Object:SetText(" ");
-            
+
    RaidMaker_WarlockCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_WarlockCount", "OVERLAY", "GameFontNormalSmall" )
    RaidMaker_WarlockCount_Object:SetWidth(18);
    RaidMaker_WarlockCount_Object:SetHeight(18);
    RaidMaker_WarlockCount_Object:SetPoint("TOPLEFT", RaidMaker_PriestCount_Object, "BOTTOMLEFT", 0,-18);
    RaidMaker_WarlockCount_Object:SetText(" ");
-            
+
    RaidMaker_PaladinCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_PaladinCount", "OVERLAY", "GameFontNormalSmall" )
    RaidMaker_PaladinCount_Object:SetWidth(18);
    RaidMaker_PaladinCount_Object:SetHeight(18);
    RaidMaker_PaladinCount_Object:SetPoint("TOPLEFT", RaidMaker_WarlockCount_Object, "BOTTOMLEFT", 0,-18);
    RaidMaker_PaladinCount_Object:SetText(" ");
-            
+
    RaidMaker_DeathknightCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_DeathknightCount", "OVERLAY", "GameFontNormalSmall" )
    RaidMaker_DeathknightCount_Object:SetWidth(18);
    RaidMaker_DeathknightCount_Object:SetHeight(18);
    RaidMaker_DeathknightCount_Object:SetPoint("TOPLEFT", RaidMaker_PaladinCount_Object, "BOTTOMLEFT", 0,-18);
    RaidMaker_DeathknightCount_Object:SetText(" ");
-            
-   -- 
+
+   --
    -- Set up the Class Icons.
    --
-   
+
    -- take the Blizzard UI graphic with a grid of 4x4 class icons and crop out the desired class one at a time.
    -- Warrior
    CreateFrame("Frame", "RaidMaker_WarriorClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
@@ -3017,7 +3089,7 @@ function RaidMaker_SetUpGuiFields()
 
 
 
-   -- 
+   --
    -- Set up the tooltips for the buttons.
    --
    RaidMaker_FetchCalendarButton:SetScript("OnEnter",
@@ -3027,7 +3099,7 @@ function RaidMaker_SetUpGuiFields()
                   GameTooltip:Show()
                end)
    RaidMaker_FetchCalendarButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
-   
+
    RaidMaker_SendAnnouncementButton:SetScript("OnEnter",
                function(this)
                   GameTooltip_SetDefaultAnchor(GameTooltip, this)
@@ -3035,7 +3107,7 @@ function RaidMaker_SetUpGuiFields()
                   GameTooltip:Show()
                end)
    RaidMaker_SendAnnouncementButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
-   
+
    RaidMaker_SendInvitesButton:SetScript("OnEnter",
                function(this)
                   GameTooltip_SetDefaultAnchor(GameTooltip, this)
@@ -3043,7 +3115,7 @@ function RaidMaker_SetUpGuiFields()
                   GameTooltip:Show()
                end)
    RaidMaker_SendInvitesButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
-   
+
    RaidMaker_SendInvDoneMsgButton:SetScript("OnEnter",
                function(this)
                   GameTooltip_SetDefaultAnchor(GameTooltip, this)
@@ -3194,7 +3266,7 @@ function RaidMaker_SetUpGuiFields()
    --
    -- Set up the RM button on the blizzard calendar event and calendar view screens.
    --
-   
+
    -- create the button for the Raid Edit screen
    raidMakerLaunchCalEditButton = CreateFrame("Button", nil, UIParent, "UIPanelButtonTemplate")
    raidMakerLaunchCalEditButton:SetHeight(20)
@@ -3219,8 +3291,8 @@ function RaidMaker_SetUpGuiFields()
                end)
    raidMakerLaunchCalEditButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
    raidMakerLaunchCalEditButton:SetText("RM")
-   
-   
+
+
    -- create the button for the Raid Viewer screen
    raidMakerLaunchCalViewButton = CreateFrame("Button", nil, UIParent, "UIPanelButtonTemplate")
    raidMakerLaunchCalViewButton:SetHeight(20)
@@ -3246,12 +3318,12 @@ function RaidMaker_SetUpGuiFields()
    raidMakerLaunchCalViewButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
    raidMakerLaunchCalViewButton:SetText("RM")
    -- must wait for the CALENDAR_OPEN_EVENT event to complete the initialization.
-   
-   
+
+
    --
    -- Set up FontString fields from the Roll Log area
    --
-   
+
    RaidMaker_LogTab_Rolls_FieldPlayerNames = {}
    RaidMaker_LogTab_Rolls_FieldRollValues = {}
    RaidMaker_LogTab_Rolls_FieldRollAges = {}
@@ -3294,7 +3366,7 @@ function RaidMaker_SetUpGuiFields()
       end
       RaidMaker_LogTab_Rolls_FieldRollAges[index] = item;
    end
-   
+
    --
    -- Set up text fields from the Loot Log area
    --
@@ -3316,10 +3388,10 @@ function RaidMaker_SetUpGuiFields()
       end
       RaidMaker_LogTab_Loot_FieldNames[index] = item;
    end
-   
-   
-   
-   
+
+
+
+
    for index=1,11 do
       local myFontString = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_ItemLink"..index-1, "OVERLAY", "GameFontNormalSmall" )
 
@@ -3349,7 +3421,7 @@ function RaidMaker_SetUpGuiFields()
       RaidMaker_LogTab_Loot_FieldItemLinkButton[index] = myButton;
       RaidMaker_LogTab_Loot_FieldItemLink[index] = myFontString;
    end
-   
+
    for index=1,11 do
       local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_RollValue"..index-1, "OVERLAY", "GameFontNormalSmall" )
       item:SetWidth(100);
@@ -3444,7 +3516,7 @@ function RaidMaker_SetUpGuiFields()
                         RaidMaker_updateRaidPlannerList_active(selfName)
                      end
                      RaidMaker_generatePingRequest()
-                     
+
                      local tipText;
                      tipText = RaidMaker_buildRaidPlannerTooltipText()
                      GameTooltip:SetText(tipText);
@@ -3452,7 +3524,7 @@ function RaidMaker_SetUpGuiFields()
                   end
                end)
    frame:SetChecked( RaidMaker_sync_enabled == 1 )
-   frame:SetScript("OnLeave", function() 
+   frame:SetScript("OnLeave", function()
                                  GameTooltip:Hide()
                                  RaidMaker_RaidPlannerListDisplayActive = 0;
                               end)
@@ -3470,6 +3542,89 @@ function RaidMaker_SetUpGuiFields()
          RaidMaker_sync_enabled = 0;
       end
    end)
+
+
+   --
+   -- Create Raid Group Number selection field
+   --
+
+   local menuTbl = {
+      {
+         text = "Group Selection",
+         isTitle = true,
+         notCheckable = true,
+      },
+      {
+         text = "Group 1",
+         isTitle = false,
+         notCheckable = true,
+         func = function(self)
+            RaidMaker_SetGroupNumber(1);
+            end,
+      },
+      {
+         text = "Group 2",
+         isTitle = flase,
+         notCheckable = true,
+         func = function(self)
+            RaidMaker_SetGroupNumber(2);
+            end,
+      },
+      {
+         text = "Group 3",
+         isTitle = false,
+         notCheckable = true,
+         func = function(self)
+            RaidMaker_SetGroupNumber(3);
+            end,
+      },
+      {
+         text = "Group 4",
+         isTitle = false,
+         notCheckable = true,
+         func = function(self)
+            RaidMaker_SetGroupNumber(4);
+            end,
+      },
+   }
+
+
+   local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_GroupNumber_FontString", "OVERLAY", "GameFontNormalSmall" )
+   item:ClearAllPoints();
+   RaidMaker_GroupNumber_FontStringObject = item;
+
+   local item = CreateFrame("Button", "RaidMaker_GroupNumber_Button", RaidMaker_TabPage1_SampleTextTab1 )
+   item:SetFontString( RaidMaker_GroupNumber_FontStringObject )
+   item:SetWidth(25);
+   item:SetHeight(18);
+   item:SetPoint("TOPLEFT", RaidMaker_TabPage1_RaidIdText, "TOPLEFT", 555,5);
+   item:SetText("Group "..RaidMaker_currentGroupNumber);
+   item:SetScript("OnClick", function(self,button)
+--      print("Button pushed");
+      EasyMenu(menuTbl, RaidMaker_TabPage1_SampleTextTab1, "RaidMaker_GroupNumber_Button" ,0,0, nil, 10)
+      end)
+--   item:SetScript("OnClick", function(self,button)
+--      local myText = self:GetText();
+--      local startIndex1,endIndex1,playerName = strfind(myText, "c%x%x%x%x%x%x%x%x(.*)");
+--      if ( playerName ~= nil ) then
+--         menuTbl[1].text = playerName;
+--         RaidMaker_menu_playerName = playerName;
+--         EasyMenu(menuTbl, RaidMaker_TabPage1_SampleTextTab1, "RaidMaker_PlayerName_Button_"..index-1 ,0,0, nil, 10)
+--      end
+--   end)
+   item:SetScript("OnEnter",
+               function(this)
+                  GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                  GameTooltip:SetText("Shows currently selected group.\nClick this to bring up menu to allow group selection.\nThis is used when creating multiple groups.");
+                  GameTooltip:Show()
+               end)
+   item:SetScript("OnLeave", function() GameTooltip:Hide() end)
+   RaidMaker_GroupNumber_ButtonObject = item;
+
+
+
+
+
 
 
 end
