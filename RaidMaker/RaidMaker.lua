@@ -1316,7 +1316,9 @@ function RaidMaker_handle_CHAT_MSG_LOOT(message, sender, language, channelString
       local name, link, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(itemID);
       if ( quality == 4  ) then -- epic(purple)=4;  superior(blue)=3;  green=2; white=1; grey=0
          if ( GetNumRaidMembers() ~= 0 ) then -- only log it if we are in a raid. i.e. filter heroics
-            if ( itemID ~= "49426" ) then -- filter Emblem of Frost
+            if ( itemID ~= "49426" ) and  -- filter Emblem of Frost
+               ( itemID ~= "22450" ) and -- filter Void Crystal
+               ( itemID ~= "34057" ) then -- filter Abyss Crystal
                RaidMaker_addLootEntryToLootLog(playerName, itemID, itemLink);
             end
          end
@@ -2414,6 +2416,7 @@ function RaidMaker_HandleFetchCalButton()
       table.sort(playerSortedList, RaidMaker_ascendInviteStatusOrder);
       RaidMaker_DisplayDatabase();
    end
+   numMembersWithRoles = 0; -- reset the flag
 end
 
 function RaidMaker_HandleSendRaidAnnouncementButton()
