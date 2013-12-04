@@ -1,6 +1,6 @@
-## Interface: 30000
-## Title: RaidMaker 1.1
-## Notes: Raid Maker Addon.  Based on AddonTemplate
+## Interface: 30300
+## Title: RaidMaker
+## Notes: Raid forming tool with event calendar and guild roster information in workspace
 ## OptionalDeps:
 ## Dependencies:
 ## SavedVariables: RaidMaker_lootLogData, RaidMaker_RaidParticipantLog
