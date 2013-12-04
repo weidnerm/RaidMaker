@@ -1172,7 +1172,7 @@ function RaidMaker_DisplayLootDatabase()
       rollValueColor = yellow;
       rollAgeColor = yellow;
 
-      if ( indexToDisplay<1 ) then
+      if ( indexToDisplay<1 ) or ( #RaidMaker_lootLogData == 0 ) then
          RaidMaker_LogTab_Loot_FieldNames[index+1]:SetText(" ");
          RaidMaker_LogTab_Loot_FieldItemLink[index+1]:SetText(" ");
          RaidMaker_LogTab_Loot_FieldRollValues[index+1]:SetText(" ");
@@ -1450,7 +1450,7 @@ function RaidMaker_handle_CHAT_MSG_SYSTEM(message, sender, language, channelStri
    -- Lotusblossem has gone offline
    -- [Lotusblossem] has come online.
 
-   startIndex,endIndex,playerName,rollValue = strfind(message, "^(.*) rolls (%d+) .*1-100%)" );
+   startIndex,endIndex,playerName,rollValue = strfind(message, "^(.*) rolls (%d+) %(1%-100%)" );
    if ( rollValue ~= nil ) then
       -- roll event detected.
       RaidMaker_addRollEntryToRollLog(playerName, tonumber(rollValue) );
