@@ -35,8 +35,8 @@ local guildRankAssistThreshold = 3;  -- 0=Guild Master. 1=Officer; 2=Lieutenant;
                                      -- set to 0 for no promote. 1 for GM only, 2 for Officers, GM, etc
 local raidMakerLaunchCalEditButton
 local raidMakerLaunchCalViewButton
-RadiMaker_testData = {};
-local RadiMaker_testTrialNum = 1;
+RaidMaker_testData = {};
+local RaidMaker_testTrialNum = 1;
 
 -- change to use the array instead of these locals
 local classColorDeathKnight   = "|c00C41F3B";
@@ -1087,8 +1087,8 @@ end
 function RaidMaker_handle_CHAT_MSG_LOOT(message, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter)
    local startIndex,endIndex,playerName,itemLink
 print("MSG_LOOT event");
-RadiMaker_testData[RadiMaker_testTrialNum]=message;
-RadiMaker_testTrialNum = RadiMaker_testTrialNum +1;
+RaidMaker_testData[RaidMaker_testTrialNum]=message;
+RaidMaker_testTrialNum = RaidMaker_testTrialNum +1;
 
 --CHAT_MSG_LOOT
 --   You receive loot: [link].
@@ -1128,11 +1128,11 @@ end
 
 function RaidMaker_handle_CHAT_MSG_SYSTEM(message, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter)
 
--- [Lotusblossem] has gone offline
+-- Lotusblossem has gone offline
 -- [Lotusblossem] has come online.
 print("MSG_SYSTEM event");
-RadiMaker_testData[RadiMaker_testTrialNum]=message;
-RadiMaker_testTrialNum = RadiMaker_testTrialNum +1;
+RaidMaker_testData[RaidMaker_testTrialNum]=message;
+RaidMaker_testTrialNum = RaidMaker_testTrialNum +1;
 
    startIndex,endIndex,playerName,rollValue = strfind(message, "^(%a+) rolls (%d+) .*1-100%)" );
    if ( rollValue ~= nil ) then
@@ -1140,10 +1140,10 @@ RadiMaker_testTrialNum = RadiMaker_testTrialNum +1;
       print(white.."Roll of "..red..rollValue..white.." done by "..green..playerName);
    end
    
-   startIndex,endIndex,playerName = strfind(message, "^(%a+) has come online." );
+   startIndex,endIndex,playerName = strfind(message, "(%a+)]|h has come online." );
    if ( playerName ~= nil ) then
       -- player online status.
-      print(white..playerName..yellow.." has come "..green.."online");
+--      print(white..playerName..yellow.." has come "..green.."online");
       if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
          if ( raidPlayerDatabase.playerInfo ~= nil ) then
             if ( raidPlayerDatabase.playerInfo[playerName] ~= nil ) then
@@ -1157,7 +1157,7 @@ RadiMaker_testTrialNum = RadiMaker_testTrialNum +1;
    startIndex,endIndex,playerName = strfind(message, "^(%a+) has gone offline." );
    if ( playerName ~= nil ) then
       -- player offline status.
-      print(white..playerName..yellow.." has gone "..red.."offline");
+--      print(white..playerName..yellow.." has gone "..red.."offline");
       if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
          if ( raidPlayerDatabase.playerInfo ~= nil ) then
             if ( raidPlayerDatabase.playerInfo[playerName] ~= nil ) then

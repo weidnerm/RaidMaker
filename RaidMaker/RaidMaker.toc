@@ -3,7 +3,7 @@
 ## Notes: Raid Maker Addon.  Based on AddonTemplate
 ## OptionalDeps:
 ## Dependencies:
-## SavedVariables: RadiMaker_testData
+## SavedVariables: RaidMaker_testData
 RaidMaker.xml
 RaidMaker.lua
 secureFrame.xml
