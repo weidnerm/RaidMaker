@@ -335,6 +335,7 @@ function RaidMaker_buildRaidList(origDatabase)
       numInvites = CalendarEventGetNumInvites();
 
       newRaidDatabase.playerInfo = {}; -- create empty fields
+      RaidMaker_syncIndexToNameTable = {}; -- clear out the sorting table.
 
       local index;
       local name, level, className, classFileName, inviteStatus, modStatus, inviteIsMine, inviteType;
@@ -366,11 +367,12 @@ function RaidMaker_buildRaidList(origDatabase)
          if ( copyRaidPlayerSettings == true ) then
             -- its the same calendar. copy the fields from the old one
             if ( origDatabase.playerInfo[name] ~= nil ) then
-               newRaidDatabase.playerInfo[name].tank   = origDatabase.playerInfo[name].tank ;
-               newRaidDatabase.playerInfo[name].heals  = origDatabase.playerInfo[name].heals;
-               newRaidDatabase.playerInfo[name].mDps   = origDatabase.playerInfo[name].mDps ;
-               newRaidDatabase.playerInfo[name].rDps   = origDatabase.playerInfo[name].rDps ;
-               newRaidDatabase.playerInfo[name].online = origDatabase.playerInfo[name].online;
+               newRaidDatabase.playerInfo[name].tank     = origDatabase.playerInfo[name].tank ;
+               newRaidDatabase.playerInfo[name].heals    = origDatabase.playerInfo[name].heals;
+               newRaidDatabase.playerInfo[name].mDps     = origDatabase.playerInfo[name].mDps ;
+               newRaidDatabase.playerInfo[name].rDps     = origDatabase.playerInfo[name].rDps ;
+               newRaidDatabase.playerInfo[name].online   = origDatabase.playerInfo[name].online;
+               newRaidDatabase.playerInfo[name].groupNum = origDatabase.playerInfo[name].groupNum;
             end
          end
 
@@ -1773,7 +1775,7 @@ function RaidMaker_processRemoteTransaction(name,playerAction,groupNum)
    local length, singleAction, index
 
    length = strlen(playerAction)
-
+   
    for index = 1,10 do
       singleAction = strsub(playerAction, index,index)
 
@@ -1804,7 +1806,6 @@ function RaidMaker_processRemoteTransaction(name,playerAction,groupNum)
    else
       raidPlayerDatabase.playerInfo[name].groupNum = tonumber(groupNum);
    end
-
 end
 
 
