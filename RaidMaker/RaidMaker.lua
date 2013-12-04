@@ -29,6 +29,8 @@ local RaidMaker_menu_playerName = "";
 local RaidMaker_appInstanceId = random(1,9999);
 local RaidMaker_msgSequenceNumber = random(1,9999);
 local RaidMaker_appMessagePrefix = "DbtRm";
+local RaidMaker_appSyncPrefix = "DbtRs";
+local RaidMaker_sync_enabled;
 
 -- change to use the array instead of these locals
 local classColorDeathKnight   = "|c00C41F3B";
@@ -1156,144 +1158,159 @@ end
 
 function RaidMaker_handle_CHAT_MSG_ADDON(prefix, message, channel, sender)
    local index,charName,charFields
+   if ( RaidMaker_sync_enabled == 1 ) then -- only process messages if sync is enabled.
+      if ( prefix == RaidMaker_appMessagePrefix ) then -- make sure its not our message
+         if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
+            if ( raidPlayerDatabase.textureIndex ~= nil ) then
    
-   if ( prefix == RaidMaker_appMessagePrefix ) then -- make sure its not our message
-      if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
-         if ( raidPlayerDatabase.textureIndex ~= nil ) then
-
-            local raidId, msgFormat, rxDay, rxHour, rxMin, appId, msgSeqNum, remoteAction, remoteDataBase = strsplit(":",message, 9 );
-
-            if ( tonumber(RaidMaker_appInstanceId) ~= tonumber(appId) ) then -- only process messages from remote instances. Different id from ours.
-               if ( tonumber(raidPlayerDatabase.textureIndex) == tonumber(raidId) ) and -- make sure the remote person is on the same raid
-                  ( tonumber(raidPlayerDatabase.day         ) == tonumber(rxDay ) ) and -- and 
-                  ( tonumber(raidPlayerDatabase.hour        ) == tonumber(rxHour) ) and -- and 
-                  ( tonumber(raidPlayerDatabase.minute      ) == tonumber(rxMin ) ) then 
-print(prefix,message);
-            
---                  if ( RaidMaker_msgSequenceNumber+1 == tonumber(msgSeqNum) ) or -- remote seq number is one more than ours. its a remote update of a click.
-                  if ( RaidMaker_msgSequenceNumber   == tonumber(msgSeqNum) ) then -- remote seq number matches ours. There was probably a collision. only accept the remote change. discard the database.
-print("updating.");                     
-
-                     local startIndex1,endIndex1,playerIndex,playerAction = strfind(remoteAction, "(%d+)(%a+)" );
-                 
-                     if ( playerIndex ~= nil ) and 
-                        ( playerAction ~= nil ) then
-                        local name, level, className, classFileName, inviteStatus, modStatus, inviteIsMine, inviteType = CalendarEventGetInvite(playerIndex);
-                     
-                        if ( name ~= nil ) then
-                           RaidMaker_processRemoteTransaction(name,playerAction)
-                        end
-                     end
-
-                     RaidMaker_msgSequenceNumber = tonumber(msgSeqNum);
-                  else 
-                     --
-                     -- remote number is totally different.  Sync up with them.
-                     --
-if ( remoteDataBase ~= nil ) then
-print("Syncing. our="..RaidMaker_msgSequenceNumber.." remote="..msgSeqNum.." transactions="..#remoteDataBase);                     
-end
-
-                     -- clear out our roles.
-                     for charName,charFields in pairs(raidPlayerDatabase.playerInfo) do
-                        raidPlayerDatabase.playerInfo[charName].tank = 0;
-                        raidPlayerDatabase.playerInfo[charName].heals = 0;
-                        raidPlayerDatabase.playerInfo[charName].mDps = 0;
-                        raidPlayerDatabase.playerInfo[charName].rDps = 0;
-                     end
-
-                     local workingDatabase = remoteDataBase;
-                     
-                     while true do
-                        local currentAction
-
-                        if ( workingDatabase == nil ) then
-                           break;
-                        end
+               local raidId, msgFormat, rxDay, rxHour, rxMin, appId, msgSeqNum, remoteAction, remoteDataBase = strsplit(":",message, 9 );
+   
+               if ( tonumber(RaidMaker_appInstanceId) ~= tonumber(appId) ) then -- only process messages from remote instances. Different id from ours.
+                  if ( tonumber(raidPlayerDatabase.textureIndex) == tonumber(raidId) ) and -- make sure the remote person is on the same raid
+                     ( tonumber(raidPlayerDatabase.day         ) == tonumber(rxDay ) ) and -- and 
+                     ( tonumber(raidPlayerDatabase.hour        ) == tonumber(rxHour) ) and -- and 
+                     ( tonumber(raidPlayerDatabase.minute      ) == tonumber(rxMin ) ) then 
+   --print(prefix,message);
+               
+   --                  if ( RaidMaker_msgSequenceNumber+1 == tonumber(msgSeqNum) ) or -- remote seq number is one more than ours. its a remote update of a click.
+                     if ( RaidMaker_msgSequenceNumber   == tonumber(msgSeqNum) ) then -- remote seq number matches ours. There was probably a collision. only accept the remote change. discard the database.
+   --print("updating.");                     
+   
+                        local startIndex1,endIndex1,playerIndex,playerAction = strfind(remoteAction, "(%d+)(%a+)" );
+                    
+                        if ( playerIndex ~= nil ) and 
+                           ( playerAction ~= nil ) then
+                           local name, level, className, classFileName, inviteStatus, modStatus, inviteIsMine, inviteType = CalendarEventGetInvite(playerIndex);
                         
-                        currentAction, workingDatabase = strsplit(":",workingDatabase, 2 );
+                           if ( name ~= nil ) then
+                              RaidMaker_processRemoteTransaction(name,playerAction)
+                           end
+                        end
+   
+                        RaidMaker_msgSequenceNumber = tonumber(msgSeqNum);
+                     else 
+                        --
+                        -- remote number is totally different.  Sync up with them.
+                        --
+   --if ( remoteDataBase ~= nil ) then
+   --print("Syncing. our="..RaidMaker_msgSequenceNumber.." remote="..msgSeqNum.." transactions="..#remoteDataBase);                     
+   --end
+   
+                        -- clear out our roles.
+                        for charName,charFields in pairs(raidPlayerDatabase.playerInfo) do
+                           raidPlayerDatabase.playerInfo[charName].tank = 0;
+                           raidPlayerDatabase.playerInfo[charName].heals = 0;
+                           raidPlayerDatabase.playerInfo[charName].mDps = 0;
+                           raidPlayerDatabase.playerInfo[charName].rDps = 0;
+                        end
+   
+                        local workingDatabase = remoteDataBase;
                         
-                        if ( currentAction == nil ) then
-                           break;
-                        else
-                           local startIndex1,endIndex1,playerIndex,playerAction = strfind(currentAction, "(%d+)(%a+)" );
-                       
-                           if ( playerIndex ~= nil ) and 
-                              ( playerAction ~= nil ) then
-                              local name, level, className, classFileName, inviteStatus, modStatus, inviteIsMine, inviteType = CalendarEventGetInvite(playerIndex);
+                        while true do
+                           local currentAction
+   
+                           if ( workingDatabase == nil ) then
+                              break;
+                           end
                            
-                              if ( name ~= nil ) then
-                                 RaidMaker_processRemoteTransaction(name,playerAction)
+                           currentAction, workingDatabase = strsplit(":",workingDatabase, 2 );
+                           
+                           if ( currentAction == nil ) then
+                              break;
+                           else
+                              local startIndex1,endIndex1,playerIndex,playerAction = strfind(currentAction, "(%d+)(%a+)" );
+                          
+                              if ( playerIndex ~= nil ) and 
+                                 ( playerAction ~= nil ) then
+                                 local name, level, className, classFileName, inviteStatus, modStatus, inviteIsMine, inviteType = CalendarEventGetInvite(playerIndex);
+                              
+                                 if ( name ~= nil ) then
+                                    RaidMaker_processRemoteTransaction(name,playerAction)
+                                 end
                               end
                            end
                         end
+   
+                        -- set our local seq number to that in the message.
+                        RaidMaker_msgSequenceNumber = tonumber(msgSeqNum);
                      end
-
-                     -- set our local seq number to that in the message.
-                     RaidMaker_msgSequenceNumber = tonumber(msgSeqNum);
+                     
+                     -- updates may have been made. update the display.
+                     RaidMaker_DisplayDatabase();
+                     
                   end
-                  
-                  -- updates may have been made. update the display.
-                  RaidMaker_DisplayDatabase();
-                  
                end
             end
+         end
+      elseif ( prefix == RaidMaker_appSyncPrefix ) then
+         if ( tonumber(message) ~= RaidMaker_appInstanceId ) then
+print("Sync request received");         
+            -- we received a request for sync. send our database.
+            RaidMaker_sendUpdateToRemoteApps("SYNCDB");
          end
       end
    end
 end
 
 function RaidMaker_sendUpdateToRemoteApps(playerName, actionId)
-   RaidMaker_msgSequenceNumber = RaidMaker_msgSequenceNumber + 1; -- increment the global sequence number
-
-   if ( playerName ~= nil ) then
-      if ( raidPlayerDatabase ~= nil ) then
-         if ( raidPlayerDatabase.playerInfo ~= nil ) then
-            if ( raidPlayerDatabase.playerInfo[playerName] ~= nil ) then
-         
-               local txMsg = "";
-               
-               txMsg = txMsg..raidPlayerDatabase.textureIndex..":"; -- Raid Id
-               txMsg = txMsg.."1"..":";                          -- version
-               txMsg = txMsg..raidPlayerDatabase.day..":";
-               txMsg = txMsg..raidPlayerDatabase.hour..":";
-               txMsg = txMsg..raidPlayerDatabase.minute..":";
-               txMsg = txMsg..RaidMaker_appInstanceId..":";      -- id of this instance of the app
-               txMsg = txMsg..RaidMaker_msgSequenceNumber..":";
-               
-               txMsg = txMsg..raidPlayerDatabase.playerInfo[playerName].indexInEvent;
-               txMsg = txMsg..actionId
+   if ( RaidMaker_sync_enabled == 1 ) then
+      
+      local transaction = nil
+      
+      RaidMaker_msgSequenceNumber = RaidMaker_msgSequenceNumber + 1; -- increment the global sequence number
    
-               for charName,charFields in pairs(raidPlayerDatabase.playerInfo) do
-                  if ( charFields.tank   == 1 ) or
-                     ( charFields.heals  == 1 ) or
-                     ( charFields.mDps   == 1 ) or
-                     ( charFields.rDps   == 1 ) then
-                        
-                     txMsg = txMsg..":"..raidPlayerDatabase.playerInfo[charName].indexInEvent;
-                        
-                     if ( charFields.tank   == 1 ) then
-                        txMsg = txMsg.."T";
-                     end
-                        
-                     if ( charFields.heals  == 1 ) then
-                        txMsg = txMsg.."H";
-                     end
-
-                     if ( charFields.mDps   == 1 ) then
-                        txMsg = txMsg.."M";
-                     end
-
-                     if ( charFields.rDps   == 1 ) then
-                        txMsg = txMsg.."R";
-                     end
-                  end
+      if ( playerName == "SYNCDB" ) then 
+         transaction = ""; -- leave transaction field blank since we just need to push database state.
+      elseif ( playerName ~= nil ) then
+         if ( raidPlayerDatabase ~= nil ) then
+            if ( raidPlayerDatabase.playerInfo ~= nil ) then
+               if ( raidPlayerDatabase.playerInfo[playerName] ~= nil ) then
+                  transaction = raidPlayerDatabase.playerInfo[playerName].indexInEvent..actionId
                end
-               
-               SendAddonMessage(RaidMaker_appMessagePrefix, txMsg, "GUILD" );
-
             end
          end
+      end
+      
+      if ( transaction ~= nil ) then
+         local txMsg = "";
+         
+         txMsg = txMsg..raidPlayerDatabase.textureIndex..":"; -- Raid Id
+         txMsg = txMsg.."1"..":";                          -- version
+         txMsg = txMsg..raidPlayerDatabase.day..":";
+         txMsg = txMsg..raidPlayerDatabase.hour..":";
+         txMsg = txMsg..raidPlayerDatabase.minute..":";
+         txMsg = txMsg..RaidMaker_appInstanceId..":";      -- id of this instance of the app
+         txMsg = txMsg..RaidMaker_msgSequenceNumber..":";
+         
+         txMsg = txMsg..transaction
+   
+         for charName,charFields in pairs(raidPlayerDatabase.playerInfo) do
+            if ( charFields.tank   == 1 ) or
+               ( charFields.heals  == 1 ) or
+               ( charFields.mDps   == 1 ) or
+               ( charFields.rDps   == 1 ) then
+                  
+               txMsg = txMsg..":"..raidPlayerDatabase.playerInfo[charName].indexInEvent;
+                  
+               if ( charFields.tank   == 1 ) then
+                  txMsg = txMsg.."T";
+               end
+                  
+               if ( charFields.heals  == 1 ) then
+                  txMsg = txMsg.."H";
+               end
+   
+               if ( charFields.mDps   == 1 ) then
+                  txMsg = txMsg.."M";
+               end
+   
+               if ( charFields.rDps   == 1 ) then
+                  txMsg = txMsg.."R";
+               end
+            end
+         end
+         
+         SendAddonMessage(RaidMaker_appMessagePrefix, txMsg, "GUILD" );
       end
    end
 end
@@ -2793,6 +2810,31 @@ function RaidMaker_SetUpGuiFields()
    RaidMaker_RollLog_Slider:SetMinMaxValues(1,1);
    RaidMaker_RollLog_Slider:SetValue(1);
 
+   --
+   -- Create sync checkbox
+   --
+   RaidMaker_sync_enabled = 0;
+   local frame = CreateFrame("CheckButton", "RaidMaker_Sync_Checkbutton", RaidMaker_TabPage1_SampleTextTab1, "UICheckButtonTemplate")
+   frame:ClearAllPoints();
+   frame:SetPoint("TOPLEFT", RaidMaker_TabPage1_RaidIdText, "TOPLEFT", 480,12);
+   _G[frame:GetName().."Text"]:SetText("Sync")
+   frame:SetScript("OnEnter",
+               function(this)
+                  GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                  GameTooltip:SetText("Clicking checkbox will request raid configuration from other raid planners\nwith sync enabled and will auto-sync further raid configuration edits.");
+                  GameTooltip:Show()
+               end)
+   frame:SetChecked( RaidMaker_sync_enabled == 1 )
+   frame:SetScript("OnLeave", function() GameTooltip:Hide() end)
+   frame:SetScript("OnClick", function(self,button)
+      if ( self:GetChecked() ) then
+         RaidMaker_sync_enabled = 1
+         SendAddonMessage(RaidMaker_appSyncPrefix, RaidMaker_appInstanceId, "GUILD" );
+      else
+         print("field is unchecked")
+         RaidMaker_sync_enabled = 0;
+      end
+   end)
 
 
 end
