@@ -201,8 +201,53 @@ function RaidMaker_Handler(msg)
    
 end
 
+function RaidMaker_repeatLoggedRaid(historyIndex)
 
+   if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
+      if ( raidPlayerDatabase.playerInfo ~= nil ) then
+         if ( historyIndex <= #RaidMaker_RaidParticipantLog) then
+            
+            -- clear out our roles.
+            local charName,charFields
+            for charName,charFields in pairs(raidPlayerDatabase.playerInfo) do
+               raidPlayerDatabase.playerInfo[charName].tank = 0;
+               raidPlayerDatabase.playerInfo[charName].heals = 0;
+               raidPlayerDatabase.playerInfo[charName].mDps = 0;
+               raidPlayerDatabase.playerInfo[charName].rDps = 0;
+            end
+            
+            local menuPlayerNameInfo
+            for charName, menuPlayerNameInfo in pairs(RaidMaker_RaidParticipantLog[historyIndex].playerInfo) do
+               if ( menuPlayerNameInfo.tank == 1 ) or
+                  ( menuPlayerNameInfo.heals == 1 ) or
+                  ( menuPlayerNameInfo.mDps == 1 ) or
+                  ( menuPlayerNameInfo.rDps == 1 ) then
+      
+                  if ( raidPlayerDatabase.playerInfo[charName] ~= nil ) then
+                     if ( menuPlayerNameInfo.tank == 1 ) then
+                        raidPlayerDatabase.playerInfo[charName].tank = 1;
+                     end
+                     if ( menuPlayerNameInfo.heals == 1 ) then
+                        raidPlayerDatabase.playerInfo[charName].heals = 1;
+                     end
+                     if ( menuPlayerNameInfo.mDps == 1 ) then
+                        raidPlayerDatabase.playerInfo[charName].mDps = 1;
+                     end
+                     if ( menuPlayerNameInfo.rDps == 1 ) then
+                        raidPlayerDatabase.playerInfo[charName].rDps = 1;
+                     end
+                     
 
+                  end
+               end
+            end
+            
+            RaidMaker_DisplayDatabase();
+
+         end
+      end
+   end
+end
 
 
 function RaidMaker_buildRaidList(origDatabase) 
@@ -1983,7 +2028,11 @@ function RaidMaker_UpdatePlayerAttendanceLog()
                   (inviteStatus == 4 ) or   -- CONFIRMED    
                   (inviteStatus == 6 ) or   -- STANDBY      
                   (inviteStatus == 7 ) or   -- SIGNEDUP     
-                  (inviteStatus == 9 ) or   -- TENTATIVE    
+                  (inviteStatus == 9 ) or   -- TENTATIVE
+                  (raidPlayerDatabase.playerInfo[charName].tank  == 1 ) or
+                  (raidPlayerDatabase.playerInfo[charName].mDps  == 1 ) or
+                  (raidPlayerDatabase.playerInfo[charName].rDps  == 1 ) or
+                  (raidPlayerDatabase.playerInfo[charName].heals == 1 ) or
                   (raidPlayerDatabase.playerInfo[charName].online == 1 ) then
                   
                   -- player has indicated acceptance of the raid.  add them to the log.
@@ -2260,8 +2309,92 @@ function RaidMaker_SetUpGuiFields()
          func = function()
             print(red.."whisper "..white..RaidMaker_menu_playerName..red.." not yet implemented.") end, 
       },
+      {
+         text = "Raid History",
+         notCheckable = true,
+         hasArrow = true,
+         menuList = {
+            { text = "raid 1", },
+            { text = "raid 2", },
+            { text = "raid 3", },
+         },
+      },
    }
 
+   --
+   -- build raid history menu
+   --
+   
+   
+   local numMenuEntries, menuIndex;
+   if ( RaidMaker_RaidParticipantLog ~= nil ) then
+      numMenuEntries = #RaidMaker_RaidParticipantLog
+      if ( numMenuEntries > 5 ) then
+         numMenuEntries = 5; -- limit the number of histories to 10.
+      end
+      local raidIndexOffset = #RaidMaker_RaidParticipantLog-numMenuEntries;  -- difference in index between menu and corresponding history entry
+      
+      
+      local tempMenuList = {};
+      for menuIndex=1,numMenuEntries do
+         tempMenuList[menuIndex] = {};
+         tempMenuList[menuIndex].hasArrow = true;
+         tempMenuList[menuIndex].notCheckable = true;
+         tempMenuList[menuIndex].text = RaidMaker_RaidParticipantLog[menuIndex+raidIndexOffset].title
+         tempMenuList[menuIndex].arg1 = menuIndex+raidIndexOffset
+         tempMenuList[menuIndex].func = function(self, arg)
+            RaidMaker_repeatLoggedRaid(arg);
+            end
+
+         
+
+         local tempPlayerList = {};
+         local currentPlayerIndex = 1;
+         local menuPlayerName, menuPlayerNameInfo
+         for menuPlayerName, menuPlayerNameInfo in pairs(RaidMaker_RaidParticipantLog[menuIndex+raidIndexOffset].playerInfo) do
+            if ( menuPlayerNameInfo.tank == 1 ) or
+               ( menuPlayerNameInfo.heals == 1 ) or
+               ( menuPlayerNameInfo.mDps == 1 ) or
+               ( menuPlayerNameInfo.rDps == 1 ) then
+   
+               
+               tempPlayerList[currentPlayerIndex] = {};
+               tempPlayerList[currentPlayerIndex].hasArrow = false;
+               tempPlayerList[currentPlayerIndex].notCheckable = true;
+
+               tempPlayerList[currentPlayerIndex].text = yellow;
+               if ( menuPlayerNameInfo.tank == 1 ) then
+                  tempPlayerList[currentPlayerIndex].text = tempPlayerList[currentPlayerIndex].text.." tank"
+               end
+               if ( menuPlayerNameInfo.heals == 1 ) then
+                  tempPlayerList[currentPlayerIndex].text = tempPlayerList[currentPlayerIndex].text.." heal"
+               end
+               if ( menuPlayerNameInfo.mDps == 1 ) then
+                  tempPlayerList[currentPlayerIndex].text = tempPlayerList[currentPlayerIndex].text.." mDps"
+               end
+               if ( menuPlayerNameInfo.rDps == 1 ) then
+                  tempPlayerList[currentPlayerIndex].text = tempPlayerList[currentPlayerIndex].text.." rDps"
+               end
+               tempPlayerList[currentPlayerIndex].text = tempPlayerList[currentPlayerIndex].text.."  - "..white..menuPlayerName
+               
+               currentPlayerIndex = currentPlayerIndex + 1;
+            end
+         end
+         tempMenuList[menuIndex].menuList = tempPlayerList;
+
+
+      end
+--         xxx = yellow.."\nResponded on:\n"..white..format(FULLDATE, CALENDAR_WEEKDAY_NAMES[weekday],CALENDAR_FULLDATE_MONTH_NAMES[month],day, year, month ).."\n"..GameTime_GetFormattedTime(hour, minute, true)
+      
+      
+   
+      menuTbl[4].menuList = tempMenuList;
+   end
+
+   --
+   -- set up player name menu
+   --
+   
    RaidMaker_PlayerName_Button_Objects = {};
    for index=1,20 do
       local item = CreateFrame("Button", "RaidMaker_PlayerName_Button_"..index-1, RaidMaker_TabPage1_SampleTextTab1 )
