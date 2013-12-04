@@ -1086,9 +1086,9 @@ end
 
 function RaidMaker_handle_CHAT_MSG_LOOT(message, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter)
    local startIndex,endIndex,playerName,itemLink
-print("MSG_LOOT event");
-RaidMaker_testData[RaidMaker_testTrialNum]=message;
-RaidMaker_testTrialNum = RaidMaker_testTrialNum +1;
+
+RaidMaker_testData[RaidMaker_testTrialNum]=message; --for testing. delete me.
+RaidMaker_testTrialNum = RaidMaker_testTrialNum +1; --for testing. delete me.
 
 --CHAT_MSG_LOOT
 --   You receive loot: [link].
@@ -1123,6 +1123,32 @@ end
 --function RaidMaker_handle_CHAT_MSG_EMOTE(autoloot)
 --print("EMOTE event: sender="..sender.." msg="..message.." target="..target);
 --end
+
+
+function RaidMaker_handle_CHAT_MSG_GUILD(message, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter)
+   RaidMaker_parse_for_pass(message);
+end
+
+function RaidMaker_handle_CHAT_MSG_RAID(message, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter)
+   RaidMaker_parse_for_pass(message);
+end
+
+function RaidMaker_handle_CHAT_MSG_SAY(message, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter)
+   RaidMaker_parse_for_pass(message);
+end
+
+function RaidMaker_handle_CHAT_MSG_PARTY(message, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter)
+   RaidMaker_parse_for_pass(message);
+end
+
+function RaidMaker_parse_for_pass(message)
+   local lowerCaseMessage = string.lower(message);
+
+   startIndex,endIndex = strfind(lowerCaseMessage, "pass" );
+   if ( startIndex ~= nil ) then
+--      print("Pass found.");
+   end
+end
 
 function RaidMaker_handle_CHAT_MSG_SYSTEM(message, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter)
 
@@ -1558,13 +1584,13 @@ function RaidMaker_SetUpClassIcons()
                end)
    RaidMaker_SendRolesButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-   RaidMaker_MainFormButtonRefresh:SetScript("OnEnter",
+   RaidMaker_ButtonRefresh:SetScript("OnEnter",
                function(this)
                   GameTooltip_SetDefaultAnchor(GameTooltip, this)
                   GameTooltip:SetText("Forces refresh on player online status.  Throttled by server.");
                   GameTooltip:Show()
                end)
-   RaidMaker_MainFormButtonRefresh:SetScript("OnLeave", function() GameTooltip:Hide() end)
+   RaidMaker_ButtonRefresh:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
    -------------------------------------------------------------------------------
    -- Create the scan button
@@ -1619,5 +1645,107 @@ function RaidMaker_SetUpClassIcons()
    raidMakerLaunchCalViewButton:SetText("RM")
    -- must wait for the CALENDAR_OPEN_EVENT event to complete the initialization.
    
+   --
+   -- Set up text fields from the Roll Log area
+   --
+   RaidMaker_LogTab_Rolls_FieldPlayerNames = {}
+   RaidMaker_LogTab_Rolls_FieldRollValues = {}
+   RaidMaker_LogTab_Rolls_FieldRollAges = {}
+   for index=1,11 do
+      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Rolls_FieldNamesField"..index, "ARTWORK", "GameFontNormalSmall" )
+      item:SetWidth(100);
+      item:SetHeight(18);
+      if ( index == 1 ) then
+         item:SetPoint("TOPLEFT", RaidMaker_GroupRollFrame, "TOPLEFT", 5,-5);
+      else
+         item:SetPoint("TOPLEFT", RaidMaker_LogTab_Rolls_FieldPlayerNames[index-1], "BOTTOMLEFT", 0,0);
+      end
+      item:SetText("Player");
+      RaidMaker_LogTab_Rolls_FieldPlayerNames[index] = item;
+   end
+   for index=1,11 do
+      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Rolls_RollValue"..index, "ARTWORK", "GameFontNormalSmall" )
+      item:SetWidth(100);
+      item:SetHeight(18);
+      if ( index == 1 ) then
+         item:SetPoint("TOPLEFT", RaidMaker_LogTab_Rolls_FieldPlayerNames[1], "TOPRIGHT", 0,0);
+      else
+         item:SetPoint("TOPLEFT", RaidMaker_LogTab_Rolls_FieldRollValues[index-1], "BOTTOMLEFT", 0,0);
+      end
+      item:SetText("Roll Value");
+      RaidMaker_LogTab_Rolls_FieldRollValues[index] = item;
+   end
+   for index=1,11 do
+      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Rolls_RollAges"..index, "ARTWORK", "GameFontNormalSmall" )
+      item:SetWidth(100);
+      item:SetHeight(18);
+      if ( index == 1 ) then
+         item:SetPoint("TOPLEFT", RaidMaker_LogTab_Rolls_FieldRollValues[1], "TOPRIGHT", 0,0);
+      else
+         item:SetPoint("TOPLEFT", RaidMaker_LogTab_Rolls_FieldRollAges[index-1], "BOTTOMLEFT", 0,0);
+      end
+      item:SetText("Roll Age");
+      RaidMaker_LogTab_Rolls_FieldRollAges[index] = item;
+   end
+   
+   --
+   -- Set up text fields from the Loot Log area
+   --
+   RaidMaker_LogTab_Loot_FieldNames = {}
+   RaidMaker_LogTab_Loot_FieldRollValues = {}
+   RaidMaker_LogTab_Loot_FieldRollAges = {}
+   RaidMaker_LogTab_Loot_FieldItemLink = {}
+   for index=1,11 do
+      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_FieldNamesField"..index, "ARTWORK", "GameFontNormalSmall" )
+      item:SetWidth(100);
+      item:SetHeight(18);
+      if ( index == 1 ) then
+         item:SetPoint("TOPLEFT", RaidMaker_GroupLootFrame, "TOPLEFT", 5,-5);
+      else
+         item:SetPoint("TOPLEFT", RaidMaker_LogTab_Rolls_FieldPlayerNames[index-1], "BOTTOMLEFT", 0,0);
+      end
+      item:SetText("Player");
+      RaidMaker_LogTab_Rolls_FieldPlayerNames[index] = item;
+   end
+   for index=1,11 do
+      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_ItemLink"..index, "ARTWORK", "GameFontNormalSmall" )
+      item:SetWidth(200);
+      item:SetHeight(18);
+      if ( index == 1 ) then
+         item:SetPoint("TOPLEFT", RaidMaker_LogTab_Rolls_FieldPlayerNames[1], "TOPRIGHT", 0,0);
+      else
+         item:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldItemLink[index-1], "BOTTOMLEFT", 0,0);
+      end
+      item:SetText("Item Name");
+      RaidMaker_LogTab_Loot_FieldItemLink[index] = item;
+   end
+   for index=1,11 do
+      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_RollValue"..index, "ARTWORK", "GameFontNormalSmall" )
+      item:SetWidth(100);
+      item:SetHeight(18);
+      if ( index == 1 ) then
+         item:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldItemLink[1], "TOPRIGHT", 0,0);
+      else
+         item:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldRollValues[index-1], "BOTTOMLEFT", 0,0);
+      end
+      item:SetText("Roll Value");
+      RaidMaker_LogTab_Loot_FieldRollValues[index] = item;
+   end
+   for index=1,11 do
+      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_RollAges"..index, "ARTWORK", "GameFontNormalSmall" )
+      item:SetWidth(100);
+      item:SetHeight(18);
+      if ( index == 1 ) then
+         item:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldRollValues[1], "TOPRIGHT", 0,0);
+      else
+         item:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldRollAges[index-1], "BOTTOMLEFT", 0,0);
+      end
+      item:SetText("Roll Age");
+      RaidMaker_LogTab_Loot_FieldRollAges[index] = item;
+   end
+
+
+
+
 end
 
