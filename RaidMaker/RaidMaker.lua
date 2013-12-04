@@ -96,7 +96,7 @@ function RaidMaker_OnLoad()
 -- * The line below adds a colored load message with instructions for use the Track Item function.
 --   DEFAULT_CHAT_FRAME:AddMessage("**To track an item, place it in slot 0,1 and use /ti to announce.**", 1.0, 0.35, 0.15);
 -- end;
-   RaidMaker_SetUpClassIcons();
+   RaidMaker_SetUpGuiFields();
    
    RaidMaker_DisplayLootDatabase();
 end
@@ -143,21 +143,6 @@ function RaidMaker_Handler(msg)
       RaidMaker_TabPage1_SampleTextTab1_DpsFlag_1:SetText(yellow.."X");
       RaidMaker_TabPage1_SampleTextTab1_Class_1:SetText(yellow.."DRUID");
 
-   raidMakerLaunchCalEditButton:SetParent(TradeSkillFrame)
---   raidMakerLaunchCalEditButton:SetParent(RaidMaker_MainForm)
---   scan_parent = raidMakerLaunchCalEditButton:GetParent()
-
-   raidMakerLaunchCalEditButton:ClearAllPoints()
-      
-   raidMakerLaunchCalEditButton:SetPoint("RIGHT", TradeSkillFrameCloseButton, "LEFT",4,0)
---   raidMakerLaunchCalEditButton:SetPoint("TOPLEFT", RaidMaker_MainForm, "TOPRIGHT",5,-4)
-   raidMakerLaunchCalEditButton:SetWidth(raidMakerLaunchCalEditButton:GetTextWidth() + 10)
-
---   raidMakerLaunchCalEditButton:Enable()
-   raidMakerLaunchCalEditButton:Show()
-
-
-
 
 --   elseif (msg == "secure on") then 
 --      RaidMaker_BuffFrame:Show();
@@ -170,6 +155,13 @@ function RaidMaker_Handler(msg)
 --   elseif (msg ~= "") then
 --      AT_buffname = msg;
 --      DEFAULT_CHAT_FRAME:AddMessage(yellow.."RaidMaker: will check for "..AT_buffname..".");
+   else 
+      print(green.."RaidMaker:"..white.." Arguments to "..yellow.."/rm");
+      print(yellow.." show - "..white.."Shows the main window.");
+      print(yellow.." hide - "..white.."Hides the main window.");
+      print(yellow.." toggle - "..white.."Toggles the main window.");
+      print(yellow.." center - "..white.."Centers the main window.");
+      print(yellow.." cal - "..white.."Fetches the most recently opened Calendar Event.");
    end
    
    
@@ -874,10 +866,11 @@ function RaidMaker_OnMouseWheelLootLog(self, delta)
 end
 
 
-function RaidMaker_TextTableUpdate(startRow)
+function RaidMaker_TextTableUpdate()
 
    local currentRow = 1;
    local charName;
+   local startRow = RaidMaker_VSlider:GetValue();
    
    for rowIndex=startRow,#playerSortedList do
       charName = playerSortedList[rowIndex];
@@ -1130,9 +1123,6 @@ end
 function RaidMaker_addLootEntryToLootLog(playerName, itemId, itemLink)
    local loggedEntryIndex;
    local startIndex1,endIndex1,itemNameText = strfind(itemLink, "%[(.*)%]");
-if (itemName1 ~= nil) then
-   print("itemName="..itemName1);
-end
 
    loggedEntryIndex = #RaidMaker_lootLogData+1;
    RaidMaker_lootLogData[loggedEntryIndex] = {};  -- make it a structure so we can put some fields in.
@@ -1187,10 +1177,6 @@ function RaidMaker_DisplayLootDatabase()
          RaidMaker_LogTab_Loot_FieldRollValues[index+1]:SetText(" ");
          RaidMaker_LogTab_Loot_FieldRollAges[index+1]:SetText(" ");   
       else
---         print("currentTime="..currentTime)
---         print("indexToDisplay="..indexToDisplay)
---         print("x[y].epocTime="..RaidMaker_lootLogData[indexToDisplay].epocTime);
-         
          timeDeltaSeconds = currentTime - RaidMaker_lootLogData[indexToDisplay].epocTime;
       
          if ( timeDeltaSeconds > 14400 ) then -- 4 hours = 4*60*60
@@ -1366,7 +1352,7 @@ function RaidMaker_ResetRolls(maxAge)
    if ( RaidMaker_RollLog == nil ) then
       RaidMaker_RollLog = {}; -- start with a blank array.
    end
---print("reseting rolls age "..maxAge);
+
    local readIndex;
    local writeIndex = 1;
    local timeCutoff = time()-maxAge;
@@ -1890,9 +1876,210 @@ function RaidMaker_HandleSendRolesToRaidButton()
    
 end
 
-function RaidMaker_SetUpClassIcons()
+function RaidMaker_SetUpGuiFields()
    local index;
 
+   -- 
+   -- Set up the Main Field grid
+   --
+   
+   RaidMaker_TabPage1_SampleTextTab1_GroupedState_Objects = {};
+   for index=1,22 do
+      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_GroupedState_"..index-1, "ARTWORK", "GameFontNormalSmall" )
+      item:SetWidth(50);
+      item:SetHeight(18);
+      if ( index == 1 ) then
+         item:SetPoint("TOPLEFT", "RaidMaker_TabPage1_SampleTextTab1", "TOPLEFT", 0,0);
+         item:SetText("In Raid");
+      else
+         item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_GroupedState_Objects[index-1], "BOTTOMLEFT", 0,0);
+         item:SetText(" ");
+      end
+      RaidMaker_TabPage1_SampleTextTab1_GroupedState_Objects[index] = item;
+   end
+
+   RaidMaker_TabPage1_SampleTextTab1_OnlineState_Objects = {};
+   for index=1,22 do
+      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_OnlineState_"..index-1, "ARTWORK", "GameFontNormalSmall" )
+      item:SetWidth(50);
+      item:SetHeight(18);
+      if ( index == 1 ) then
+         item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_GroupedState_Objects[1], "TOPRIGHT", 0,0);
+         item:SetText("Online");
+      else
+         item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_OnlineState_Objects[index-1], "BOTTOMLEFT", 0,0);
+         item:SetText(" ");
+      end
+      RaidMaker_TabPage1_SampleTextTab1_OnlineState_Objects[index] = item;
+   end
+
+   RaidMaker_TabPage1_SampleTextTab1_InviteStatus_Objects = {};
+   for index=1,22 do
+      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_InviteStatus_"..index-1, "ARTWORK", "GameFontNormalSmall" )
+      item:SetWidth(75);
+      item:SetHeight(18);
+      if ( index == 1 ) then
+         item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_OnlineState_Objects[1], "TOPRIGHT", 0,0);
+         item:SetText("Response");
+      else
+         item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_InviteStatus_Objects[index-1], "BOTTOMLEFT", 0,0);
+         item:SetText(" ");
+      end
+      RaidMaker_TabPage1_SampleTextTab1_InviteStatus_Objects[index] = item;
+   end
+
+   RaidMaker_TabPage1_SampleTextTab1_PlayerName_Objects = {};
+   for index=1,22 do
+      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_PlayerName_"..index-1, "ARTWORK", "GameFontNormalSmall" )
+      item:SetWidth(100);
+      item:SetHeight(18);
+      if ( index == 1 ) then
+         item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_InviteStatus_Objects[1], "TOPRIGHT", 0,0);
+         item:SetText("Char Name");
+      else
+         item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_PlayerName_Objects[index-1], "BOTTOMLEFT", 0,0);
+         item:SetText(" ");
+      end
+      RaidMaker_TabPage1_SampleTextTab1_PlayerName_Objects[index] = item;
+   end
+
+   RaidMaker_TabPage1_SampleTextTab1_TankFlag_Objects = {};
+   for index=1,22 do
+      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_TankFlag_"..index-1, "ARTWORK", "GameFontNormalSmall" )
+      item:SetWidth(50);
+      item:SetHeight(18);
+      if ( index == 1 ) then
+         item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_PlayerName_Objects[1], "TOPRIGHT", 0,0);
+         item:SetText("Tank");
+      else
+         item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_TankFlag_Objects[index-1], "BOTTOMLEFT", 0,0);
+         item:SetText(" ");
+      end
+      RaidMaker_TabPage1_SampleTextTab1_TankFlag_Objects[index] = item;
+   end
+
+   RaidMaker_TabPage1_SampleTextTab1_HealFlag_Objects = {};
+   for index=1,22 do
+      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_HealFlag_"..index-1, "ARTWORK", "GameFontNormalSmall" )
+      item:SetWidth(50);
+      item:SetHeight(18);
+      if ( index == 1 ) then
+         item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_TankFlag_Objects[1], "TOPRIGHT", 0,0);
+         item:SetText("Heal");
+      else
+         item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_HealFlag_Objects[index-1], "BOTTOMLEFT", 0,0);
+         item:SetText(" ");
+      end
+      RaidMaker_TabPage1_SampleTextTab1_HealFlag_Objects[index] = item;
+   end
+
+   RaidMaker_TabPage1_SampleTextTab1_DpsFlag_Objects = {};
+   for index=1,22 do
+      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_DpsFlag_"..index-1, "ARTWORK", "GameFontNormalSmall" )
+      item:SetWidth(50);
+      item:SetHeight(18);
+      if ( index == 1 ) then
+         item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_HealFlag_Objects[1], "TOPRIGHT", 0,0);
+         item:SetText("DPS");
+      else
+         item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_DpsFlag_Objects[index-1], "BOTTOMLEFT", 0,0);
+         item:SetText(" ");
+      end
+      RaidMaker_TabPage1_SampleTextTab1_DpsFlag_Objects[index] = item;
+   end
+
+   RaidMaker_TabPage1_SampleTextTab1_Class_Objects = {};
+   for index=1,22 do
+      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_Class_"..index-1, "ARTWORK", "GameFontNormalSmall" )
+      item:SetWidth(75);
+      item:SetHeight(18);
+      if ( index == 1 ) then
+         item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_DpsFlag_Objects[1], "TOPRIGHT", 0,0);
+         item:SetText("Class");
+      else
+         item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_Class_Objects[index-1], "BOTTOMLEFT", 0,0);
+         item:SetText(" ");
+      end
+      RaidMaker_TabPage1_SampleTextTab1_Class_Objects[index] = item;
+   end
+
+
+
+--parent_SampleTextTab1
+--
+--      RaidMaker_TabPage1_SampleTextTab1_GroupedState_1:SetText(red.."not");
+--      RaidMaker_TabPage1_SampleTextTab1_OnlineState_1:SetText(green.."online");
+--      RaidMaker_TabPage1_SampleTextTab1_InviteStatus_1:SetText(green.."Accepted");
+--      RaidMaker_TabPage1_SampleTextTab1_PlayerName_1:SetText(white.."Cellifalas");
+--      RaidMaker_TabPage1_SampleTextTab1_TankFlag_1:SetText(yellow.."X");
+--      RaidMaker_TabPage1_SampleTextTab1_HealFlag_1:SetText(yellow.."X");
+--      RaidMaker_TabPage1_SampleTextTab1_DpsFlag_1:SetText(yellow.."X");
+--      RaidMaker_TabPage1_SampleTextTab1_Class_1:SetText(yellow.."DRUID");
+
+   --
+   -- Set up class totals text fields.
+   --
+   
+   RaidMaker_WarriorCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_WarriorCount", "ARTWORK", "GameFontNormalSmall" )
+   RaidMaker_WarriorCount_Object:SetWidth(18);
+   RaidMaker_WarriorCount_Object:SetHeight(18);
+   RaidMaker_WarriorCount_Object:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_Class_1, "TOPRIGHT", 55,-7);
+   RaidMaker_WarriorCount_Object:SetText(" ");
+
+   RaidMaker_MageCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_MageCount", "ARTWORK", "GameFontNormalSmall" )
+   RaidMaker_MageCount_Object:SetWidth(18);
+   RaidMaker_MageCount_Object:SetHeight(18);
+   RaidMaker_MageCount_Object:SetPoint("TOPLEFT", RaidMaker_WarriorCount_Object, "BOTTOMLEFT", 0,-18);
+   RaidMaker_MageCount_Object:SetText(" ");
+
+   RaidMaker_RogueCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_RogueCount", "ARTWORK", "GameFontNormalSmall" )
+   RaidMaker_RogueCount_Object:SetWidth(18);
+   RaidMaker_RogueCount_Object:SetHeight(18);
+   RaidMaker_RogueCount_Object:SetPoint("TOPLEFT", RaidMaker_MageCount_Object, "BOTTOMLEFT", 0,-18);
+   RaidMaker_RogueCount_Object:SetText(" ");
+
+   RaidMaker_DruidCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_DruidCount", "ARTWORK", "GameFontNormalSmall" )
+   RaidMaker_DruidCount_Object:SetWidth(18);
+   RaidMaker_DruidCount_Object:SetHeight(18);
+   RaidMaker_DruidCount_Object:SetPoint("TOPLEFT", RaidMaker_RogueCount_Object, "BOTTOMLEFT", 0,-18);
+   RaidMaker_DruidCount_Object:SetText(" ");
+
+   RaidMaker_HunterCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_HunterCount", "ARTWORK", "GameFontNormalSmall" )
+   RaidMaker_HunterCount_Object:SetWidth(18);
+   RaidMaker_HunterCount_Object:SetHeight(18);
+   RaidMaker_HunterCount_Object:SetPoint("TOPLEFT", RaidMaker_DruidCount_Object, "BOTTOMLEFT", 0,-18);
+   RaidMaker_HunterCount_Object:SetText(" ");
+
+   RaidMaker_ShamanCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_ShamanCount", "ARTWORK", "GameFontNormalSmall" )
+   RaidMaker_ShamanCount_Object:SetWidth(18);
+   RaidMaker_ShamanCount_Object:SetHeight(18);
+   RaidMaker_ShamanCount_Object:SetPoint("TOPLEFT", RaidMaker_HunterCount_Object, "BOTTOMLEFT", 0,-18);
+   RaidMaker_ShamanCount_Object:SetText(" ");
+
+   RaidMaker_PriestCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_PriestCount", "ARTWORK", "GameFontNormalSmall" )
+   RaidMaker_PriestCount_Object:SetWidth(18);
+   RaidMaker_PriestCount_Object:SetHeight(18);
+   RaidMaker_PriestCount_Object:SetPoint("TOPLEFT", RaidMaker_ShamanCount_Object, "BOTTOMLEFT", 0,-18);
+   RaidMaker_PriestCount_Object:SetText(" ");
+            
+   RaidMaker_WarlockCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_WarlockCount", "ARTWORK", "GameFontNormalSmall" )
+   RaidMaker_WarlockCount_Object:SetWidth(18);
+   RaidMaker_WarlockCount_Object:SetHeight(18);
+   RaidMaker_WarlockCount_Object:SetPoint("TOPLEFT", RaidMaker_PriestCount_Object, "BOTTOMLEFT", 0,-18);
+   RaidMaker_WarlockCount_Object:SetText(" ");
+            
+   RaidMaker_PaladinCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_PaladinCount", "ARTWORK", "GameFontNormalSmall" )
+   RaidMaker_PaladinCount_Object:SetWidth(18);
+   RaidMaker_PaladinCount_Object:SetHeight(18);
+   RaidMaker_PaladinCount_Object:SetPoint("TOPLEFT", RaidMaker_WarlockCount_Object, "BOTTOMLEFT", 0,-18);
+   RaidMaker_PaladinCount_Object:SetText(" ");
+            
+   RaidMaker_DeathknightCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_DeathknightCount", "ARTWORK", "GameFontNormalSmall" )
+   RaidMaker_DeathknightCount_Object:SetWidth(18);
+   RaidMaker_DeathknightCount_Object:SetHeight(18);
+   RaidMaker_DeathknightCount_Object:SetPoint("TOPLEFT", RaidMaker_PaladinCount_Object, "BOTTOMLEFT", 0,-18);
+   RaidMaker_DeathknightCount_Object:SetText(" ");
+            
    -- 
    -- Set up the Class Icons.
    --
@@ -1988,6 +2175,47 @@ function RaidMaker_SetUpClassIcons()
    RaidMaker_DeathKnightClassPictureTexture:SetAllPoints()
    RaidMaker_DeathKnightClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
    RaidMaker_DeathKnightClassPictureTexture:SetTexCoord(.25,0.5,0.5,0.75)
+
+
+
+   --
+   -- Position the raid maker buttons.
+   --
+   local localButton = getglobal("RaidMaker_TabPage1_SampleTextTab1_GroupedStateHeaderButton");
+   localButton:SetPoint("TOPRIGHT", "RaidMaker_TabPage1_SampleTextTab1_GroupedState_0", "TOPRIGHT", 0,3)
+
+   local localButton = getglobal("RaidMaker_TabPage1_SampleTextTab1_OnlineStateHeaderButton");
+   localButton:SetPoint("TOPRIGHT", "RaidMaker_TabPage1_SampleTextTab1_OnlineState_0", "TOPRIGHT", 0,3)
+
+   local localButton = getglobal("RaidMaker_TabPage1_SampleTextTab1_InviteStatusHeaderButton");
+   localButton:SetPoint("TOPRIGHT", "RaidMaker_TabPage1_SampleTextTab1_InviteStatus_0", "TOPRIGHT", 0,3)
+
+   local localButton = getglobal("RaidMaker_TabPage1_SampleTextTab1_PlayerNameHeaderButton");
+   localButton:SetPoint("TOPRIGHT", "RaidMaker_TabPage1_SampleTextTab1_PlayerName_0", "TOPRIGHT", 0,3)
+
+   local localButton = getglobal("RaidMaker_TabPage1_SampleTextTab1_ClassHeaderButton");
+   localButton:SetPoint("TOPRIGHT", "RaidMaker_TabPage1_SampleTextTab1_Class_0", "TOPRIGHT", 0,3)
+
+
+   local localButton = getglobal("RaidMaker_FetchCalendarButton");
+   localButton:SetPoint("TOPLEFT", "RaidMaker_TabPage1_SampleTextTab1_GroupedState_21", "BOTTOMLEFT", 0,-12)
+
+   for index=1,21 do
+      local localButton = getglobal("RaidMaker_TabPage1_SampleTextTab1_TankButton_"..index-1);
+      localButton:SetPoint("TOPLEFT", "RaidMaker_TabPage1_SampleTextTab1_TankFlag_"..index-1, "TOPLEFT", 0,0)
+      localButton:SetWidth(50)
+      localButton:SetHeight(18)
+   
+      local localButton = getglobal("RaidMaker_TabPage1_SampleTextTab1_HealButton_"..index-1);
+      localButton:SetPoint("TOPLEFT", "RaidMaker_TabPage1_SampleTextTab1_HealFlag_"..index-1, "TOPLEFT", 0,0)
+      localButton:SetWidth(50)
+      localButton:SetHeight(18)
+   
+      local localButton = getglobal("RaidMaker_TabPage1_SampleTextTab1_DpsButton_"..index-1);
+      localButton:SetPoint("TOPLEFT", "RaidMaker_TabPage1_SampleTextTab1_DpsFlag_"..index-1, "TOPLEFT", 0,0)
+      localButton:SetWidth(50)
+      localButton:SetHeight(18)
+   end
 
    -- 
    -- Set up the tooltips for the buttons.
@@ -2322,8 +2550,6 @@ function RaidMaker_SetUpClassIcons()
    --
    RaidMaker_LootLog_Slider:SetPoint("TOPLEFT", "RaidMaker_LogTab_Loot_RollAges1", "TOPRIGHT", 0,0);
    RaidMaker_LootLog_Slider:SetScript("OnValueChanged", RaidMaker_DisplayLootDatabase );
---   RaidMaker_LootLog_Slider:EnableMouseWheel(true);
---   RaidMaker_LootLog_Slider:SetScript("OnMouseWheel", function(self,delta) RaidMaker_OnMouseWheelLootLog(self, delta) end );
 
    if ( #RaidMaker_lootLogData <= 10 ) then
       RaidMaker_LootLog_Slider:SetMinMaxValues(#RaidMaker_lootLogData-9,#RaidMaker_lootLogData-9);
@@ -2339,9 +2565,13 @@ function RaidMaker_SetUpClassIcons()
    --
    RaidMaker_RollLog_Slider:SetPoint("TOPLEFT", "RaidMaker_LogTab_Rolls_RollAges1", "TOPRIGHT", 0,0);
    RaidMaker_RollLog_Slider:SetScript("OnValueChanged", RaidMaker_DisplayRollsDatabase );
---   RaidMaker_RollLog_Slider:EnableMouseWheel(true);
---   RaidMaker_RollLog_Slider:SetScript("OnMouseWheel", function(self,delta) RaidMaker_OnMouseWheelRollLog(self, delta) end );
 
+
+   --
+   -- Set up the RaidMaker slider
+   --
+   RaidMaker_VSlider:SetPoint("TOPLEFT", "RaidMaker_TabPage1_SampleTextTab1_Class_1", "TOPRIGHT", 0,0);
+   RaidMaker_VSlider:SetScript("OnValueChanged", RaidMaker_TextTableUpdate );
 
    --
    -- Set up the mouse wheel to scroll
