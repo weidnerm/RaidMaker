@@ -19,11 +19,6 @@
             this:RegisterEvent("CHAT_MSG_SAY");
             this:RegisterEvent("CHAT_MSG_PARTY");
 --            this:RegisterEvent("CHAT_MSG_EMOTE");
-
-
-
-
-            
          </OnLoad> 
          <OnEvent> 
             if (event == "VARIABLES_LOADED") then 

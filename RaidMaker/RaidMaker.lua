@@ -37,6 +37,7 @@ local raidMakerLaunchCalEditButton
 local raidMakerLaunchCalViewButton
 RaidMaker_testData = {};
 local RaidMaker_testTrialNum = 1;
+local RaidMaker_RollLog = {};
 
 -- change to use the array instead of these locals
 local classColorDeathKnight   = "|c00C41F3B";
@@ -1144,11 +1145,74 @@ end
 function RaidMaker_parse_for_pass(message)
    local lowerCaseMessage = string.lower(message);
 
-   startIndex,endIndex = strfind(lowerCaseMessage, "pass" );
-   if ( startIndex ~= nil ) then
---      print("Pass found.");
+--   startIndex,endIndex = strfind(lowerCaseMessage, "pass" );
+--   if ( startIndex ~= nil ) then
+   startIndex,endIndex,playerName = strfind(message, "(%a+)]|h.*pass" );
+   if ( playerName ~= nil ) then
+print(yellow.."Pass found by "..red..playerName);
+      RaidMaker_addRollEntryToRollLog(playerName, 0);
    end
 end
+
+function RaidMaker_addRollEntryToRollLog(playerName, rollValue)
+   local loggedEntryIndex;
+   
+   loggedEntryIndex = #RaidMaker_RollLog+1;
+   RaidMaker_RollLog[loggedEntryIndex] = {};  -- make it a structure so we can put some fields in.
+   RaidMaker_RollLog[loggedEntryIndex].rollValue = rollValue;
+   RaidMaker_RollLog[loggedEntryIndex].playerName = playerName;
+   RaidMaker_RollLog[loggedEntryIndex].epocTime = os.time();
+
+-- fixme. need to resort and redisplay
+   RaidMaker_displayRollsDatabase();
+
+end
+
+function RaidMaker_displayRollsDatabase()
+   
+   local indexToDisplay;
+   local playerNameColor;
+   local rollValueColor;
+   local rollAgeColor;
+   local currentTime = os.time();
+   local timeDeltaSeconds;
+   
+   RaidMaker_resortRollsList()
+   
+   for index = 1,10 do
+      indexToDisplay = index; -- eventually make this the sorted index.
+      if ( index <= #RaidMaker_RollLog ) then
+         -- It will fit on the screen and we are not past the end of the list.
+         
+         playerNameColor = white;
+         rollValueColor = yellow;
+         rollAgeColor = yellow;
+         
+         timeDeltaSeconds = RaidMaker_RollLog[indexToDisplay].epocTime - currentTime;
+         
+         if ( timeDeltaSeconds > (2*60) ) then -- roll is old. color the entry grey
+            playerNameColor = mediumGrey;
+            rollValueColor = mediumGrey;
+            rollAgeColor = mediumGrey;
+         end
+         
+         RaidMaker_LogTab_Rolls_FieldPlayerNames[index+1]SetText(playerNameColor..RaidMaker_RollLog[indexToDisplay].playerName);
+         RaidMaker_LogTab_Rolls_FieldRollValues[index+1]SetText(rollValueColor..RaidMaker_RollLog[indexToDisplay].rollValue);
+         RaidMaker_LogTab_Rolls_FieldRollAges[index+1]:SetText(rollAgeColor..timeDeltaSeconds);
+      else
+         -- blank out the row
+         RaidMaker_LogTab_Rolls_FieldPlayerNames[index+1]SetText(" ");
+         RaidMaker_LogTab_Rolls_FieldRollValues[index+1]SetText(" ");
+         RaidMaker_LogTab_Rolls_FieldRollAges[index+1]:SetText(" ");
+      end
+   end
+end
+
+function RaidMaker_resortRollsList()
+   -- fixme
+end
+
+
 
 function RaidMaker_handle_CHAT_MSG_SYSTEM(message, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter)
 
@@ -1161,7 +1225,8 @@ RaidMaker_testTrialNum = RaidMaker_testTrialNum +1;
    startIndex,endIndex,playerName,rollValue = strfind(message, "^(%a+) rolls (%d+) .*1-100%)" );
    if ( rollValue ~= nil ) then
       -- roll event detected.
-      print(white.."Roll of "..red..rollValue..white.." done by "..green..playerName);
+print(white.."Roll of "..red..rollValue..white.." done by "..green..playerName);
+      RaidMaker_addRollEntryToRollLog(playerName, rollValue);
    end
    
    startIndex,endIndex,playerName = strfind(message, "(%a+)]|h has come online." );
@@ -1664,39 +1729,42 @@ function RaidMaker_SetUpClassIcons()
    RaidMaker_LogTab_Rolls_FieldRollValues = {}
    RaidMaker_LogTab_Rolls_FieldRollAges = {}
    for index=1,11 do
-      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Rolls_FieldNamesField"..index, "ARTWORK", "GameFontNormalSmall" )
+      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Rolls_FieldNamesField"..index-1, "ARTWORK", "GameFontNormalSmall" )
       item:SetWidth(100);
       item:SetHeight(18);
       if ( index == 1 ) then
          item:SetPoint("TOPLEFT", RaidMaker_GroupRollFrame, "TOPLEFT", 5,-5);
+         item:SetText("Player");
       else
          item:SetPoint("TOPLEFT", RaidMaker_LogTab_Rolls_FieldPlayerNames[index-1], "BOTTOMLEFT", 0,0);
+         item:SetText(" ");
       end
-      item:SetText("Player");
       RaidMaker_LogTab_Rolls_FieldPlayerNames[index] = item;
    end
    for index=1,11 do
-      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Rolls_RollValue"..index, "ARTWORK", "GameFontNormalSmall" )
+      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Rolls_RollValue"..index-1, "ARTWORK", "GameFontNormalSmall" )
       item:SetWidth(100);
       item:SetHeight(18);
       if ( index == 1 ) then
          item:SetPoint("TOPLEFT", RaidMaker_LogTab_Rolls_FieldPlayerNames[1], "TOPRIGHT", 0,0);
+         item:SetText("Roll Value");
       else
          item:SetPoint("TOPLEFT", RaidMaker_LogTab_Rolls_FieldRollValues[index-1], "BOTTOMLEFT", 0,0);
+         item:SetText(" ");
       end
-      item:SetText("Roll Value");
       RaidMaker_LogTab_Rolls_FieldRollValues[index] = item;
    end
    for index=1,11 do
-      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Rolls_RollAges"..index, "ARTWORK", "GameFontNormalSmall" )
+      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Rolls_RollAges"..index-1, "ARTWORK", "GameFontNormalSmall" )
       item:SetWidth(100);
       item:SetHeight(18);
       if ( index == 1 ) then
          item:SetPoint("TOPLEFT", RaidMaker_LogTab_Rolls_FieldRollValues[1], "TOPRIGHT", 0,0);
+         item:SetText("Roll Age");
       else
          item:SetPoint("TOPLEFT", RaidMaker_LogTab_Rolls_FieldRollAges[index-1], "BOTTOMLEFT", 0,0);
+         item:SetText(" ");
       end
-      item:SetText("Roll Age");
       RaidMaker_LogTab_Rolls_FieldRollAges[index] = item;
    end
    
@@ -1708,51 +1776,55 @@ function RaidMaker_SetUpClassIcons()
    RaidMaker_LogTab_Loot_FieldRollAges = {}
    RaidMaker_LogTab_Loot_FieldItemLink = {}
    for index=1,11 do
-      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_FieldNamesField"..index, "ARTWORK", "GameFontNormalSmall" )
+      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_FieldNamesField"..index-1, "ARTWORK", "GameFontNormalSmall" )
       item:SetWidth(100);
       item:SetHeight(18);
       if ( index == 1 ) then
          item:SetPoint("TOPLEFT", RaidMaker_GroupLootFrame, "TOPLEFT", 5,-5);
+         item:SetText("Player");
       else
          item:SetPoint("TOPLEFT", RaidMaker_LogTab_Rolls_FieldPlayerNames[index-1], "BOTTOMLEFT", 0,0);
+         item:SetText(" ");
       end
-      item:SetText("Player");
       RaidMaker_LogTab_Rolls_FieldPlayerNames[index] = item;
    end
    for index=1,11 do
-      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_ItemLink"..index, "ARTWORK", "GameFontNormalSmall" )
+      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_ItemLink"..index-1, "ARTWORK", "GameFontNormalSmall" )
       item:SetWidth(200);
       item:SetHeight(18);
       if ( index == 1 ) then
          item:SetPoint("TOPLEFT", RaidMaker_LogTab_Rolls_FieldPlayerNames[1], "TOPRIGHT", 0,0);
+         item:SetText("Item Name");
       else
          item:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldItemLink[index-1], "BOTTOMLEFT", 0,0);
+         item:SetText(" ");
       end
-      item:SetText("Item Name");
       RaidMaker_LogTab_Loot_FieldItemLink[index] = item;
    end
    for index=1,11 do
-      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_RollValue"..index, "ARTWORK", "GameFontNormalSmall" )
+      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_RollValue"..index-1, "ARTWORK", "GameFontNormalSmall" )
       item:SetWidth(100);
       item:SetHeight(18);
       if ( index == 1 ) then
          item:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldItemLink[1], "TOPRIGHT", 0,0);
+         item:SetText("Roll Value");
       else
          item:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldRollValues[index-1], "BOTTOMLEFT", 0,0);
+         item:SetText(" ");
       end
-      item:SetText("Roll Value");
       RaidMaker_LogTab_Loot_FieldRollValues[index] = item;
    end
    for index=1,11 do
-      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_RollAges"..index, "ARTWORK", "GameFontNormalSmall" )
+      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_RollAges"..index-1, "ARTWORK", "GameFontNormalSmall" )
       item:SetWidth(100);
       item:SetHeight(18);
       if ( index == 1 ) then
          item:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldRollValues[1], "TOPRIGHT", 0,0);
+         item:SetText("Roll Age");
       else
          item:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldRollAges[index-1], "BOTTOMLEFT", 0,0);
+         item:SetText(" ");
       end
-      item:SetText("Roll Age");
       RaidMaker_LogTab_Loot_FieldRollAges[index] = item;
    end
 
