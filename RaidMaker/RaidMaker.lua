@@ -1243,12 +1243,13 @@ function RaidMaker_ClickHandler_TankFlag(clickedRow)
          -- toggle the selection
          if ( raidPlayerDatabase.playerInfo[clickedCharName].tank == 1 ) then
             raidPlayerDatabase.playerInfo[clickedCharName].tank = 0;
+            RaidMaker_updateGroupNumber(clickedCharName);
             RaidMaker_sendUpdateToRemoteApps(clickedCharName, "t");
          else
             raidPlayerDatabase.playerInfo[clickedCharName].tank = 1;
+            RaidMaker_updateGroupNumber(clickedCharName);
             RaidMaker_sendUpdateToRemoteApps(clickedCharName, "T");
          end
-         RaidMaker_updateGroupNumber(clickedCharName);
 
          RaidMaker_DisplayDatabase();
       end
@@ -1267,12 +1268,13 @@ function RaidMaker_ClickHandler_HealFlag(clickedRow)
          -- toggle the selection
          if ( raidPlayerDatabase.playerInfo[clickedCharName].heals == 1 ) then
             raidPlayerDatabase.playerInfo[clickedCharName].heals = 0;
+            RaidMaker_updateGroupNumber(clickedCharName);
             RaidMaker_sendUpdateToRemoteApps(clickedCharName, "h");
          else
             raidPlayerDatabase.playerInfo[clickedCharName].heals = 1;
+            RaidMaker_updateGroupNumber(clickedCharName);
             RaidMaker_sendUpdateToRemoteApps(clickedCharName, "H");
          end
-         RaidMaker_updateGroupNumber(clickedCharName);
 
          RaidMaker_DisplayDatabase();
       end
@@ -1291,12 +1293,13 @@ function RaidMaker_ClickHandler_mDpsFlag(clickedRow)
          -- toggle the selection
          if ( raidPlayerDatabase.playerInfo[clickedCharName].mDps == 1 ) then
             raidPlayerDatabase.playerInfo[clickedCharName].mDps = 0;
+            RaidMaker_updateGroupNumber(clickedCharName);
             RaidMaker_sendUpdateToRemoteApps(clickedCharName, "m");
          else
             raidPlayerDatabase.playerInfo[clickedCharName].mDps = 1;
+            RaidMaker_updateGroupNumber(clickedCharName);
             RaidMaker_sendUpdateToRemoteApps(clickedCharName, "M");
          end
-         RaidMaker_updateGroupNumber(clickedCharName);
 
          RaidMaker_DisplayDatabase();
       end
@@ -1315,12 +1318,13 @@ function RaidMaker_ClickHandler_rDpsFlag(clickedRow)
          -- toggle the selection
          if ( raidPlayerDatabase.playerInfo[clickedCharName].rDps == 1 ) then
             raidPlayerDatabase.playerInfo[clickedCharName].rDps = 0;
+            RaidMaker_updateGroupNumber(clickedCharName);
             RaidMaker_sendUpdateToRemoteApps(clickedCharName, "r");
          else
             raidPlayerDatabase.playerInfo[clickedCharName].rDps = 1;
+            RaidMaker_updateGroupNumber(clickedCharName);
             RaidMaker_sendUpdateToRemoteApps(clickedCharName, "R");
          end
-         RaidMaker_updateGroupNumber(clickedCharName);
 
          RaidMaker_DisplayDatabase();
       end
@@ -1500,12 +1504,13 @@ function RaidMaker_handle_CHAT_MSG_ADDON(prefix, message, channel, sender)
                         ( tonumber(raidPlayerDatabase.day         ) == tonumber(rxDay ) ) and -- and
                         ( tonumber(raidPlayerDatabase.hour        ) == tonumber(rxHour) ) and -- and
                         ( tonumber(raidPlayerDatabase.minute      ) == tonumber(rxMin ) ) then
+print(message);
 
       --                  if ( RaidMaker_msgSequenceNumber+1 == tonumber(msgSeqNum) ) or -- remote seq number is one more than ours. its a remote update of a click.
                         if ( RaidMaker_msgSequenceNumber   == tonumber(msgSeqNum) ) then -- remote seq number matches ours. There was probably a collision. only accept the remote change. discard the database.
-                           local startIndex1,endIndex1,playerIndex,playerAction = strfind(remoteAction, "(%d+)(%a+)" );
-
+                           local startIndex1,endIndex1,playerIndex,playerAction,groupNum = strfind(remoteAction, "(%d+)(%a+)(%d+)" );
                            if ( playerIndex ~= nil ) and
+                              ( groupNum ~= nil ) and
                               ( playerAction ~= nil ) then
                               local name = RaidMaker_syncIndexToNameTable[tonumber(playerIndex)];
 
@@ -1526,6 +1531,7 @@ function RaidMaker_handle_CHAT_MSG_ADDON(prefix, message, channel, sender)
                               raidPlayerDatabase.playerInfo[charName].heals = 0;
                               raidPlayerDatabase.playerInfo[charName].mDps = 0;
                               raidPlayerDatabase.playerInfo[charName].rDps = 0;
+                              raidPlayerDatabase.playerInfo[charName].groupNum = 255;
                            end
 
                            local workingDatabase = remoteDataBase;
@@ -1542,14 +1548,15 @@ function RaidMaker_handle_CHAT_MSG_ADDON(prefix, message, channel, sender)
                               if ( currentAction == nil ) then
                                  break;
                               else
-                                 local startIndex1,endIndex1,playerIndex,playerAction = strfind(currentAction, "(%d+)(%a+)" );
+                                 local startIndex1,endIndex1,playerIndex,playerAction,groupNum = strfind(currentAction, "(%d+)(%a+)(%d+)" );
 
                                  if ( playerIndex ~= nil ) and
+                                    ( groupNum ~= nil ) and
                                     ( playerAction ~= nil ) then
                                     local name = RaidMaker_syncIndexToNameTable[tonumber(playerIndex)];
 
                                     if ( name ~= nil ) then
-                                       RaidMaker_processRemoteTransaction(name,playerAction)
+                                       RaidMaker_processRemoteTransaction(name,playerAction,groupNum)
                                     end
                                  end
                               end
@@ -1704,7 +1711,7 @@ function RaidMaker_sendUpdateToRemoteApps(playerName, actionId)
          if ( raidPlayerDatabase ~= nil ) then
             if ( raidPlayerDatabase.playerInfo ~= nil ) then
                if ( raidPlayerDatabase.playerInfo[playerName] ~= nil ) then
-                  transaction = raidPlayerDatabase.playerInfo[playerName].syncIndex..actionId
+                  transaction = raidPlayerDatabase.playerInfo[playerName].syncIndex..actionId..RaidMaker_currentGroupNumber;
                end
             end
          end
@@ -1746,6 +1753,10 @@ function RaidMaker_sendUpdateToRemoteApps(playerName, actionId)
                if ( charFields.rDps   == 1 ) then
                   txMsg = txMsg.."R";
                end
+               
+               -- append the group number.
+               txMsg = txMsg..charFields.groupNum;
+               
             end
          end
 
@@ -1756,7 +1767,7 @@ end
 
 
 
-function RaidMaker_processRemoteTransaction(name,playerAction)
+function RaidMaker_processRemoteTransaction(name,playerAction,groupNum)
    local length, singleAction, index
 
    length = strlen(playerAction)
@@ -1782,6 +1793,16 @@ function RaidMaker_processRemoteTransaction(name,playerAction)
          raidPlayerDatabase.playerInfo[name].rDps = 0;
       end
    end
+   
+   if ( raidPlayerDatabase.playerInfo[name].tank == 0 ) and
+      ( raidPlayerDatabase.playerInfo[name].heals == 0 ) and
+      ( raidPlayerDatabase.playerInfo[name].mDps == 0 ) and
+      ( raidPlayerDatabase.playerInfo[name].rDps == 0 ) then
+      raidPlayerDatabase.playerInfo[name].groupNum = 255; -- if they have no role, set group to nogroup (255)
+   else
+      raidPlayerDatabase.playerInfo[name].groupNum = tonumber(groupNum);
+   end
+
 end
 
 
