@@ -1100,10 +1100,11 @@ function RaidMaker_handle_CHAT_MSG_LOOT(message, sender, language, channelString
       end
    end
 
+   -- if someone won something, parse the details.
    if (playerName ~= nil ) then
       local startIndex,endIndex,itemID = strfind(arg1, "(%d+):")
       local name, link, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(itemID);
-      if ( quality == 4 ) then
+      if ( quality == 4 ) or ( quality == 3 ) then -- epic(purple)=4;  superior(blue)=3;  green=2; white=1; grey=0
          -- epic loot found event.
          print(red.."Player="..playerName..white.." got "..green.." itemID="..itemID.." link="..itemLink);
       end
@@ -1119,16 +1120,8 @@ end
 --end
 
 function RaidMaker_handle_CHAT_MSG_SYSTEM(message, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter)
-----print("SYSTEM event: sender="..sender.." msg="..message.." target="..target);
---
---   -- "Bebhearley rolls 2 (1-100)
-----   local startIndex,endIndex,playerName = strfind(message, "%a+ rolls %d+ (1-100)");
---   local startIndex,endIndex,playerName = strfind(arg1, "^%a+ rolls ");
-----   print ("startIndex="..startIndex.." endIndex="..endIndex.." playerName="..playerName.." rollValue="..rollValue);
---   print ("startIndex="..startIndex.." endIndex="..endIndex.." playerName="..playerName);
 
--- Lotusblossem has gone offline
--- You receive loot: [link].
+-- [Lotusblossem] has gone offline
 -- [Lotusblossem] has come online.
 
    startIndex,endIndex,playerName,rollValue = strfind(message, "^(%a+) rolls (%d+)" );
@@ -1136,8 +1129,38 @@ function RaidMaker_handle_CHAT_MSG_SYSTEM(message, sender, language, channelStri
       -- roll event detected.
       print(white.."Roll of "..red..rollValue..white.." done by "..green..playerName);
    end
-
+   
+   startIndex,endIndex,playerName = strfind(message, "^[(%a+)] has come online." );
+   if ( playerName ~= nil ) then
+      -- player online status.
+      print(white..playerName..yellow.." has come "..green.."online");
+      if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
+         if ( raidPlayerDatabase.playerInfo ~= nil ) then
+            if ( raidPlayerDatabase.playerInfo[playerName] ~= nil ) then
+               raidPlayerDatabase.playerInfo[playerName].online = 1;
+            end
+         end
+      end
+   end
+   
+   startIndex,endIndex,playerName = strfind(message, "^[(%a+)] has gone offline." );
+   if ( playerName ~= nil ) then
+      -- player offline status.
+      print(white..playerName..yellow.." has gone "..red.."offline");
+      if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
+         if ( raidPlayerDatabase.playerInfo ~= nil ) then
+            if ( raidPlayerDatabase.playerInfo[playerName] ~= nil ) then
+               raidPlayerDatabase.playerInfo[playerName].online = 0;
+            end
+         end
+      end
+   end
+   
+   
 end
+
+
+
 
 function RaidMaker_handle_CALENDAR_OPEN_EVENT(selection)
    if ( selection == "PLAYER" ) then
