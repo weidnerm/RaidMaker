@@ -251,10 +251,14 @@ end
 function RaidMaker_SetUpSync()
    local result = true;
    
-   result = RegisterAddonMessagePrefix(RaidMaker_appMessagePrefix)
-   
+   result = RegisterAddonMessagePrefix(RaidMaker_appSyncPrefix)
    if ( result == false ) then
-      print(red.."RaidMaker Error:"..white.." unable to register Sync prefix.");
+      print(red.."RaidMaker Error:"..white.." unable to register Sync Init prefix.");
+   end
+
+   result = RegisterAddonMessagePrefix(RaidMaker_appMessagePrefix)  
+   if ( result == false ) then
+      print(red.."RaidMaker Error:"..white.." unable to register Sync Normal prefix.");
    end
 end
 
@@ -315,18 +319,22 @@ function RaidMaker_repeatLoggedRaid(historyIndex)
                   if ( raidPlayerDatabase.playerInfo[charName] ~= nil ) then
                      if ( menuPlayerNameInfo.tank == 1 ) then
                         raidPlayerDatabase.playerInfo[charName].tank = 1;
+                        raidPlayerDatabase.playerInfo[charName].groupNum = RaidMaker_currentGroupNumber;
                         RaidMaker_sendUpdateToRemoteApps(charName, "T");
                      end
                      if ( menuPlayerNameInfo.heals == 1 ) then
                         raidPlayerDatabase.playerInfo[charName].heals = 1;
+                        raidPlayerDatabase.playerInfo[charName].groupNum = RaidMaker_currentGroupNumber;
                         RaidMaker_sendUpdateToRemoteApps(charName, "H");
                      end
                      if ( menuPlayerNameInfo.mDps == 1 ) then
                         raidPlayerDatabase.playerInfo[charName].mDps = 1;
+                        raidPlayerDatabase.playerInfo[charName].groupNum = RaidMaker_currentGroupNumber;
                         RaidMaker_sendUpdateToRemoteApps(charName, "M");
                      end
                      if ( menuPlayerNameInfo.rDps == 1 ) then
                         raidPlayerDatabase.playerInfo[charName].rDps = 1;
+                        raidPlayerDatabase.playerInfo[charName].groupNum = RaidMaker_currentGroupNumber;
                         RaidMaker_sendUpdateToRemoteApps(charName, "R");
                      end
 
@@ -410,6 +418,9 @@ function RaidMaker_buildRaidList(origDatabase)
          newRaidDatabase.playerInfo[name].rDps = 0;
          newRaidDatabase.playerInfo[name].online = "";
          newRaidDatabase.playerInfo[name].syncIndex = 0;
+         newRaidDatabase.playerInfo[name].inGroup = 0;
+         newRaidDatabase.playerInfo[name].guildRankIndex = 100; -- big number. means uninitialized
+         newRaidDatabase.playerInfo[name].partyInviteDeferred = 0; -- no party invite queued at this point.
          newRaidDatabase.playerInfo[name].groupNum = 255;
 
          local su_weekday, su_month, su_day, su_year, su_hour, su_minute = CalendarEventGetInviteResponseTime(index);
@@ -421,6 +432,8 @@ function RaidMaker_buildRaidList(origDatabase)
          newRaidDatabase.playerInfo[name].signupInfo.year    = su_year   ;
          newRaidDatabase.playerInfo[name].signupInfo.hour    = su_hour   ;
          newRaidDatabase.playerInfo[name].signupInfo.minute  = su_minute ;
+         -- NOTE. if any fields are added and initialized here, add them to guild roster update area too.
+         
 
          if ( copyRaidPlayerSettings == true ) then
             -- its the same calendar. copy the fields from the old one
@@ -434,7 +447,6 @@ function RaidMaker_buildRaidList(origDatabase)
             end
          end
 
-         newRaidDatabase.playerInfo[name].inGroup = 0;
          if ( GetNumRaidMembers() == 0 ) then
             if (UnitInParty(name) ) then
                newRaidDatabase.playerInfo[name].inGroup = 1;
@@ -444,10 +456,6 @@ function RaidMaker_buildRaidList(origDatabase)
                newRaidDatabase.playerInfo[name].inGroup = 1;
             end
          end
-
-         newRaidDatabase.playerInfo[name].guildRankIndex = 100; -- big number. means uninitialized
-
-         newRaidDatabase.playerInfo[name].partyInviteDeferred = 0; -- no party invite queued at this point.
 
          RaidMaker_syncIndexToNameTable[index] = name; -- build up the list of names. will be sorted later.
       end
@@ -489,6 +497,7 @@ end
 function RaidMaker_GuildRosterUpdate(flag)
    -- timestamp the update.
    previousGuildRosterUpdateTime = time();
+   local raidDatabaseResortNeeded = 0;
    guildRosterInformation = {}
 
    if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
@@ -499,6 +508,36 @@ function RaidMaker_GuildRosterUpdate(flag)
 
          for index=1,numGuildMembers do
             name, rank, rankIndex, level, class, zone, note, officernote, online, status, classFileName = GetGuildRosterInfo(index);
+
+            if ( raidPlayerDatabase.playerInfo[name] == nil ) then
+               raidPlayerDatabase.playerInfo[name] = {}; -- create empty fields
+               raidPlayerDatabase.playerInfo[name].inviteStatus = 8; -- INVITED = 1;ACCEPTED = 2;DECLINED = 3;CONFIRMED = 4;OUT = 5;STANDBY = 6;SIGNEDUP = 7;NOT_SIGNEDUP = 8;TENTATIVE = 9
+               raidPlayerDatabase.playerInfo[name].classFilename = classFileName; -- "WARRIOR", "PRIEST", etc
+
+               raidPlayerDatabase.playerInfo[name].tank = 0;
+               raidPlayerDatabase.playerInfo[name].heals = 0;
+               raidPlayerDatabase.playerInfo[name].mDps = 0;
+               raidPlayerDatabase.playerInfo[name].rDps = 0;
+               raidPlayerDatabase.playerInfo[name].online = "";
+               raidPlayerDatabase.playerInfo[name].syncIndex = 0;
+               raidPlayerDatabase.playerInfo[name].inGroup = 0;
+               raidPlayerDatabase.playerInfo[name].guildRankIndex = 100; -- big number. means uninitialized
+               raidPlayerDatabase.playerInfo[name].partyInviteDeferred = 0; -- no party invite queued at this point.
+               raidPlayerDatabase.playerInfo[name].groupNum = 255;
+      
+               raidPlayerDatabase.playerInfo[name].signupInfo = {};      
+               raidPlayerDatabase.playerInfo[name].signupInfo.weekday = 1;
+               raidPlayerDatabase.playerInfo[name].signupInfo.month   = 1  ;
+               raidPlayerDatabase.playerInfo[name].signupInfo.day     = 1    ;
+               raidPlayerDatabase.playerInfo[name].signupInfo.year    = 3000   ;
+               raidPlayerDatabase.playerInfo[name].signupInfo.hour    = 1   ;
+               raidPlayerDatabase.playerInfo[name].signupInfo.minute  = 1 ;
+               -- NOTE. if any fields are added and initialized here, add them to guild roster update area too.
+
+               ---xxx
+               
+               raidDatabaseResortNeeded = 1;
+            end
 
             -- build guild roster database so we can look up main chars
             local startIndex,endIndex,nameOfMainChar;
@@ -518,6 +557,28 @@ function RaidMaker_GuildRosterUpdate(flag)
             if ( raidPlayerDatabase.playerInfo[name] ~= nil ) then
                raidPlayerDatabase.playerInfo[name].zone           = zone;
                raidPlayerDatabase.playerInfo[name].guildRankIndex = rankIndex;
+            end            
+         end
+         
+         -- resort the display order if we added any members.
+         if (raidDatabaseResortNeeded == 1) then
+            if ( raidPlayerDatabase.title ~= nil ) then
+               playerSortedList = RaidMaker_buildPlayerListSort(raidPlayerDatabase);
+               table.sort(playerSortedList, RaidMaker_ascendInviteStatusOrder);
+            end
+         end
+
+         --
+         -- build up sync list (alphabetical sorted list of names combined from calendar and guild roster)
+         --
+         RaidMaker_syncIndexToNameTable = RaidMaker_buildPlayerListSort(raidPlayerDatabase);
+         table.sort(RaidMaker_syncIndexToNameTable);  -- default sort is ascending alphabetical
+         local playerIndex,tempName;
+         for playerSyncIndex,tempName in pairs(RaidMaker_syncIndexToNameTable) do
+            if ( tempName ~= nil) then
+               if ( raidPlayerDatabase.playerInfo[tempName] ~= nil ) then -- need this check in case non-guildie invited
+                  raidPlayerDatabase.playerInfo[tempName].syncIndex = playerSyncIndex;
+               end
             end
          end
 
@@ -1279,7 +1340,7 @@ function RaidMaker_TextTableUpdate()
       elseif ( raidPlayerDatabase.playerInfo[charName].inviteStatus == 7 ) then
          textBox:SetText(green.."Signed Up");
       elseif ( raidPlayerDatabase.playerInfo[charName].inviteStatus == 8 ) then
-         textBox:SetText(red.."Not Signed Up");
+         textBox:SetText(mediumGrey.."Not Signed Up");
       elseif ( raidPlayerDatabase.playerInfo[charName].inviteStatus == 9 ) then
          textBox:SetText(yellow.."Tentative");
       else
@@ -1583,7 +1644,9 @@ function RaidMaker_handle_CHAT_MSG_LOOT(message, sender, language, channelString
          if ( GetNumRaidMembers() ~= 0 ) then -- only log it if we are in a raid. i.e. filter heroics
             if ( itemID ~= "49426" ) and  -- filter Emblem of Frost
                ( itemID ~= "22450" ) and -- filter Void Crystal
-               ( itemID ~= "34057" ) then -- filter Abyss Crystal
+               ( itemID ~= "34057" ) and -- filter Abyss Crystal
+               ( itemID ~= "52722" ) and -- filter Maelstrom Crystal
+               ( itemID ~= "71998" ) then -- filter Essence of Destruction
                RaidMaker_addLootEntryToLootLog(playerName, itemID, itemLink);
             end
          end
@@ -1725,6 +1788,7 @@ function RaidMaker_handle_CHAT_MSG_ADDON(prefix, message, channel, sender)
    local index,charName,charFields
    if ( RaidMaker_sync_enabled == 1 ) then -- only process messages if sync is enabled.
       if ( prefix == RaidMaker_appMessagePrefix ) then -- make sure its not our message
+--print("Got prefix <"..RaidMaker_appMessagePrefix.."> msg <"..message..">");
          if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
             if ( raidPlayerDatabase.textureIndex ~= nil ) then
                local raidId, msgFormat, rxDay, rxHour, rxMin, appId, msgSeqNum, remoteAction, remoteDataBase = strsplit(":",message, 9 );
@@ -1809,7 +1873,7 @@ function RaidMaker_handle_CHAT_MSG_ADDON(prefix, message, channel, sender)
             end
          end
       elseif ( prefix == RaidMaker_appSyncPrefix ) then
-
+--print("Got prefix <"..RaidMaker_appSyncPrefix.."> msg <"..message..">");
          if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
             local remoteAppInstanceId, msgFormat, opcode, raidId = strsplit(":",message, 4 );
             if ( remoteAppInstanceId ~= nil ) and
@@ -1822,7 +1886,7 @@ function RaidMaker_handle_CHAT_MSG_ADDON(prefix, message, channel, sender)
                         if ( opcode == "SyncReq" ) then
                            -- we received a request for sync. send our database.
                            RaidMaker_sendUpdateToRemoteApps("SYNCDB");
-
+--print("Sending Database due to sync request.");
                            -- track who has been contributing.
                            RaidMaker_updateRaidPlannerList_seen(sender)
 
@@ -1952,7 +2016,7 @@ function RaidMaker_sendUpdateToRemoteApps(playerName, actionId)
          local txMsg = "";
 
          txMsg = txMsg..raidPlayerDatabase.textureIndex..":"; -- Raid Id
-         txMsg = txMsg..RaidMaker_syncProtocolVersion..":";                          -- version
+         txMsg = txMsg..RaidMaker_syncProtocolVersion..":";  -- protocol version
          txMsg = txMsg..raidPlayerDatabase.day..":";
          txMsg = txMsg..raidPlayerDatabase.hour..":";
          txMsg = txMsg..raidPlayerDatabase.minute..":";
@@ -3866,6 +3930,7 @@ function RaidMaker_SetUpGuiFields()
                                                       RaidMaker_syncProtocolVersion..":"..
                                                       "SyncReq:"..
                                                       raidPlayerDatabase.textureIndex, "GUILD" );
+--print("sending sync request.");               
          end
       else
          RaidMaker_sync_enabled = 0;
