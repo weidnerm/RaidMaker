@@ -11,8 +11,8 @@ local green  = "|c0000ff00";
 local blue   = "|c000000ff";
 local raidPlayerDatabase = {};
 local playerSortedList = {};
-local raidConvertArmedFlag = false;
-local raidLootTypeArmedFlag = false;
+local raidSetupArmedFlag = false;
+local pendingInvitesReadyArmedFlag = false;
 local numMembersToPromoteToAssist = 0;
 local guildRankAssistThreshold = 3;  -- 0=Guild Master. 1=Officer; 2=Lieutenant; etc...  Controls if officers get assist.
                                      -- set to 0 for no promote. 1 for GM only, 2 for Officers, GM, etc
@@ -257,8 +257,7 @@ function RaidMaker_buildRaidList(origDatabase)
    -- start a new database from scratch
    local newRaidDatabase = {};
    local copyRaidPlayerSettings = false;
-   raidConvertArmedFlag = false;
-   raidLootTypeArmedFlag = false;
+   raidSetupArmedFlag = false;
    numMembersToPromoteToAssist = 0;
 
    -- get the raid title
@@ -392,6 +391,7 @@ end
 function RaidMaker_GuildRosterUpdate(flag)
    -- timestamp the update.
    previousGuildRosterUpdateTime = time();
+   local guildRosterInformation = {}
 
    if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
       if ( raidPlayerDatabase.playerInfo ~= nil ) then
@@ -401,7 +401,14 @@ function RaidMaker_GuildRosterUpdate(flag)
 
          for index=1,numGuildMembers do
             name, rank, rankIndex, level, class, zone, note, officernote, online, status, classFileName = GetGuildRosterInfo(index);
-
+            
+            -- build guild roster database so we can look up main chars
+            local startIndex,endIndex,nameOfMainChar = strfind(note, "%((.*)%)" );
+            guildRosterInformation[name] = {}
+            guildRosterInformation[name].rankIndex = rankIndex
+            guildRosterInformation[name].nameOfMainChar = nameOfMainChar
+            
+            -- update the raid database with this guild member information
             if ( raidPlayerDatabase.playerInfo[name] ~= nil ) then
                -- player is included in calendar list. lets look them up.
                if ( online == 1 ) then
@@ -412,6 +419,25 @@ function RaidMaker_GuildRosterUpdate(flag)
                
                raidPlayerDatabase.playerInfo[name].zone           = zone;
                raidPlayerDatabase.playerInfo[name].guildRankIndex = rankIndex;
+
+            end
+         end
+
+         local charName,charFields;
+         for charName,charFields in pairs(raidPlayerDatabase.playerInfo) do
+            if ( guildRosterInformation[charName] ~= nil ) then -- make sure the player is in the guild
+               local nameOfMainChar = guildRosterInformation[charName].nameOfMainChar
+               
+               if ( nameOfMainChar ~= nil ) then -- make sure the char has a main.
+                  if ( guildRosterInformation[nameOfMainChar] ~= nil ) then -- make sure the main is in the guild (might be some other text)
+                     if ( guildRosterInformation[nameOfMainChar].rankIndex ~= nil ) then
+                        if ( guildRosterInformation[nameOfMainChar].rankIndex < raidPlayerDatabase.playerInfo[charName].guildRankIndex ) then
+                           -- update the database with the main's rank.
+                           raidPlayerDatabase.playerInfo[charName].guildRankIndex = guildRosterInformation[nameOfMainChar].rankIndex;
+                        end
+                     end
+                  end
+               end
             end
          end
          
@@ -1922,49 +1948,55 @@ function RaidMaker_handle_PARTY_MEMBERS_CHANGED()
       if ( raidPlayerDatabase.playerInfo ~= nil ) then
 
          -- only set up the group if the user has selected the feature.
-         if ( raidConvertArmedFlag == true ) then
+         if ( raidSetupArmedFlag == true ) then
             
-            if ( GetNumRaidMembers() == 0 ) then
+            local method, partyMaster, raidMaster
+            local numRaidMembers
+            
+            lootMethod, partyMaster, raidMaster = GetLootMethod()
+            numRaidMembers = GetNumRaidMembers()
+            lootThreshold = GetLootThreshold()
+            
+            if ( numRaidMembers == 0 ) then
                -- we are not in a raid. might need to convert it to one
                         
                if ( GetNumPartyMembers() > 0 ) then
                   -- we are in a party. lets convert it to a raid.
-                  raidConvertArmedFlag = false; -- dont run this again.
-      
                   ConvertToRaid();
-                  
-                  -- set master looter
-                  local selfName = GetUnitName("player",true); -- get the raid leader name (one running this)
-                  SetLootMethod("master", selfName);
-      
-                  -- set loot rules
-                  raidLootTypeArmedFlag = true;
                end
-            else
-               -- we are already in a raid.  just need to configure looting.
-               raidConvertArmedFlag = false; -- dont run this again.
-      
+               pendingInvitesReadyArmedFlag = true
+               
+            elseif ( pendingInvitesReadyArmedFlag == true ) then
+               
+               -- invite the pending players
+               for rowIndex=1,#playerSortedList do
+                  charName = playerSortedList[rowIndex];
+                  if ( raidPlayerDatabase.playerInfo[charName].partyInviteDeferred == 1) then
+                     -- player needs an invite
+                     raidPlayerDatabase.playerInfo[charName].partyInviteDeferred = 0;
+                     InviteUnit(charName);
+                  end
+               end
+               pendingInvitesReadyArmedFlag = false   
+               
+            elseif ( lootMethod ~= "master" ) then
+               -- raid is not yet configured for master looter.  lets set that up.
+               
                -- set master looter
                local selfName = GetUnitName("player",true); -- get the raid leader name (one running this)
-               SetLootMethod("master", selfName, 4);
+               SetLootMethod("master", selfName);
                
-               -- set loot rules
-               raidLootTypeArmedFlag = true;
-                              
-            end
-         elseif ( raidLootTypeArmedFlag == true ) then
-            raidLootTypeArmedFlag = false;
-            -- set loot rules
-            SetLootThreshold(4);  -- set the threshold to epic.
+            elseif ( lootThreshold ~= 4 ) then
+               -- loot threshold is not yet set to epic.  configure it.
+               
+               -- set loot to epic
+               SetLootThreshold(4);  -- set the threshold to epic.
             
-            -- invite the pending players
-            for rowIndex=1,#playerSortedList do
-               charName = playerSortedList[rowIndex];
-               if ( raidPlayerDatabase.playerInfo[charName].partyInviteDeferred == 1) then
-                  -- player needs an invite
-                  raidPlayerDatabase.playerInfo[charName].partyInviteDeferred = 0;
-                  InviteUnit(charName);
-               end
+            
+            else
+               -- raid setup is complete.  all checks passed.
+               raidSetupArmedFlag = false
+
             end
          end
       
@@ -2076,7 +2108,7 @@ function RaidMaker_HandleSendInvitesButton()
          end
       end
    end
-   raidConvertArmedFlag = true; -- indicate that on subsequent party change event we might need to convert to raid and configure looting.
+   raidSetupArmedFlag = true; -- indicate that on subsequent party change event we might need to convert to raid and configure looting.
    
    RaidMaker_UpdatePlayerAttendanceLog();
    
