@@ -252,6 +252,14 @@ function RaidMaker_UpdateOldLootLogs()
    
       for index=1,#RaidMaker_lootLogData do        -- loop through each historical log entry.
          
+         if ( RaidMaker_lootLogData[index].itemName == nil ) then
+            -- we have an old entry from when the name extraction was broken.  lets fix it.
+            RaidMaker_lootLogData[index].AggregateLootInfo = nil; -- clear out the aggregate log.  it will be fixed right after this.
+            
+            local startIndex1,endIndex1,itemNameText = strfind(RaidMaker_lootLogData[index].itemLink, "%[(.*)%]");
+            RaidMaker_lootLogData[index].itemName = itemNameText;
+         end
+
          if ( RaidMaker_lootLogData[index] ~= nil ) and
             ( RaidMaker_lootLogData[index].AggregateLootInfo   == nil ) and
             ( RaidMaker_lootLogData[index].itemName   ~= nil ) and
@@ -268,7 +276,6 @@ function RaidMaker_UpdateOldLootLogs()
                                                              RaidMaker_lootLogData[index].rollValue .."^" ..
                                                              RaidMaker_lootLogData[index].itemId    .."^" ..
                                                              RaidMaker_lootLogData[index].itemLink     ;
-            
          end      
       end
    end
