@@ -35,11 +35,12 @@ local guildRankAssistThreshold = 3;  -- 0=Guild Master. 1=Officer; 2=Lieutenant;
                                      -- set to 0 for no promote. 1 for GM only, 2 for Officers, GM, etc
 local raidMakerLaunchCalEditButton
 local raidMakerLaunchCalViewButton
-RaidMaker_testData = {};
+RaidMaker_lootLogData = {};
 local RaidMaker_testTrialNum = 1;
 local RaidMaker_RollLog = {};
 local RaidMaker_sortedRollList = {};
 local RaidMaker_sortRollAlgorithm_id = 1;   -- 1=sort by roll value; 2=sort by time; 3=sort by playername
+local RaidMaker_highestRoll = 0;
 
 -- change to use the array instead of these locals
 local classColorDeathKnight   = "|c00C41F3B";
@@ -429,7 +430,6 @@ function RaidMaker_buildRaidList(origDatabase)
       local name, level, className, classFileName, inviteStatus, modStatus, inviteIsMine, inviteType;
       for index=1,numInvites do
          name, level, className, classFileName, inviteStatus, modStatus, inviteIsMine, inviteType = CalendarEventGetInvite(index);
-   --      print (green.."PlayerDB: "..white..name..red.."inviteStatus="..inviteStatus);
    
          newRaidDatabase.playerInfo[name] = {}; -- create empty fields
          newRaidDatabase.playerInfo[name].inviteStatus = inviteStatus; -- INVITED = 1;ACCEPTED = 2;DECLINED = 3;CONFIRMED = 4;OUT = 5;STANDBY = 6;SIGNEDUP = 7;NOT_SIGNEDUP = 8;TENTATIVE = 9
@@ -467,21 +467,6 @@ function RaidMaker_buildRaidList(origDatabase)
    
       RaidMaker_GuildRosterUpdate(); -- try to querry database
       
-      
-      
-      
-   --   print (green.."RaidMaker: "..white.." title: "..red..newRaidDatabase.title);
-   --   for charName,charFields in pairs(newRaidDatabase.playerInfo) do
-   --      local charStatus = "";
-   --      charStatus = charStatus..red.."cls="..yellow..charFields.classFilename;
-   --      charStatus = charStatus..red..";inv="..yellow..charFields.inviteStatus;
-   --      charStatus = charStatus..red..";t="..yellow..charFields.tank;
-   --      charStatus = charStatus..red..";h="..yellow..charFields.heals;
-   --      charStatus = charStatus..red..";d="..yellow..charFields.dps;
-   --      charStatus = charStatus..red..";party="..yellow..charFields.inGroup;
-   --      charStatus = charStatus..red..";on="..yellow..charFields.online;
-   --      print (green.."PlayerDB: "..white..charName..":" ..charStatus);
-   --   end     
    else
       print(red.."RaidMaker error: "..white.."Must open an event through the Calendar first.");
    end
@@ -490,7 +475,6 @@ function RaidMaker_buildRaidList(origDatabase)
 end
 
 function RaidMaker_GuildRosterUpdate(flag)
---   print("GUILD_ROSTER_UPDATE received");
 
    if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
       if ( raidPlayerDatabase.playerInfo ~= nil ) then
@@ -867,9 +851,7 @@ function RaidMaker_TextTableUpdate(startRow)
 
    local currentRow = 1;
    local charName;
---print("RaidMaker_TextTableUpdate("..startRow..")" );   
    
---   for charName,charFields in pairs(raidPlayerDatabase.playerInfo) do
    for rowIndex=startRow,#playerSortedList do
       charName = playerSortedList[rowIndex];
 
@@ -1090,12 +1072,9 @@ end
 function RaidMaker_handle_CHAT_MSG_LOOT(message, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter)
    local startIndex,endIndex,playerName,itemLink
 
-RaidMaker_testData[RaidMaker_testTrialNum]=message; --for testing. delete me.
-RaidMaker_testTrialNum = RaidMaker_testTrialNum +1; --for testing. delete me.
-
---CHAT_MSG_LOOT
---   You receive loot: [link].
---   Flapjacckk receive loot: [link].
+   --CHAT_MSG_LOOT
+   --   You receive loot: [link].
+   --   Flapjacckk receive loot: [link].
 
    -- Check if another player won something
    startIndex,endIndex,playerName,itemLink = strfind(message, "(%a+) receives loot: (.*)." );
@@ -1112,20 +1091,54 @@ RaidMaker_testTrialNum = RaidMaker_testTrialNum +1; --for testing. delete me.
    if (playerName ~= nil ) then
       local startIndex,endIndex,itemID = strfind(arg1, "(%d+):")
       local name, link, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(itemID);
-      if ( quality == 4 ) or ( quality == 3 ) then -- epic(purple)=4;  superior(blue)=3;  green=2; white=1; grey=0
+--      if ( quality == 4 ) or ( quality == 3 ) then -- epic(purple)=4;  superior(blue)=3;  green=2; white=1; grey=0
+      if ( quality >=0  ) or ( quality == 3 ) then -- epic(purple)=4;  superior(blue)=3;  green=2; white=1; grey=0
          -- epic loot found event.
          print(red.."Player="..playerName..white.." got "..green.." itemID="..itemID.." link="..itemLink);
+         RaidMaker_addLootEntryToLootLog(playerName, itemID, itemLink);
       end
    end
 end
+
+function RaidMaker_addLootEntryToLootLog(playerName, itemId, itemLink)
+   local loggedEntryIndex;
+
+   loggedEntryIndex = #RaidMaker_lootLogData+1;
+   RaidMaker_lootLogData[loggedEntryIndex] = {};  -- make it a structure so we can put some fields in.
+   RaidMaker_lootLogData[loggedEntryIndex].itemLink = itemLink;
+   RaidMaker_lootLogData[loggedEntryIndex].playerName = playerName;
+   RaidMaker_lootLogData[loggedEntryIndex].epocTime = time();
+   RaidMaker_lootLogData[loggedEntryIndex].itemId = tonumber( itemId );
+   RaidMaker_lootLogData[loggedEntryIndex].itemName = "fixme";
+   RaidMaker_lootLogData[loggedEntryIndex].rollValue = 0;
+--   RaidMaker_lootLogData[loggedEntryIndex].rollLog = RaidMaker_RollLog;
+   
+   -- find the roll value if its in the list
+   local index;
+   for index = 1,#RaidMaker_RollLog do
+      if ( playerName == RaidMaker_RollLog[index].playerName ) then
+         RaidMaker_lootLogData[loggedEntryIndex].rollValue = tonumber(RaidMaker_RollLog[index].rollValue);
+      end
+   end
+   
+   local timeDeltaSeconds = time() - RaidMaker_lootLogData[loggedEntryIndex].epocTime;
+   
+   RaidMaker_LogTab_Loot_FieldNames[2]:SetText(playerName);
+   RaidMaker_LogTab_Loot_FieldItemLink[2]:SetText(itemLink);
+   RaidMaker_LogTab_Loot_FieldRollValues[2]:SetText(rollValue);
+   RaidMaker_LogTab_Loot_FieldRollAges[2]:SetText(timeDeltaSeconds);   
+   
+   
+   
+
+end
+
+
 
 function RaidMaker_handle_LOOT_OPENED(autoloot)
 --print("LOOT_OPENED event: autoloot="..autoloot);
 end
 
---function RaidMaker_handle_CHAT_MSG_EMOTE(autoloot)
---print("EMOTE event: sender="..sender.." msg="..message.." target="..target);
---end
 
 
 function RaidMaker_handle_CHAT_MSG_GUILD(message, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter)
@@ -1144,15 +1157,28 @@ function RaidMaker_handle_CHAT_MSG_PARTY(message, sender, language, channelStrin
    RaidMaker_parse_for_pass(message, sender);
 end
 
+function RaidMaker_handle_CHAT_MSG_PARTY_LEADER(message, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter)
+   RaidMaker_parse_for_pass(message, sender);
+end
+
+function RaidMaker_handle_CHAT_MSG_RAID_LEADER(message, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter)
+   RaidMaker_parse_for_pass(message, sender);
+end
+
+function RaidMaker_handle_CHAT_MSG_RAID_WARNING(message, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter)
+   RaidMaker_parse_for_pass(message, sender);
+end
+
+
+
+
+
 function RaidMaker_parse_for_pass(message, playerName)
    local lowerCaseMessage = string.lower(message);
-RaidMaker_testData[RaidMaker_testTrialNum]=playerName..message; --for testing. delete me.
-RaidMaker_testTrialNum = RaidMaker_testTrialNum +1; --for testing. delete me.
 
    startIndex,endIndex = strfind(lowerCaseMessage, "pass" );
    if ( startIndex ~= nil ) then
-print(yellow.."Pass found by "..red..playerName);
-      RaidMaker_addRollEntryToRollLog(playerName, "0");
+      RaidMaker_addRollEntryToRollLog(playerName, 0);
    end
 end
 
@@ -1181,7 +1207,6 @@ function RaidMaker_DisplayRollsDatabase()
    local timeDeltaSeconds;
    
    for index = 1,10 do
---      indexToDisplay = index; -- eventually make this the sorted index starting at the scroll bar position.
       indexToDisplay = RaidMaker_sortedRollList[index]; -- eventually make this the sorted index starting at the scroll bar position.
 
       if ( index <= #RaidMaker_RollLog ) then
@@ -1193,6 +1218,12 @@ function RaidMaker_DisplayRollsDatabase()
          
          timeDeltaSeconds = currentTime - RaidMaker_RollLog[indexToDisplay].epocTime;
          
+         if ( RaidMaker_RollLog[indexToDisplay].rollValue == RaidMaker_highestRoll ) then
+            playerNameColor = green;
+            rollValueColor = green;
+            rollAgeColor = green;
+         end
+         
          if ( timeDeltaSeconds > (2*60) ) then -- roll is old. color the entry grey
             playerNameColor = mediumGrey;
             rollValueColor = mediumGrey;
@@ -1200,7 +1231,11 @@ function RaidMaker_DisplayRollsDatabase()
          end
          
          RaidMaker_LogTab_Rolls_FieldPlayerNames[index+1]:SetText(playerNameColor..RaidMaker_RollLog[indexToDisplay].playerName);
-         RaidMaker_LogTab_Rolls_FieldRollValues[index+1]:SetText(rollValueColor..RaidMaker_RollLog[indexToDisplay].rollValue);
+         if ( RaidMaker_RollLog[indexToDisplay].rollValue == 0 ) then
+            RaidMaker_LogTab_Rolls_FieldRollValues[index+1]:SetText(rollValueColor.."pass");
+         else
+            RaidMaker_LogTab_Rolls_FieldRollValues[index+1]:SetText(rollValueColor..RaidMaker_RollLog[indexToDisplay].rollValue);
+         end
          RaidMaker_LogTab_Rolls_FieldRollAges[index+1]:SetText(rollAgeColor..timeDeltaSeconds);
       else
          -- blank out the row
@@ -1211,13 +1246,23 @@ function RaidMaker_DisplayRollsDatabase()
    end
 end
 
+function RaidMaker_ResetRolls()
+   RaidMaker_RollLog = {}; -- start with a blank array.
+   RaidMaker_highestRoll = 0;
+   RaidMaker_DisplayRollsDatabase();
+end
+
 function RaidMaker_resortRollsList()
    local index
 
    RaidMaker_sortedRollList = {}; -- start with a blank array.
    
-   for index = 1,#RaidMaker_RollLog do -- pre-fill the array 
-      RaidMaker_sortedRollList[index] = index;
+   for index = 1,#RaidMaker_RollLog do
+      RaidMaker_sortedRollList[index] = index; -- pre-fill the array 
+      
+      if ( RaidMaker_highestRoll < RaidMaker_RollLog[index].rollValue ) then
+         RaidMaker_highestRoll = RaidMaker_RollLog[index].rollValue; -- we have a new highest.
+      end
    end
    
    -- sort the table
@@ -1286,23 +1331,18 @@ end
 
 function RaidMaker_handle_CHAT_MSG_SYSTEM(message, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter)
 
--- Lotusblossem has gone offline
--- [Lotusblossem] has come online.
-print("MSG_SYSTEM event");
-RaidMaker_testData[RaidMaker_testTrialNum]=message;
-RaidMaker_testTrialNum = RaidMaker_testTrialNum +1;
+   -- Lotusblossem has gone offline
+   -- [Lotusblossem] has come online.
 
    startIndex,endIndex,playerName,rollValue = strfind(message, "^(%a+) rolls (%d+) .*1-100%)" );
    if ( rollValue ~= nil ) then
       -- roll event detected.
-print(white.."Roll of "..red..rollValue..white.." done by "..green..playerName);
-      RaidMaker_addRollEntryToRollLog(playerName, rollValue);
+      RaidMaker_addRollEntryToRollLog(playerName, tonumber(rollValue) );
    end
    
    startIndex,endIndex,playerName = strfind(message, "(%a+)]|h has come online." );
    if ( playerName ~= nil ) then
       -- player online status.
---      print(white..playerName..yellow.." has come "..green.."online");
       if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
          if ( raidPlayerDatabase.playerInfo ~= nil ) then
             if ( raidPlayerDatabase.playerInfo[playerName] ~= nil ) then
@@ -1316,7 +1356,6 @@ print(white.."Roll of "..red..rollValue..white.." done by "..green..playerName);
    startIndex,endIndex,playerName = strfind(message, "^(%a+) has gone offline." );
    if ( playerName ~= nil ) then
       -- player offline status.
---      print(white..playerName..yellow.." has gone "..red.."offline");
       if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
          if ( raidPlayerDatabase.playerInfo ~= nil ) then
             if ( raidPlayerDatabase.playerInfo[playerName] ~= nil ) then
@@ -1401,7 +1440,6 @@ function RaidMaker_handle_PARTY_MEMBERS_CHANGED()
                   -- player needs an invite
                   raidPlayerDatabase.playerInfo[charName].partyInviteDeferred = 0;
                   InviteUnit(charName);
---print("sending deferred invite to "..charName);
                end
             end
          end
@@ -1501,15 +1539,12 @@ function RaidMaker_HandleSendInvitesButton()
                   
                   numInvitesToSendHere = numInvitesToSendHere - 1;
                   
---print("sending invite to "..charName);
-                  
                   InviteUnit(charName);
 
 
                else
                   -- need to defer the invitation.
                   raidPlayerDatabase.playerInfo[charName].partyInviteDeferred = 1;
---print("Deferring invite to "..charName);
                end
             end
          end

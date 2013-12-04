@@ -18,6 +18,10 @@
             this:RegisterEvent("CHAT_MSG_RAID");
             this:RegisterEvent("CHAT_MSG_SAY");
             this:RegisterEvent("CHAT_MSG_PARTY");
+            this:RegisterEvent("CHAT_MSG_PARTY_LEADER");
+            this:RegisterEvent("CHAT_MSG_RAID_LEADER");
+            this:RegisterEvent("CHAT_MSG_RAID_WARNING");
+            
 --            this:RegisterEvent("CHAT_MSG_EMOTE");
          </OnLoad> 
          <OnEvent> 
@@ -43,8 +47,12 @@
                RaidMaker_handle_CHAT_MSG_SAY(...); 
             elseif (event == "CHAT_MSG_PARTY") then 
                RaidMaker_handle_CHAT_MSG_PARTY(...); 
---            elseif (event == "CHAT_MSG_EMOTE") then 
---               RaidMaker_handle_CHAT_MSG_EMOTE(...); 
+            elseif (event == "CHAT_MSG_PARTY_LEADER") then 
+               RaidMaker_handle_CHAT_MSG_PARTY_LEADER(...); 
+            elseif (event == "CHAT_MSG_RAID_LEADER") then 
+               RaidMaker_handle_CHAT_MSG_RAID_LEADER(...); 
+            elseif (event == "CHAT_MSG_RAID_WARNING") then 
+               RaidMaker_handle_CHAT_MSG_RAID_WARNING(...); 
             end 
          </OnEvent> 
       </Scripts> 
@@ -2301,7 +2309,7 @@
                   </Backdrop>
                </Frame>   
                <Frame name="RaidMaker_GroupRollFrame">
-                  <Size><AbsDimension x="540" y="210" /></Size>
+                  <Size><AbsDimension x="440" y="210" /></Size>
                   <Anchors>
                      <Anchor point="TOPLEFT" relativeTo="$parent">
                         <Offset>
@@ -2315,6 +2323,22 @@
                      <EdgeSize><AbsValue val="16" /></EdgeSize>
                   </Backdrop>
                </Frame>   
+               <Button name="RaidMaker_RollResetButton" inherits="UIPanelButtonTemplate2" text="Reset">
+                  <Size><AbsDimension x="80" y="22"/></Size>
+                  <Anchors>
+                     <Anchor point="TOPLEFT" relativePoint="TOPRIGHT"  relativeTo="RaidMaker_GroupRollFrame">
+                         <Offset>
+                             <AbsDimension x="30" y="-10"/>
+                         </Offset>
+                     </Anchor>
+                  </Anchors>
+                  <Scripts>
+                     <OnClick>
+                        RaidMaker_ResetRolls();
+                     </OnClick>
+                  </Scripts>
+               </Button>
+
             </Frames>   
        <!--end Background Frame-->
             
