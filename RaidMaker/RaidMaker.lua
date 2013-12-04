@@ -2023,6 +2023,23 @@ function RaidMaker_handle_PARTY_MEMBERS_CHANGED()
                      PromoteToAssistant(name);
                      numMembersToPromoteToAssist = numMembersToPromoteToAssist - 1; -- account for the assist we promoted.
                   end
+                  
+                  
+                  local isTank, isHealer, isDamage = UnitGroupRolesAssigned(name)
+                  
+                  if ( raidPlayerDatabase.playerInfo[name].tank == 1 ) and 
+                     ( isTank == false ) then
+                     UnitSetRole(name,"TANK");
+                  elseif ( raidPlayerDatabase.playerInfo[name].heals == 1 ) and 
+                     ( isHealer == false ) then
+                     UnitSetRole(name,"HEALER");
+                  elseif ( raidPlayerDatabase.playerInfo[name].mDps == 1 ) and 
+                     ( isDamage == false ) then
+                     UnitSetRole(name,"DAMAGER");
+                  elseif ( raidPlayerDatabase.playerInfo[name].rDps == 1 ) and 
+                     ( isDamage == false ) then
+                     UnitSetRole(name,"DAMAGER");
+                  end
                end 
             end
          end
