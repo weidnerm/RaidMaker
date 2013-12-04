@@ -111,6 +111,8 @@ function RaidMaker_OnLoad()
    RaidMaker_SetUpGuiFields();
 
    RaidMaker_DisplayLootDatabase();
+   
+   RaidMaker_UpdateOldLootLogs();
 end
 
 
@@ -242,6 +244,36 @@ function RaidMaker_Handler(msg)
 
 
 end
+
+function RaidMaker_UpdateOldLootLogs()
+   local index; 
+   
+   if ( RaidMaker_lootLogData ~= nil ) then
+   
+      for index=1,#RaidMaker_lootLogData do        -- loop through each historical log entry.
+         
+         if ( RaidMaker_lootLogData[index] ~= nil ) and
+            ( RaidMaker_lootLogData[index].AggregateLootInfo   == nil ) and
+            ( RaidMaker_lootLogData[index].itemName   ~= nil ) and
+            ( RaidMaker_lootLogData[index].epocTime   ~= nil ) and
+            ( RaidMaker_lootLogData[index].playerName ~= nil ) and
+            ( RaidMaker_lootLogData[index].rollValue  ~= nil ) and
+            ( RaidMaker_lootLogData[index].itemLink   ~= nil ) and
+            ( RaidMaker_lootLogData[index].itemId     ~= nil ) then
+            
+            -- append each field in a super field.  Use "^" as the separator
+            RaidMaker_lootLogData[index].AggregateLootInfo = RaidMaker_lootLogData[index].itemName  .."^" ..
+                                                             RaidMaker_lootLogData[index].epocTime  .."^" ..
+                                                             RaidMaker_lootLogData[index].playerName.."^" ..
+                                                             RaidMaker_lootLogData[index].rollValue .."^" ..
+                                                             RaidMaker_lootLogData[index].itemId    .."^" ..
+                                                             RaidMaker_lootLogData[index].itemLink     ;
+            
+         end      
+      end
+   end
+end
+
 
 function RaidMaker_repeatLoggedRaid(historyIndex)
 
@@ -1539,6 +1571,14 @@ function RaidMaker_addLootEntryToLootLog(playerName, itemId, itemLink)
    RaidMaker_lootLogData[loggedEntryIndex].itemName = itemNameText;
    RaidMaker_lootLogData[loggedEntryIndex].rollValue = 0;
 --   RaidMaker_lootLogData[loggedEntryIndex].rollLog = RaidMaker_RollLog;
+   -- append each field in a super field.  Use "^" as the separator
+   RaidMaker_lootLogData[loggedEntryIndex].AggregateLootInfo = RaidMaker_lootLogData[loggedEntryIndex].itemName  .."^" ..
+                                                               RaidMaker_lootLogData[loggedEntryIndex].epocTime  .."^" ..
+                                                               RaidMaker_lootLogData[loggedEntryIndex].playerName.."^" ..
+                                                               RaidMaker_lootLogData[loggedEntryIndex].rollValue .."^" ..
+                                                               RaidMaker_lootLogData[loggedEntryIndex].itemId    .."^" ..
+                                                               RaidMaker_lootLogData[loggedEntryIndex].itemLink     ;
+   
 
    -- find the roll value if its in the list
    local index;
