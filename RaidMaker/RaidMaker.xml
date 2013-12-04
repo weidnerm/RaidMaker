@@ -1401,9 +1401,6 @@
                      <OnValueChanged>
                          RaidMaker_TextTableUpdate(value)
                      </OnValueChanged>
-                     <OnMouseWheel>
-                         RaidMaker_OnMouseWheel(self, delta)
-                     </OnMouseWheel>
                    </Scripts>
                    <ThumbTexture name="$parentThumbTexture"
                                      file="Interface\Buttons\UI-ScrollBar-Knob">

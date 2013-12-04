@@ -1888,6 +1888,119 @@ function RaidMaker_SetUpClassIcons()
 
 
    --
+   -- Set Up tooltips for roll tab buttons
+   --
+
+   RaidMaker_RollResetButton4:SetScript("OnEnter",
+               function(this)
+                  GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                  GameTooltip:SetText("Purge all roll entries that are older than 4 minutes in age.");
+                  GameTooltip:Show()
+               end)
+   RaidMaker_RollResetButton4:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+   RaidMaker_RollResetButton3:SetScript("OnEnter",
+               function(this)
+                  GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                  GameTooltip:SetText("Purge all roll entries that are older than 3 minutes in age.");
+                  GameTooltip:Show()
+               end)
+   RaidMaker_RollResetButton3:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+   RaidMaker_RollResetButton2:SetScript("OnEnter",
+               function(this)
+                  GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                  GameTooltip:SetText("Purge all roll entries that are older than 2 minutes in age.");
+                  GameTooltip:Show()
+               end)
+   RaidMaker_RollResetButton2:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+   RaidMaker_RollResetButton1:SetScript("OnEnter",
+               function(this)
+                  GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                  GameTooltip:SetText("Purge all roll entries that are older than 1 minutes in age.");
+                  GameTooltip:Show()
+               end)
+   RaidMaker_RollResetButton1:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+   RaidMaker_RollResetButton:SetScript("OnEnter",
+               function(this)
+                  GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                  GameTooltip:SetText("Purge all roll entries.");
+                  GameTooltip:Show()
+               end)
+   RaidMaker_RollResetButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+
+   --
+   -- Set Up tooltips for column header buttons
+   --
+   RaidMaker_TabPage1_SampleTextTab1_GroupedStateHeaderButton:SetScript("OnEnter",
+               function(this)
+                  GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                  GameTooltip:SetText("Sort by Grouped status; Event Response status; Player Name.");
+                  GameTooltip:Show()
+               end)
+   RaidMaker_TabPage1_SampleTextTab1_GroupedStateHeaderButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+   RaidMaker_TabPage1_SampleTextTab1_OnlineStateHeaderButton:SetScript("OnEnter",
+               function(this)
+                  GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                  GameTooltip:SetText("Sort by Online status; Event Response status; Player Name.");
+                  GameTooltip:Show()
+               end)
+   RaidMaker_TabPage1_SampleTextTab1_OnlineStateHeaderButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+   RaidMaker_TabPage1_SampleTextTab1_InviteStatusHeaderButton:SetScript("OnEnter",
+               function(this)
+                  GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                  GameTooltip:SetText("Sort by Event Response status; Player Name.");
+                  GameTooltip:Show()
+               end)
+   RaidMaker_TabPage1_SampleTextTab1_InviteStatusHeaderButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+   RaidMaker_TabPage1_SampleTextTab1_PlayerNameHeaderButton:SetScript("OnEnter",
+               function(this)
+                  GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                  GameTooltip:SetText("Sort by Player Name.");
+                  GameTooltip:Show()
+               end)
+   RaidMaker_TabPage1_SampleTextTab1_PlayerNameHeaderButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+   RaidMaker_TabPage1_SampleTextTab1_ClassHeaderButton:SetScript("OnEnter",
+               function(this)
+                  GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                  GameTooltip:SetText("Sort by Class name; Player Name.");
+                  GameTooltip:Show()
+               end)
+   RaidMaker_TabPage1_SampleTextTab1_ClassHeaderButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+   RaidMaker_TabPage1_SampleTextTab1_TankButton_0:SetScript("OnEnter",
+               function(this)
+                  GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                  GameTooltip:SetText("Sort by Tank status; Healer status; DPS status; Player Name.");
+                  GameTooltip:Show()
+               end)
+   RaidMaker_TabPage1_SampleTextTab1_TankButton_0:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+   RaidMaker_TabPage1_SampleTextTab1_HealButton_0:SetScript("OnEnter",
+               function(this)
+                  GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                  GameTooltip:SetText("Sort by Healer status; Tank status; DPS status; Player Name.");
+                  GameTooltip:Show()
+               end)
+   RaidMaker_TabPage1_SampleTextTab1_HealButton_0:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+   RaidMaker_TabPage1_SampleTextTab1_DpsButton_0:SetScript("OnEnter",
+               function(this)
+                  GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                  GameTooltip:SetText("Sort by DPS status; Tank status; Healer status; Player Name.");
+                  GameTooltip:Show()
+               end)
+   RaidMaker_RollResetButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+
+   --
    -- Set up the RM button on the blizzard calendar event and calendar view screens.
    --
    
@@ -2055,8 +2168,8 @@ function RaidMaker_SetUpClassIcons()
    --
    RaidMaker_LootLog_Slider:SetPoint("TOPLEFT", "RaidMaker_LogTab_Loot_RollAges1", "TOPRIGHT", 0,0);
    RaidMaker_LootLog_Slider:SetScript("OnValueChanged", RaidMaker_DisplayLootDatabase );
-   RaidMaker_LootLog_Slider:EnableMouseWheel(true);
-   RaidMaker_LootLog_Slider:SetScript("OnMouseWheel", function(self,delta) RaidMaker_OnMouseWheelLootLog(self, delta) end );
+--   RaidMaker_LootLog_Slider:EnableMouseWheel(true);
+--   RaidMaker_LootLog_Slider:SetScript("OnMouseWheel", function(self,delta) RaidMaker_OnMouseWheelLootLog(self, delta) end );
 
    if ( #RaidMaker_lootLogData <= 10 ) then
       RaidMaker_LootLog_Slider:SetMinMaxValues(1,1);
@@ -2072,8 +2185,21 @@ function RaidMaker_SetUpClassIcons()
    --
    RaidMaker_RollLog_Slider:SetPoint("TOPLEFT", "RaidMaker_LogTab_Rolls_RollAges1", "TOPRIGHT", 0,0);
    RaidMaker_RollLog_Slider:SetScript("OnValueChanged", RaidMaker_DisplayRollsDatabase );
-   RaidMaker_RollLog_Slider:EnableMouseWheel(true);
-   RaidMaker_RollLog_Slider:SetScript("OnMouseWheel", function(self,delta) RaidMaker_OnMouseWheelRollLog(self, delta) end );
+--   RaidMaker_RollLog_Slider:EnableMouseWheel(true);
+--   RaidMaker_RollLog_Slider:SetScript("OnMouseWheel", function(self,delta) RaidMaker_OnMouseWheelRollLog(self, delta) end );
+
+
+   --
+   -- Set up the mouse wheel to scroll
+   --
+   RaidMaker_GroupRollFrame:EnableMouseWheel(true);
+   RaidMaker_GroupRollFrame:SetScript("OnMouseWheel", function(self,delta) RaidMaker_OnMouseWheelRollLog(self, delta) end );
+   RaidMaker_GroupLootFrame:EnableMouseWheel(true);
+   RaidMaker_GroupLootFrame:SetScript("OnMouseWheel", function(self,delta) RaidMaker_OnMouseWheelLootLog(self, delta) end );
+   RaidMaker_TabPage1:EnableMouseWheel(true);
+   RaidMaker_TabPage1:SetScript("OnMouseWheel", function(self,delta) RaidMaker_OnMouseWheel(self, delta) end );
+
+
 
    RaidMaker_RollLog_Slider:SetMinMaxValues(1,1);
    RaidMaker_RollLog_Slider:SetValue(1);
