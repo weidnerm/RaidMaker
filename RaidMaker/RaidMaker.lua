@@ -33,6 +33,7 @@ local RaidMaker_appMessagePrefix = "DbtRm";
 local RaidMaker_appSyncPrefix = "DbtRs";
 local RaidMaker_sync_enabled;
 local previousGuildRosterUpdateTime = 0
+local RaidMaker_syncIndexToNameTable = {};
 
 -- change to use the array instead of these locals
 local classColorDeathKnight   = "|c00C41F3B";
@@ -256,6 +257,7 @@ function RaidMaker_buildRaidList(origDatabase)
       
       newRaidDatabase.playerInfo = {}; -- create empty fields
       
+      local index;
       local name, level, className, classFileName, inviteStatus, modStatus, inviteIsMine, inviteType;
       for index=1,numInvites do
          name, level, className, classFileName, inviteStatus, modStatus, inviteIsMine, inviteType = CalendarEventGetInvite(index);
@@ -269,7 +271,17 @@ function RaidMaker_buildRaidList(origDatabase)
          newRaidDatabase.playerInfo[name].mDps = 0;
          newRaidDatabase.playerInfo[name].rDps = 0;
          newRaidDatabase.playerInfo[name].online = 0;
-         newRaidDatabase.playerInfo[name].indexInEvent = index;
+         newRaidDatabase.playerInfo[name].syncIndex = 0;
+         
+         local su_weekday, su_month, su_day, su_year, su_hour, su_minute = CalendarEventGetInviteResponseTime(index);
+         newRaidDatabase.playerInfo[name].signupInfo = {};
+
+         newRaidDatabase.playerInfo[name].signupInfo.weekday = su_weekday;
+         newRaidDatabase.playerInfo[name].signupInfo.month   = su_month  ;
+         newRaidDatabase.playerInfo[name].signupInfo.day     = su_day    ;
+         newRaidDatabase.playerInfo[name].signupInfo.year    = su_year   ;
+         newRaidDatabase.playerInfo[name].signupInfo.hour    = su_hour   ;
+         newRaidDatabase.playerInfo[name].signupInfo.minute  = su_minute ;
 
          if ( copyRaidPlayerSettings == true ) then
             -- its the same calendar. copy the fields from the old one
@@ -297,13 +309,22 @@ function RaidMaker_buildRaidList(origDatabase)
          
          newRaidDatabase.playerInfo[name].partyInviteDeferred = 0; -- no party invite queued at this point.
    
+         RaidMaker_syncIndexToNameTable[index] = name; -- build up the list of names. will be sorted later.
       end
       
       -- set up ourself as dps as a default.
       local selfName = GetUnitName("player",true);
       newRaidDatabase.playerInfo[selfName].rDps = 1;
       
-   
+      --
+      -- build up sync list (alphabetical sorted list of names)
+      --
+      table.sort(RaidMaker_syncIndexToNameTable);  -- default sort is ascending alphabetical
+      for index=1,numInvites do
+         local tempName = RaidMaker_syncIndexToNameTable[index];
+         newRaidDatabase.playerInfo[tempName].syncIndex = index;
+      end
+
       GuildRoster(); -- trigger a GUILD_ROSTER_UPDATE event so we can get the online/offline status of players.
    
       RaidMaker_GuildRosterUpdate(); -- try to querry database
@@ -551,6 +572,36 @@ function RaidMaker_ascendInviteStatusOrder(a,b)
       return false;
    end
    
+   if ( raidPlayerDatabase.playerInfo[a].signupInfo.year < raidPlayerDatabase.playerInfo[b].signupInfo.year ) then
+      return true;
+   elseif ( raidPlayerDatabase.playerInfo[a].signupInfo.year > raidPlayerDatabase.playerInfo[b].signupInfo.year ) then
+      return false;
+   end
+
+   if ( raidPlayerDatabase.playerInfo[a].signupInfo.month < raidPlayerDatabase.playerInfo[b].signupInfo.month ) then
+      return true;
+   elseif ( raidPlayerDatabase.playerInfo[a].signupInfo.month > raidPlayerDatabase.playerInfo[b].signupInfo.month ) then
+      return false;
+   end
+
+   if ( raidPlayerDatabase.playerInfo[a].signupInfo.day < raidPlayerDatabase.playerInfo[b].signupInfo.day ) then
+      return true;
+   elseif ( raidPlayerDatabase.playerInfo[a].signupInfo.day > raidPlayerDatabase.playerInfo[b].signupInfo.day ) then
+      return false;
+   end
+
+   if ( raidPlayerDatabase.playerInfo[a].signupInfo.hour < raidPlayerDatabase.playerInfo[b].signupInfo.hour ) then
+      return true;
+   elseif ( raidPlayerDatabase.playerInfo[a].signupInfo.hour > raidPlayerDatabase.playerInfo[b].signupInfo.hour ) then
+      return false;
+   end
+
+   if ( raidPlayerDatabase.playerInfo[a].signupInfo.minute < raidPlayerDatabase.playerInfo[b].signupInfo.minute ) then
+      return true;
+   elseif ( raidPlayerDatabase.playerInfo[a].signupInfo.minute > raidPlayerDatabase.playerInfo[b].signupInfo.minute ) then
+      return false;
+   end
+
    return a<b;
 end
 
@@ -1185,7 +1236,6 @@ function RaidMaker_handle_CHAT_MSG_ADDON(prefix, message, channel, sender)
       if ( prefix == RaidMaker_appMessagePrefix ) then -- make sure its not our message
          if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
             if ( raidPlayerDatabase.textureIndex ~= nil ) then
-   
                local raidId, msgFormat, rxDay, rxHour, rxMin, appId, msgSeqNum, remoteAction, remoteDataBase = strsplit(":",message, 9 );
    
                if ( tonumber(RaidMaker_appInstanceId) ~= tonumber(appId) ) then -- only process messages from remote instances. Different id from ours.
@@ -1196,13 +1246,12 @@ function RaidMaker_handle_CHAT_MSG_ADDON(prefix, message, channel, sender)
                
    --                  if ( RaidMaker_msgSequenceNumber+1 == tonumber(msgSeqNum) ) or -- remote seq number is one more than ours. its a remote update of a click.
                      if ( RaidMaker_msgSequenceNumber   == tonumber(msgSeqNum) ) then -- remote seq number matches ours. There was probably a collision. only accept the remote change. discard the database.
-   
                         local startIndex1,endIndex1,playerIndex,playerAction = strfind(remoteAction, "(%d+)(%a+)" );
                     
                         if ( playerIndex ~= nil ) and 
                            ( playerAction ~= nil ) then
-                           local name, level, className, classFileName, inviteStatus, modStatus, inviteIsMine, inviteType = CalendarEventGetInvite(playerIndex);
-                        
+                           local name = RaidMaker_syncIndexToNameTable[tonumber(playerIndex)];
+                           
                            if ( name ~= nil ) then
                               RaidMaker_processRemoteTransaction(name,playerAction)
                            end
@@ -1240,8 +1289,8 @@ function RaidMaker_handle_CHAT_MSG_ADDON(prefix, message, channel, sender)
                           
                               if ( playerIndex ~= nil ) and 
                                  ( playerAction ~= nil ) then
-                                 local name, level, className, classFileName, inviteStatus, modStatus, inviteIsMine, inviteType = CalendarEventGetInvite(playerIndex);
-                              
+                                 local name = RaidMaker_syncIndexToNameTable[tonumber(playerIndex)];
+
                                  if ( name ~= nil ) then
                                     RaidMaker_processRemoteTransaction(name,playerAction)
                                  end
@@ -1282,7 +1331,7 @@ function RaidMaker_sendUpdateToRemoteApps(playerName, actionId)
          if ( raidPlayerDatabase ~= nil ) then
             if ( raidPlayerDatabase.playerInfo ~= nil ) then
                if ( raidPlayerDatabase.playerInfo[playerName] ~= nil ) then
-                  transaction = raidPlayerDatabase.playerInfo[playerName].indexInEvent..actionId
+                  transaction = raidPlayerDatabase.playerInfo[playerName].syncIndex..actionId
                end
             end
          end
@@ -1307,7 +1356,7 @@ function RaidMaker_sendUpdateToRemoteApps(playerName, actionId)
                ( charFields.mDps   == 1 ) or
                ( charFields.rDps   == 1 ) then
                   
-               txMsg = txMsg..":"..raidPlayerDatabase.playerInfo[charName].indexInEvent;
+               txMsg = txMsg..":"..raidPlayerDatabase.playerInfo[charName].syncIndex;
                   
                if ( charFields.tank   == 1 ) then
                   txMsg = txMsg.."T";
@@ -2247,9 +2296,14 @@ function RaidMaker_SetUpGuiFields()
                
                            local signupText = ""
                            GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT",0,0)
-                           if ( raidPlayerDatabase.playerInfo[playerName].indexInEvent ~= nil ) then
-
-                        		local weekday, month, day, year, hour, minute = CalendarEventGetInviteResponseTime(raidPlayerDatabase.playerInfo[playerName].indexInEvent);
+                           if ( raidPlayerDatabase.playerInfo[playerName].signupInfo ~= nil ) then
+                              
+                              local weekday = raidPlayerDatabase.playerInfo[playerName].signupInfo.weekday;
+                              local month   = raidPlayerDatabase.playerInfo[playerName].signupInfo.month  ;
+                              local day     = raidPlayerDatabase.playerInfo[playerName].signupInfo.day    ;
+                              local year    = raidPlayerDatabase.playerInfo[playerName].signupInfo.year   ;
+                              local hour    = raidPlayerDatabase.playerInfo[playerName].signupInfo.hour   ;
+                              local minute  = raidPlayerDatabase.playerInfo[playerName].signupInfo.minute ;
 
                               if ( weekday ~= nil ) and
                                  ( weekday ~= 0 ) then
@@ -2580,7 +2634,7 @@ function RaidMaker_SetUpGuiFields()
    RaidMaker_TabPage1_SampleTextTab1_InviteStatusHeaderButton:SetScript("OnEnter",
                function(this)
                   GameTooltip_SetDefaultAnchor(GameTooltip, this)
-                  GameTooltip:SetText("Sort by Event Response status; Player Name.");
+                  GameTooltip:SetText("Sort by Event Response status; Response Time; Player Name.");
                   GameTooltip:Show()
                end)
    RaidMaker_TabPage1_SampleTextTab1_InviteStatusHeaderButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
