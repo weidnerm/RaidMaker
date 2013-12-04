@@ -1170,11 +1170,9 @@ function RaidMaker_handle_CHAT_MSG_ADDON(prefix, message, channel, sender)
                      ( tonumber(raidPlayerDatabase.day         ) == tonumber(rxDay ) ) and -- and 
                      ( tonumber(raidPlayerDatabase.hour        ) == tonumber(rxHour) ) and -- and 
                      ( tonumber(raidPlayerDatabase.minute      ) == tonumber(rxMin ) ) then 
-   --print(prefix,message);
                
    --                  if ( RaidMaker_msgSequenceNumber+1 == tonumber(msgSeqNum) ) or -- remote seq number is one more than ours. its a remote update of a click.
                      if ( RaidMaker_msgSequenceNumber   == tonumber(msgSeqNum) ) then -- remote seq number matches ours. There was probably a collision. only accept the remote change. discard the database.
-   --print("updating.");                     
    
                         local startIndex1,endIndex1,playerIndex,playerAction = strfind(remoteAction, "(%d+)(%a+)" );
                     
@@ -1192,9 +1190,6 @@ function RaidMaker_handle_CHAT_MSG_ADDON(prefix, message, channel, sender)
                         --
                         -- remote number is totally different.  Sync up with them.
                         --
-   --if ( remoteDataBase ~= nil ) then
-   --print("Syncing. our="..RaidMaker_msgSequenceNumber.." remote="..msgSeqNum.." transactions="..#remoteDataBase);                     
-   --end
    
                         -- clear out our roles.
                         for charName,charFields in pairs(raidPlayerDatabase.playerInfo) do
@@ -1244,7 +1239,6 @@ function RaidMaker_handle_CHAT_MSG_ADDON(prefix, message, channel, sender)
          end
       elseif ( prefix == RaidMaker_appSyncPrefix ) then
          if ( tonumber(message) ~= RaidMaker_appInstanceId ) then
-print("Sync request received");         
             -- we received a request for sync. send our database.
             RaidMaker_sendUpdateToRemoteApps("SYNCDB");
          end
@@ -2214,6 +2208,30 @@ function RaidMaker_SetUpGuiFields()
             EasyMenu(menuTbl, RaidMaker_TabPage1_SampleTextTab1, "RaidMaker_PlayerName_Button_"..index-1 ,0,0, nil, 10)
          end
       end)
+      item:SetScript("OnEnter",
+         function(self)
+            local myText = self:GetText();
+            local startIndex1,endIndex1,playerName = strfind(myText, "c%x%x%x%x%x%x%x%x(.*)");
+            if ( playerName ~= nil ) then
+               if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
+                  if ( raidPlayerDatabase.playerInfo ~= nil ) then
+                     if ( raidPlayerDatabase.playerInfo[playerName] ~= nil ) then
+                        if ( raidPlayerDatabase.playerInfo[playerName].zone ~= nil ) then
+               
+--                           GameTooltip_SetDefaultAnchor(GameTooltip, self)
+                           GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT",0,0)
+                           GameTooltip:SetText(white..playerName..yellow.." last seen in "..green..raidPlayerDatabase.playerInfo[playerName].zone);
+                           GameTooltip:Show()
+                        else
+                           GuildRoster(); -- trigger a GUILD_ROSTER_UPDATE event so we can get the online/offline status of players.
+                        end
+                     end
+                  end
+               end
+            end
+         end)
+      item:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
 
 
       RaidMaker_PlayerName_Button_Objects[index] = item;
@@ -2454,7 +2472,7 @@ function RaidMaker_SetUpGuiFields()
    RaidMaker_ButtonRefresh:SetScript("OnEnter",
                function(this)
                   GameTooltip_SetDefaultAnchor(GameTooltip, this)
-                  GameTooltip:SetText("Forces refresh on player online status.  Throttled by server.");
+                  GameTooltip:SetText("Forces refresh on player online status and last zone.  Throttled by server.");
                   GameTooltip:Show()
                end)
    RaidMaker_ButtonRefresh:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -2821,7 +2839,7 @@ function RaidMaker_SetUpGuiFields()
    frame:SetScript("OnEnter",
                function(this)
                   GameTooltip_SetDefaultAnchor(GameTooltip, this)
-                  GameTooltip:SetText("Clicking checkbox will request raid configuration from other raid planners\nwith sync enabled and will auto-sync further raid configuration edits.");
+                  GameTooltip:SetText("Clicking checkbox will request raid configuration from other raid planners\nwho have sync enabled and will auto-sync further raid configuration edits.");
                   GameTooltip:Show()
                end)
    frame:SetChecked( RaidMaker_sync_enabled == 1 )
@@ -2831,7 +2849,6 @@ function RaidMaker_SetUpGuiFields()
          RaidMaker_sync_enabled = 1
          SendAddonMessage(RaidMaker_appSyncPrefix, RaidMaker_appInstanceId, "GUILD" );
       else
-         print("field is unchecked")
          RaidMaker_sync_enabled = 0;
       end
    end)
