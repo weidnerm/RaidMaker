@@ -25,6 +25,7 @@ local RaidMaker_RollLog = {};
 local RaidMaker_sortedRollList = {};
 local RaidMaker_sortRollAlgorithm_id = 1;   -- 1=sort by roll value; 2=sort by time; 3=sort by playername
 local RaidMaker_highestRoll = 0;
+local RaidMaker_menu_playerName = "";
 
 -- change to use the array instead of these locals
 local classColorDeathKnight   = "|c00C41F3B";
@@ -97,6 +98,41 @@ function RaidMaker_Handler(msg)
    elseif (msg == "center") then
       RaidMaker_MainForm:ClearAllPoints()
       RaidMaker_MainForm:SetPoint("CENTER", UIParent, "CENTER",0,0)
+   elseif (msg == "test") then
+      local numSets = GetNumEquipmentSets()
+      local inSet = {}
+      
+      for i=1,numSets do
+         
+         local name, icon, setID = GetEquipmentSetInfo(i)
+         local items = GetEquipmentSetItemIDs(name)
+         for slot,item in pairs(items) do
+            if inSet[item] then
+               inSet[item] = inSet[item]..", "..name
+            else
+               inSet[item] = name
+            end
+         end
+      end
+      
+      local function OnTooltipSetItem(self)
+      local name,link = self:GetItem()
+         if name then
+            local equippable = IsEquippableItem(link)
+            local item = link:match("Hitem:(%d+)")
+            item = tonumber(item)
+            if not equippable then
+               -- Do nothing
+            elseif inSet[item] then
+               GameTooltip:AddLine("Equipment Set: ".. inSet[item],0.2,1,0.2)
+            else
+               GameTooltip:AddLine("Item not in an equipment set", 1, 0.2, 0.2)
+            end
+            cleared = true
+         end
+      end
+      GameTooltip:HookScript("OnTooltipSetItem", OnTooltipSetItem)
+      
    elseif (msg == "text") then
       -- for testing purposes. can be deleted.
       RaidMaker_TabPage1_SampleTextTab1_GroupedState_1:SetText(red.."not");
@@ -132,6 +168,8 @@ function RaidMaker_Handler(msg)
    
    
 end
+
+
 
 
 
@@ -1656,7 +1694,7 @@ function RaidMaker_SetUpGuiFields()
    
    RaidMaker_TabPage1_SampleTextTab1_GroupedState_Objects = {};
    for index=1,22 do
-      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_GroupedState_"..index-1, "ARTWORK", "GameFontNormalSmall" )
+      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_GroupedState_"..index-1, "OVERLAY", "GameFontNormalSmall" )
       item:SetWidth(50);
       item:SetHeight(18);
       if ( index == 1 ) then
@@ -1680,7 +1718,7 @@ function RaidMaker_SetUpGuiFields()
       myFrame:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_GroupedState_Objects[2*index], "TOPLEFT", 0,0)
       local myTexture = myFrame:CreateTexture("RaidMaker_RaidBuilder_row_frameTexture"..index, "BACKGROUND")
       myTexture:SetAllPoints()
-      myTexture:SetTexture(0.1, 0.1, 0.1, .25);
+      myTexture:SetTexture(0.15, 0.15, 0.15, .25);
       RaidMaker_RaidBuilder_row_frame_Objects[index] = myFrame;
       RaidMaker_RaidBuilder_row_frameTexture_Objects[index] = myTexture;
    end
@@ -1688,7 +1726,7 @@ function RaidMaker_SetUpGuiFields()
 
    RaidMaker_TabPage1_SampleTextTab1_OnlineState_Objects = {};
    for index=1,22 do
-      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_OnlineState_"..index-1, "ARTWORK", "GameFontNormalSmall" )
+      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_OnlineState_"..index-1, "OVERLAY", "GameFontNormalSmall" )
       item:SetWidth(50);
       item:SetHeight(18);
       if ( index == 1 ) then
@@ -1703,7 +1741,7 @@ function RaidMaker_SetUpGuiFields()
 
    RaidMaker_TabPage1_SampleTextTab1_InviteStatus_Objects = {};
    for index=1,22 do
-      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_InviteStatus_"..index-1, "ARTWORK", "GameFontNormalSmall" )
+      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_InviteStatus_"..index-1, "OVERLAY", "GameFontNormalSmall" )
       item:SetWidth(75);
       item:SetHeight(18);
       if ( index == 1 ) then
@@ -1718,13 +1756,14 @@ function RaidMaker_SetUpGuiFields()
 
    RaidMaker_TabPage1_SampleTextTab1_PlayerName_Objects = {};
    for index=1,22 do
-      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_PlayerName_"..index-1, "ARTWORK", "GameFontNormalSmall" )
+      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_PlayerName_"..index-1, "OVERLAY", "GameFontNormalSmall" )
       item:SetWidth(100);
       item:SetHeight(18);
+      item:ClearAllPoints();
       if ( index == 1 ) then
          item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_InviteStatus_Objects[1], "TOPRIGHT", 0,0);
          item:SetText("Char Name");
-      else
+      elseif ( index == 22 ) then
          item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_PlayerName_Objects[index-1], "BOTTOMLEFT", 0,0);
          item:SetText(" ");
       end
@@ -1733,14 +1772,13 @@ function RaidMaker_SetUpGuiFields()
 
    RaidMaker_TabPage1_SampleTextTab1_TankFlag_Objects = {};
    for index=1,22 do
-      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_TankFlag_"..index-1, "ARTWORK", "GameFontNormalSmall" )
+      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_TankFlag_"..index-1, "OVERLAY", "GameFontNormalSmall" )
       item:SetWidth(50);
       item:SetHeight(18);
+      item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_InviteStatus_Objects[index], "TOPRIGHT", 100,0);
       if ( index == 1 ) then
-         item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_PlayerName_Objects[1], "TOPRIGHT", 0,0);
          item:SetText("Tank");
       else
-         item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_TankFlag_Objects[index-1], "BOTTOMLEFT", 0,0);
          item:SetText(" ");
       end
       RaidMaker_TabPage1_SampleTextTab1_TankFlag_Objects[index] = item;
@@ -1748,7 +1786,7 @@ function RaidMaker_SetUpGuiFields()
 
    RaidMaker_TabPage1_SampleTextTab1_HealFlag_Objects = {};
    for index=1,22 do
-      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_HealFlag_"..index-1, "ARTWORK", "GameFontNormalSmall" )
+      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_HealFlag_"..index-1, "OVERLAY", "GameFontNormalSmall" )
       item:SetWidth(50);
       item:SetHeight(18);
       if ( index == 1 ) then
@@ -1763,7 +1801,7 @@ function RaidMaker_SetUpGuiFields()
 
    RaidMaker_TabPage1_SampleTextTab1_DpsFlag_Objects = {};
    for index=1,22 do
-      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_DpsFlag_"..index-1, "ARTWORK", "GameFontNormalSmall" )
+      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_DpsFlag_"..index-1, "OVERLAY", "GameFontNormalSmall" )
       item:SetWidth(50);
       item:SetHeight(18);
       if ( index == 1 ) then
@@ -1778,7 +1816,7 @@ function RaidMaker_SetUpGuiFields()
 
    RaidMaker_TabPage1_SampleTextTab1_Class_Objects = {};
    for index=1,22 do
-      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_Class_"..index-1, "ARTWORK", "GameFontNormalSmall" )
+      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_Class_"..index-1, "OVERLAY", "GameFontNormalSmall" )
       item:SetWidth(75);
       item:SetHeight(18);
       if ( index == 1 ) then
@@ -1793,76 +1831,114 @@ function RaidMaker_SetUpGuiFields()
 
 
 
---parent_SampleTextTab1
---
---      RaidMaker_TabPage1_SampleTextTab1_GroupedState_1:SetText(red.."not");
---      RaidMaker_TabPage1_SampleTextTab1_OnlineState_1:SetText(green.."online");
---      RaidMaker_TabPage1_SampleTextTab1_InviteStatus_1:SetText(green.."Accepted");
---      RaidMaker_TabPage1_SampleTextTab1_PlayerName_1:SetText(white.."Cellifalas");
---      RaidMaker_TabPage1_SampleTextTab1_TankFlag_1:SetText(yellow.."X");
---      RaidMaker_TabPage1_SampleTextTab1_HealFlag_1:SetText(yellow.."X");
---      RaidMaker_TabPage1_SampleTextTab1_DpsFlag_1:SetText(yellow.."X");
---      RaidMaker_TabPage1_SampleTextTab1_Class_1:SetText(yellow.."DRUID");
+   --
+   -- Set up player name buttons 
+   --
+
+
+   local menuTbl = {
+      {
+         text = "Alantodne",
+         isTitle = true,
+         notCheckable = true,
+      },
+      {
+         text = "Invite",
+         notCheckable = true,
+         func = function(self)
+            InviteUnit(RaidMaker_menu_playerName);
+            end, 
+      },
+      {
+         text = "Whisper",
+         notCheckable = true,
+         func = function()
+            print(red.."whisper "..white..RaidMaker_menu_playerName..red.." not yet implemented.") end, 
+      },
+   }
+
+   RaidMaker_PlayerName_Button_Objects = {};
+   for index=1,20 do
+      local item = CreateFrame("Button", "RaidMaker_PlayerName_Button_"..index-1, RaidMaker_TabPage1_SampleTextTab1 )
+      item:SetFontString( RaidMaker_TabPage1_SampleTextTab1_PlayerName_Objects[index+1] )
+      item:SetWidth(100);
+      item:SetHeight(18);
+      item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_InviteStatus_Objects[index+1], "TOPRIGHT", 0,0);
+      item:SetText("X");
+      item:SetScript("OnClick", function(self,button)
+         local myText = self:GetText();
+         local startIndex1,endIndex1,playerName = strfind(myText, "c%x%x%x%x%x%x%x%x(.*)");
+         if ( playerName ~= nil ) then
+            menuTbl[1].text = playerName;
+            RaidMaker_menu_playerName = playerName;
+            EasyMenu(menuTbl, RaidMaker_TabPage1_SampleTextTab1, "RaidMaker_PlayerName_Button_"..index-1 ,0,0, nil, 10)
+         end
+      end)
+
+      RaidMaker_PlayerName_Button_Objects[index] = item;
+   end
+
+
 
    --
    -- Set up class totals text fields.
    --
    
-   RaidMaker_WarriorCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_WarriorCount", "ARTWORK", "GameFontNormalSmall" )
+   RaidMaker_WarriorCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_WarriorCount", "OVERLAY", "GameFontNormalSmall" )
    RaidMaker_WarriorCount_Object:SetWidth(18);
    RaidMaker_WarriorCount_Object:SetHeight(18);
    RaidMaker_WarriorCount_Object:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_Class_1, "TOPRIGHT", 55,-7);
    RaidMaker_WarriorCount_Object:SetText(" ");
 
-   RaidMaker_MageCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_MageCount", "ARTWORK", "GameFontNormalSmall" )
+   RaidMaker_MageCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_MageCount", "OVERLAY", "GameFontNormalSmall" )
    RaidMaker_MageCount_Object:SetWidth(18);
    RaidMaker_MageCount_Object:SetHeight(18);
    RaidMaker_MageCount_Object:SetPoint("TOPLEFT", RaidMaker_WarriorCount_Object, "BOTTOMLEFT", 0,-18);
    RaidMaker_MageCount_Object:SetText(" ");
 
-   RaidMaker_RogueCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_RogueCount", "ARTWORK", "GameFontNormalSmall" )
+   RaidMaker_RogueCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_RogueCount", "OVERLAY", "GameFontNormalSmall" )
    RaidMaker_RogueCount_Object:SetWidth(18);
    RaidMaker_RogueCount_Object:SetHeight(18);
    RaidMaker_RogueCount_Object:SetPoint("TOPLEFT", RaidMaker_MageCount_Object, "BOTTOMLEFT", 0,-18);
    RaidMaker_RogueCount_Object:SetText(" ");
 
-   RaidMaker_DruidCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_DruidCount", "ARTWORK", "GameFontNormalSmall" )
+   RaidMaker_DruidCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_DruidCount", "OVERLAY", "GameFontNormalSmall" )
    RaidMaker_DruidCount_Object:SetWidth(18);
    RaidMaker_DruidCount_Object:SetHeight(18);
    RaidMaker_DruidCount_Object:SetPoint("TOPLEFT", RaidMaker_RogueCount_Object, "BOTTOMLEFT", 0,-18);
    RaidMaker_DruidCount_Object:SetText(" ");
 
-   RaidMaker_HunterCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_HunterCount", "ARTWORK", "GameFontNormalSmall" )
+   RaidMaker_HunterCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_HunterCount", "OVERLAY", "GameFontNormalSmall" )
    RaidMaker_HunterCount_Object:SetWidth(18);
    RaidMaker_HunterCount_Object:SetHeight(18);
    RaidMaker_HunterCount_Object:SetPoint("TOPLEFT", RaidMaker_DruidCount_Object, "BOTTOMLEFT", 0,-18);
    RaidMaker_HunterCount_Object:SetText(" ");
 
-   RaidMaker_ShamanCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_ShamanCount", "ARTWORK", "GameFontNormalSmall" )
+   RaidMaker_ShamanCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_ShamanCount", "OVERLAY", "GameFontNormalSmall" )
    RaidMaker_ShamanCount_Object:SetWidth(18);
    RaidMaker_ShamanCount_Object:SetHeight(18);
    RaidMaker_ShamanCount_Object:SetPoint("TOPLEFT", RaidMaker_HunterCount_Object, "BOTTOMLEFT", 0,-18);
    RaidMaker_ShamanCount_Object:SetText(" ");
 
-   RaidMaker_PriestCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_PriestCount", "ARTWORK", "GameFontNormalSmall" )
+   RaidMaker_PriestCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_PriestCount", "OVERLAY", "GameFontNormalSmall" )
    RaidMaker_PriestCount_Object:SetWidth(18);
    RaidMaker_PriestCount_Object:SetHeight(18);
    RaidMaker_PriestCount_Object:SetPoint("TOPLEFT", RaidMaker_ShamanCount_Object, "BOTTOMLEFT", 0,-18);
    RaidMaker_PriestCount_Object:SetText(" ");
             
-   RaidMaker_WarlockCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_WarlockCount", "ARTWORK", "GameFontNormalSmall" )
+   RaidMaker_WarlockCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_WarlockCount", "OVERLAY", "GameFontNormalSmall" )
    RaidMaker_WarlockCount_Object:SetWidth(18);
    RaidMaker_WarlockCount_Object:SetHeight(18);
    RaidMaker_WarlockCount_Object:SetPoint("TOPLEFT", RaidMaker_PriestCount_Object, "BOTTOMLEFT", 0,-18);
    RaidMaker_WarlockCount_Object:SetText(" ");
             
-   RaidMaker_PaladinCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_PaladinCount", "ARTWORK", "GameFontNormalSmall" )
+   RaidMaker_PaladinCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_PaladinCount", "OVERLAY", "GameFontNormalSmall" )
    RaidMaker_PaladinCount_Object:SetWidth(18);
    RaidMaker_PaladinCount_Object:SetHeight(18);
    RaidMaker_PaladinCount_Object:SetPoint("TOPLEFT", RaidMaker_WarlockCount_Object, "BOTTOMLEFT", 0,-18);
    RaidMaker_PaladinCount_Object:SetText(" ");
             
-   RaidMaker_DeathknightCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_DeathknightCount", "ARTWORK", "GameFontNormalSmall" )
+   RaidMaker_DeathknightCount_Object = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_DeathknightCount", "OVERLAY", "GameFontNormalSmall" )
    RaidMaker_DeathknightCount_Object:SetWidth(18);
    RaidMaker_DeathknightCount_Object:SetHeight(18);
    RaidMaker_DeathknightCount_Object:SetPoint("TOPLEFT", RaidMaker_PaladinCount_Object, "BOTTOMLEFT", 0,-18);
@@ -2003,10 +2079,6 @@ function RaidMaker_SetUpGuiFields()
       localButton:SetWidth(50)
       localButton:SetHeight(18)
    end
-
-
-
-
 
 
    -- 
@@ -2240,7 +2312,7 @@ function RaidMaker_SetUpGuiFields()
    RaidMaker_LogTab_Rolls_FieldRollValues = {}
    RaidMaker_LogTab_Rolls_FieldRollAges = {}
    for index=1,11 do
-      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Rolls_FieldNamesField"..index-1, "ARTWORK", "GameFontNormalSmall" )
+      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Rolls_FieldNamesField"..index-1, "OVERLAY", "GameFontNormalSmall" )
       item:SetWidth(100);
       item:SetHeight(18);
       if ( index == 1 ) then
@@ -2253,7 +2325,7 @@ function RaidMaker_SetUpGuiFields()
       RaidMaker_LogTab_Rolls_FieldPlayerNames[index] = item;
    end
    for index=1,11 do
-      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Rolls_RollValue"..index-1, "ARTWORK", "GameFontNormalSmall" )
+      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Rolls_RollValue"..index-1, "OVERLAY", "GameFontNormalSmall" )
       item:SetWidth(100);
       item:SetHeight(18);
       if ( index == 1 ) then
@@ -2266,7 +2338,7 @@ function RaidMaker_SetUpGuiFields()
       RaidMaker_LogTab_Rolls_FieldRollValues[index] = item;
    end
    for index=1,11 do
-      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Rolls_RollAges"..index-1, "ARTWORK", "GameFontNormalSmall" )
+      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Rolls_RollAges"..index-1, "OVERLAY", "GameFontNormalSmall" )
       item:SetWidth(100);
       item:SetHeight(18);
       if ( index == 1 ) then
@@ -2287,7 +2359,7 @@ function RaidMaker_SetUpGuiFields()
    RaidMaker_LogTab_Loot_FieldRollAges = {}
    RaidMaker_LogTab_Loot_FieldItemLink = {}
    for index=1,11 do
-      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_FieldNamesField"..index-1, "ARTWORK", "GameFontNormalSmall" )
+      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_FieldNamesField"..index-1, "OVERLAY", "GameFontNormalSmall" )
       item:SetWidth(100);
       item:SetHeight(18);
       if ( index == 1 ) then
@@ -2300,7 +2372,7 @@ function RaidMaker_SetUpGuiFields()
       RaidMaker_LogTab_Loot_FieldNames[index] = item;
    end
    for index=1,11 do
-      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_ItemLink"..index-1, "ARTWORK", "GameFontNormalSmall" )
+      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_ItemLink"..index-1, "OVERLAY", "GameFontNormalSmall" )
       item:SetWidth(200);
       item:SetHeight(18);
       if ( index == 1 ) then
@@ -2313,7 +2385,7 @@ function RaidMaker_SetUpGuiFields()
       RaidMaker_LogTab_Loot_FieldItemLink[index] = item;
    end
    for index=1,11 do
-      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_RollValue"..index-1, "ARTWORK", "GameFontNormalSmall" )
+      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_RollValue"..index-1, "OVERLAY", "GameFontNormalSmall" )
       item:SetWidth(100);
       item:SetHeight(18);
       if ( index == 1 ) then
@@ -2326,7 +2398,7 @@ function RaidMaker_SetUpGuiFields()
       RaidMaker_LogTab_Loot_FieldRollValues[index] = item;
    end
    for index=1,11 do
-      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_RollAges"..index-1, "ARTWORK", "GameFontNormalSmall" )
+      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_RollAges"..index-1, "OVERLAY", "GameFontNormalSmall" )
       item:SetWidth(100);
       item:SetHeight(18);
       if ( index == 1 ) then
@@ -2378,9 +2450,11 @@ function RaidMaker_SetUpGuiFields()
    RaidMaker_TabPage1:EnableMouseWheel(true);
    RaidMaker_TabPage1:SetScript("OnMouseWheel", function(self,delta) RaidMaker_OnMouseWheel(self, delta) end );
 
-
-
    RaidMaker_RollLog_Slider:SetMinMaxValues(1,1);
    RaidMaker_RollLog_Slider:SetValue(1);
+
+
+
+
 end
 

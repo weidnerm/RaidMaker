@@ -6,4 +6,3 @@
 ## SavedVariables: RaidMaker_lootLogData, RaidMaker_RaidParticipantLog
 RaidMaker.xml
 RaidMaker.lua
-secureFrame.xml
