@@ -584,44 +584,46 @@ function RaidMaker_DisplayDatabase()
    for rowIndex=1,#playerSortedList do
       charName = playerSortedList[rowIndex];
 
-      if ( raidPlayerDatabase.playerInfo[charName].tank == 1 ) or
-         ( raidPlayerDatabase.playerInfo[charName].heals == 1 ) or
-         ( raidPlayerDatabase.playerInfo[charName].mDps == 1 ) or
-         ( raidPlayerDatabase.playerInfo[charName].rDps == 1) then
+      if ( raidPlayerDatabase.playerInfo[charName].groupNum == RaidMaker_currentGroupNumber ) then -- only consider ones in our group.
 
-         if ( guildRosterInformation[charName] ~= nil ) and
-            ( guildRosterInformation[charName].online == 1 ) then
-            onlineCountForRaid  = onlineCountForRaid + 1;
+         if ( raidPlayerDatabase.playerInfo[charName].tank == 1 ) or
+            ( raidPlayerDatabase.playerInfo[charName].heals == 1 ) or
+            ( raidPlayerDatabase.playerInfo[charName].mDps == 1 ) or
+            ( raidPlayerDatabase.playerInfo[charName].rDps == 1) then
+   
+            if ( guildRosterInformation[charName] ~= nil ) and
+               ( guildRosterInformation[charName].online == 1 ) then
+               onlineCountForRaid  = onlineCountForRaid + 1;
+            end
+   
+            playerCountForRaid  = playerCountForRaid + 1;
+   
+            if ( raidPlayerDatabase.playerInfo[charName].classFilename ~= nil) then
+               raidPlayerDatabase.classCount[raidPlayerDatabase.playerInfo[charName].classFilename] =  -- add up our class totals
+               raidPlayerDatabase.classCount[raidPlayerDatabase.playerInfo[charName].classFilename] + 1;
+            end
          end
-
-         playerCountForRaid  = playerCountForRaid + 1;
-
-         if ( raidPlayerDatabase.playerInfo[charName].classFilename ~= nil) then
-            raidPlayerDatabase.classCount[raidPlayerDatabase.playerInfo[charName].classFilename] =  -- add up our class totals
-            raidPlayerDatabase.classCount[raidPlayerDatabase.playerInfo[charName].classFilename] + 1;
+   
+         if ( raidPlayerDatabase.playerInfo[charName].tank == 1 ) then
+            tankCountForRaid  = tankCountForRaid + 1;
+         end
+   
+         if ( raidPlayerDatabase.playerInfo[charName].heals == 1 ) then
+            healCountForRaid  = healCountForRaid + 1;
+         end
+   
+         if ( raidPlayerDatabase.playerInfo[charName].mDps == 1 ) then
+            mDpsCountForRaid  = mDpsCountForRaid + 1;
+         end
+   
+         if ( raidPlayerDatabase.playerInfo[charName].rDps == 1 ) then
+            rDpsCountForRaid  = rDpsCountForRaid + 1;
+         end
+   
+         if ( raidPlayerDatabase.playerInfo[charName].inGroup == 1 ) then
+            groupedCountForRaid  = groupedCountForRaid + 1;
          end
       end
-
-      if ( raidPlayerDatabase.playerInfo[charName].tank == 1 ) then
-         tankCountForRaid  = tankCountForRaid + 1;
-      end
-
-      if ( raidPlayerDatabase.playerInfo[charName].heals == 1 ) then
-         healCountForRaid  = healCountForRaid + 1;
-      end
-
-      if ( raidPlayerDatabase.playerInfo[charName].mDps == 1 ) then
-         mDpsCountForRaid  = mDpsCountForRaid + 1;
-      end
-
-      if ( raidPlayerDatabase.playerInfo[charName].rDps == 1 ) then
-         rDpsCountForRaid  = rDpsCountForRaid + 1;
-      end
-
-      if ( raidPlayerDatabase.playerInfo[charName].inGroup == 1 ) then
-         groupedCountForRaid  = groupedCountForRaid + 1;
-      end
-
 
    end
 
@@ -1504,7 +1506,7 @@ function RaidMaker_handle_CHAT_MSG_ADDON(prefix, message, channel, sender)
                         ( tonumber(raidPlayerDatabase.day         ) == tonumber(rxDay ) ) and -- and
                         ( tonumber(raidPlayerDatabase.hour        ) == tonumber(rxHour) ) and -- and
                         ( tonumber(raidPlayerDatabase.minute      ) == tonumber(rxMin ) ) then
-print(message);
+--print(message);
 
       --                  if ( RaidMaker_msgSequenceNumber+1 == tonumber(msgSeqNum) ) or -- remote seq number is one more than ours. its a remote update of a click.
                         if ( RaidMaker_msgSequenceNumber   == tonumber(msgSeqNum) ) then -- remote seq number matches ours. There was probably a collision. only accept the remote change. discard the database.
@@ -2319,41 +2321,45 @@ function RaidMaker_HandleSendInvitesButton()
    for rowIndex=1,#playerSortedList do
       charName = playerSortedList[rowIndex];
 
-
-      if ( raidPlayerDatabase.playerInfo[charName].tank == 1 ) or
-         ( raidPlayerDatabase.playerInfo[charName].heals == 1 ) or
-         ( raidPlayerDatabase.playerInfo[charName].mDps == 1 ) or
-         ( raidPlayerDatabase.playerInfo[charName].rDps == 1) then
-
-         numMembersWithRoles = numMembersWithRoles + 1;
-
-         if ( selfName ~= charName ) then -- invite everyone but ourself
-
-            if ( raidPlayerDatabase.playerInfo[charName].tank == 1 ) or -- prepare to promote them when they join group.
-               (raidPlayerDatabase.playerInfo[charName].guildRankIndex < guildRankAssistThreshold ) then
-               numMembersToPromoteToAssist = numMembersToPromoteToAssist +1;
-            end
-
-            if ( UnitInRaid(charName) == nil ) then -- player isnt in raid already. need to bring them in.
-               if ( numInvitesToSendHere >= 1 ) then
-
-
-                  numInvitesToSendHere = numInvitesToSendHere - 1;
-
-                  InviteUnit(charName);
-
-
-               else
-                  -- need to defer the invitation.
-                  raidPlayerDatabase.playerInfo[charName].partyInviteDeferred = 1;
+      if ( raidPlayerDatabase.playerInfo[charName].groupNum == RaidMaker_currentGroupNumber ) then -- only invite ones in our group.
+         if ( raidPlayerDatabase.playerInfo[charName].tank == 1 ) or
+            ( raidPlayerDatabase.playerInfo[charName].heals == 1 ) or
+            ( raidPlayerDatabase.playerInfo[charName].mDps == 1 ) or
+            ( raidPlayerDatabase.playerInfo[charName].rDps == 1) then
+   
+            numMembersWithRoles = numMembersWithRoles + 1;
+   
+            if ( selfName ~= charName ) then -- invite everyone but ourself
+   
+               if ( raidPlayerDatabase.playerInfo[charName].tank == 1 ) or -- prepare to promote them when they join group.
+                  (raidPlayerDatabase.playerInfo[charName].guildRankIndex < guildRankAssistThreshold ) then
+                  numMembersToPromoteToAssist = numMembersToPromoteToAssist +1;
+               end
+   
+               if ( UnitInRaid(charName) == nil ) then -- player isnt in raid already. need to bring them in.
+                  if ( numInvitesToSendHere >= 1 ) then
+   
+   
+                     numInvitesToSendHere = numInvitesToSendHere - 1;
+   
+                     InviteUnit(charName);
+   
+   
+                  else
+                     -- need to defer the invitation.
+                     raidPlayerDatabase.playerInfo[charName].partyInviteDeferred = 1;
+                  end
                end
             end
          end
       end
 
    end
-   raidSetupArmedFlag = true; -- indicate that on subsequent party change event we might need to convert to raid and configure looting.
-   isRoleUpdateArmed = true; -- indicate that we should update assigned roles.
+   
+   if ( numMembersWithRoles > 5 ) then
+      raidSetupArmedFlag = true; -- indicate that on subsequent party change event we might need to convert to raid and configure looting.
+      isRoleUpdateArmed = true; -- indicate that we should update assigned roles.
+   end
 
    RaidMaker_UpdatePlayerAttendanceLog();
 
@@ -2528,45 +2534,54 @@ function RaidMaker_HandleSendRolesToRaidButton()
    for rowIndex=1,#playerSortedList do
       charName = playerSortedList[rowIndex];
 
-      if ( raidPlayerDatabase.playerInfo[charName].tank == 1 ) then
-         if ( tankCount ~= 0 ) then
-            tankList = tankList..", ";
+      if ( raidPlayerDatabase.playerInfo[charName].groupNum == RaidMaker_currentGroupNumber ) then -- only consider ones in our group.
+
+         if ( raidPlayerDatabase.playerInfo[charName].tank == 1 ) then
+            if ( tankCount ~= 0 ) then
+               tankList = tankList..", ";
+            end
+            tankList = tankList..charName
+            tankCount = tankCount + 1;
+            UnitSetRole(charName,"TANK");
          end
-         tankList = tankList..charName
-         tankCount = tankCount + 1;
-         UnitSetRole(charName,"TANK");
-      end
-      if ( raidPlayerDatabase.playerInfo[charName].heals == 1 ) then
-         if ( healCount ~= 0 ) then
-            healList = healList..", ";
+         if ( raidPlayerDatabase.playerInfo[charName].heals == 1 ) then
+            if ( healCount ~= 0 ) then
+               healList = healList..", ";
+            end
+            healList = healList..charName
+            healCount = healCount + 1;
+            UnitSetRole(charName,"HEALER");
          end
-         healList = healList..charName
-         healCount = healCount + 1;
-         UnitSetRole(charName,"HEALER");
-      end
-      if ( raidPlayerDatabase.playerInfo[charName].mDps == 1 ) then
-         if ( mDpsCount ~= 0 ) then
-            mDpslist = mDpslist..", ";
+         if ( raidPlayerDatabase.playerInfo[charName].mDps == 1 ) then
+            if ( mDpsCount ~= 0 ) then
+               mDpslist = mDpslist..", ";
+            end
+            mDpslist = mDpslist..charName
+            mDpsCount = mDpsCount + 1;
+            UnitSetRole(charName,"DAMAGER");
          end
-         mDpslist = mDpslist..charName
-         mDpsCount = mDpsCount + 1;
-         UnitSetRole(charName,"DAMAGER");
-      end
-      if ( raidPlayerDatabase.playerInfo[charName].rDps == 1 ) then
-         if ( rDpsCount ~= 0 ) then
-            rDpslist = rDpslist..", ";
+         if ( raidPlayerDatabase.playerInfo[charName].rDps == 1 ) then
+            if ( rDpsCount ~= 0 ) then
+               rDpslist = rDpslist..", ";
+            end
+            rDpslist = rDpslist..charName
+            rDpsCount = rDpsCount + 1;
+            UnitSetRole(charName,"DAMAGER");
          end
-         rDpslist = rDpslist..charName
-         rDpsCount = rDpsCount + 1;
-         UnitSetRole(charName,"DAMAGER");
       end
    end
 
-   SendChatMessage("Roles for the raid are:", "RAID" );
-   SendChatMessage("   Tanks: "..tankList , "RAID" );
-   SendChatMessage("   Healers: "..healList , "RAID" );
-   SendChatMessage("   Melee DPS: "..mDpslist , "RAID" );
-   SendChatMessage("   Ranged DPS: "..rDpslist , "RAID" );
+   local numRaidMembers = GetNumRaidMembers();
+   local chatDestination = "PARTY"
+   if ( numRaidMembers > 0 ) then -- check if its actaully a raid.
+      chatDestination = "RAID";
+   end
+      
+   SendChatMessage("Roles for the raid are:", chatDestination );
+   SendChatMessage("   Tanks: "..tankList , chatDestination );
+   SendChatMessage("   Healers: "..healList , chatDestination );
+   SendChatMessage("   Melee DPS: "..mDpslist , chatDestination );
+   SendChatMessage("   Ranged DPS: "..rDpslist , chatDestination );
 
 end
 
