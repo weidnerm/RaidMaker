@@ -1475,10 +1475,25 @@
                      </OnClick>
                   </Scripts>
                </Button>
-               <Button name="RaidMaker_SendRolesButton" inherits="UIPanelButtonTemplate2" text="Ann. Roles">
+               <Button name="RaidMaker_SendInvDoneMsgButton" inherits="UIPanelButtonTemplate2" text="Ann Invites">
                   <Size><AbsDimension x="80" y="22"/></Size>
                   <Anchors>
                      <Anchor point="TOPLEFT" relativePoint="TOPRIGHT"  relativeTo="RaidMaker_SendInvitesButton">
+                         <Offset>
+                             <AbsDimension x="10" y="0"/>
+                         </Offset>
+                     </Anchor>
+                  </Anchors>
+                  <Scripts>
+                     <OnClick>
+                        RaidMaker_HandleAnnounceInvitesDoneButton();
+                     </OnClick>
+                  </Scripts>
+               </Button>
+               <Button name="RaidMaker_SendRolesButton" inherits="UIPanelButtonTemplate2" text="Ann. Roles">
+                  <Size><AbsDimension x="80" y="22"/></Size>
+                  <Anchors>
+                     <Anchor point="TOPLEFT" relativePoint="TOPRIGHT"  relativeTo="RaidMaker_SendInvDoneMsgButton">
                          <Offset>
                              <AbsDimension x="10" y="0"/>
                          </Offset>

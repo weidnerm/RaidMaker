@@ -1243,8 +1243,18 @@ function RaidMaker_HandleFetchCalButton()
 end
 
 function RaidMaker_HandleSendRaidAnnouncementButton()
-   SendChatMessage("Invites will be coming soon for: "..raidPlayerDatabase.title, "GUILD" );
+   if ( raidPlayerDatabase.title ~= nil ) then
+      SendChatMessage("Invites will be coming soon for: "..raidPlayerDatabase.title, "GUILD" );
+   end
 end
+
+function RaidMaker_HandleAnnounceInvitesDoneButton()
+   if ( raidPlayerDatabase.title ~= nil ) then
+      SendChatMessage("Invites have been sent for: "..raidPlayerDatabase.title..".  Thank you to all who signed up.", "GUILD" );
+   end
+end
+
+
 
 function RaidMaker_HandleSendRolesToRaidButton()
 
@@ -1382,5 +1392,54 @@ function RaidMaker_SetUpClassIcons()
 	   RaidMaker_DeathKnightClassPictureTexture:SetAllPoints()
 	   RaidMaker_DeathKnightClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
 	   RaidMaker_DeathKnightClassPictureTexture:SetTexCoord(.25,0.5,0.5,0.75)
+
+	RaidMaker_FetchCalendarButton:SetScript("OnEnter",
+			      function(this)
+				      GameTooltip_SetDefaultAnchor(GameTooltip, this)
+				      GameTooltip:SetText("Fetches most recently opened calander and resets role selections.");
+				      GameTooltip:Show()
+			      end)
+	RaidMaker_FetchCalendarButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	
+	RaidMaker_SendAnnouncementButton:SetScript("OnEnter",
+			      function(this)
+				      GameTooltip_SetDefaultAnchor(GameTooltip, this)
+				      GameTooltip:SetText("Announces to /guild that invites will be coming soon.");
+				      GameTooltip:Show()
+			      end)
+	RaidMaker_SendAnnouncementButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	
+	RaidMaker_SendInvitesButton:SetScript("OnEnter",
+			      function(this)
+				      GameTooltip_SetDefaultAnchor(GameTooltip, this)
+				      GameTooltip:SetText("Sends group invites to all checked players and forms raid group.");
+				      GameTooltip:Show()
+			      end)
+	RaidMaker_SendInvitesButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+	
+	RaidMaker_SendInvDoneMsgButton:SetScript("OnEnter",
+			      function(this)
+				      GameTooltip_SetDefaultAnchor(GameTooltip, this)
+				      GameTooltip:SetText("Sends msg to /guild indicating that all invites are sent.");
+				      GameTooltip:Show()
+			      end)
+	RaidMaker_SendInvDoneMsgButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+	RaidMaker_SendRolesButton:SetScript("OnEnter",
+			      function(this)
+				      GameTooltip_SetDefaultAnchor(GameTooltip, this)
+				      GameTooltip:SetText("Sends the list of tanks, healers, and dps to /raid.");
+				      GameTooltip:Show()
+			      end)
+	RaidMaker_SendRolesButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+	RaidMaker_MainFormButtonRefresh:SetScript("OnEnter",
+			      function(this)
+				      GameTooltip_SetDefaultAnchor(GameTooltip, this)
+				      GameTooltip:SetText("Forces refresh on player online status.  Throttled by server.");
+				      GameTooltip:Show()
+			      end)
+	RaidMaker_MainFormButtonRefresh:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
 
 end
