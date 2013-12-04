@@ -13,7 +13,9 @@ local raidPlayerDatabase = {};
 local playerSortedList = {};
 local raidSetupArmedFlag = false;
 local pendingInvitesReadyArmedFlag = false;
+local isRoleUpdateArmed = false;
 local numMembersToPromoteToAssist = 0;
+local numMembersWithRoles = 0;
 local guildRankAssistThreshold = 3;  -- 0=Guild Master. 1=Officer; 2=Lieutenant; etc...  Controls if officers get assist.
                                      -- set to 0 for no promote. 1 for GM only, 2 for Officers, GM, etc
 local raidMakerLaunchCalEditButton
@@ -368,7 +370,9 @@ function RaidMaker_buildRaidList(origDatabase)
       table.sort(RaidMaker_syncIndexToNameTable);  -- default sort is ascending alphabetical
       for index=1,numInvites do
          local tempName = RaidMaker_syncIndexToNameTable[index];
-         newRaidDatabase.playerInfo[tempName].syncIndex = index;
+         if ( newRaidDatabase.playerInfo[tempName] ~= nil ) then -- need this check in case non-guildie invited
+            newRaidDatabase.playerInfo[tempName].syncIndex = index;
+         end
       end
 
       GuildRoster(); -- trigger a GUILD_ROSTER_UPDATE event so we can get the online/offline status of players.
@@ -1999,7 +2003,6 @@ function RaidMaker_handle_PARTY_MEMBERS_CHANGED()
             end
          end
       
-            
          if ( numMembersToPromoteToAssist > 0 ) then -- do we have some assists left to promote
             
             local numRaidMembers = GetNumRaidMembers();
@@ -2022,24 +2025,54 @@ function RaidMaker_handle_PARTY_MEMBERS_CHANGED()
                      PromoteToAssistant(name);
                      numMembersToPromoteToAssist = numMembersToPromoteToAssist - 1; -- account for the assist we promoted.
                   end
+               end
+            end
+         end
                   
                   
-                  local isTank, isHealer, isDamage = UnitGroupRolesAssigned(name)
+         if ( isRoleUpdateArmed == true ) then -- do we have some assists left to promote
+
+            local numRaidMembers = GetNumRaidMembers();
+            
+            if ( numRaidMembers > 0 ) then -- make sure we are in a raid already.
+               local allRolesCorrect = 1;
+      
+               -- loop through the raid members, promoting any tanks.
+               for memberIndex=1,numRaidMembers do
+               
+                  local name, rank, subgroup, level, class, fileName, zone, online, isDead, role, isML = GetRaidRosterInfo(memberIndex);
+      
+                  local role = UnitGroupRolesAssigned(name)
                   
                   if ( raidPlayerDatabase.playerInfo[name].tank == 1 ) and 
-                     ( isTank == false ) then
+                     ( role ~= "TANK" ) then
+print("Setting "..name.." to TANK"); -- debug. take out.
                      UnitSetRole(name,"TANK");
+                     allRolesCorrect = 0;
                   elseif ( raidPlayerDatabase.playerInfo[name].heals == 1 ) and 
-                     ( isHealer == false ) then
+                         ( role ~= "HEALER" ) then
+print("Setting "..name.." to HEALER"); -- debug. take out.
                      UnitSetRole(name,"HEALER");
+                     allRolesCorrect = 0;
                   elseif ( raidPlayerDatabase.playerInfo[name].mDps == 1 ) and 
-                     ( isDamage == false ) then
+                         ( role ~= "DAMAGER" ) then
+print("Setting "..name.." to DAMAGER was "..role); -- debug. take out.
                      UnitSetRole(name,"DAMAGER");
+                     allRolesCorrect = 0;
                   elseif ( raidPlayerDatabase.playerInfo[name].rDps == 1 ) and 
-                     ( isDamage == false ) then
+                         ( role ~= "DAMAGER" ) then
+print("Setting "..name.." to DAMAGER was "..role); -- debug. take out.
                      UnitSetRole(name,"DAMAGER");
+                     allRolesCorrect = 0;
                   end
                end 
+               
+               if ( allRolesCorrect == 1 ) and
+                  ( numRaidMembers == numMembersWithRoles ) then -- make sure all roles are set and raid is fully present
+print("All roles set. disarming role assignment");
+                  isRoleUpdateArmed = false; 
+               end
+            
             end
          end
          
@@ -2087,21 +2120,25 @@ end
 function RaidMaker_HandleSendInvitesButton()
    local selfName = GetUnitName("player",true); -- get the raid leader name (one running this)
    numMembersToPromoteToAssist = 0;
+   numMembersWithRoles = 0;
    local numInvitesToSendHere = 4 - GetNumPartyMembers();
    local rowIndex;
    local charName;
    
+   
    for rowIndex=1,#playerSortedList do
       charName = playerSortedList[rowIndex];
 
-      -- invite everyone but ourself
-      if ( selfName ~= charName ) then
 
-         if ( raidPlayerDatabase.playerInfo[charName].tank == 1 ) or
-            ( raidPlayerDatabase.playerInfo[charName].heals == 1 ) or
-            ( raidPlayerDatabase.playerInfo[charName].mDps == 1 ) or
-            ( raidPlayerDatabase.playerInfo[charName].rDps == 1) then
-               
+      if ( raidPlayerDatabase.playerInfo[charName].tank == 1 ) or
+         ( raidPlayerDatabase.playerInfo[charName].heals == 1 ) or
+         ( raidPlayerDatabase.playerInfo[charName].mDps == 1 ) or
+         ( raidPlayerDatabase.playerInfo[charName].rDps == 1) then
+            
+         numMembersWithRoles = numMembersWithRoles + 1;
+
+         if ( selfName ~= charName ) then -- invite everyone but ourself
+            
             if ( raidPlayerDatabase.playerInfo[charName].tank == 1 ) or -- prepare to promote them when they join group.
                (raidPlayerDatabase.playerInfo[charName].guildRankIndex < guildRankAssistThreshold ) then
                numMembersToPromoteToAssist = numMembersToPromoteToAssist +1;
@@ -2114,8 +2151,8 @@ function RaidMaker_HandleSendInvitesButton()
                   numInvitesToSendHere = numInvitesToSendHere - 1;
                   
                   InviteUnit(charName);
-
-
+   
+   
                else
                   -- need to defer the invitation.
                   raidPlayerDatabase.playerInfo[charName].partyInviteDeferred = 1;
@@ -2123,8 +2160,10 @@ function RaidMaker_HandleSendInvitesButton()
             end
          end
       end
+
    end
    raidSetupArmedFlag = true; -- indicate that on subsequent party change event we might need to convert to raid and configure looting.
+   isRoleUpdateArmed = true; -- indicate that we should update assigned roles.
    
    RaidMaker_UpdatePlayerAttendanceLog();
    
@@ -2282,15 +2321,16 @@ function RaidMaker_HandleAnnounceInvitesDoneButton()
 end
 
 
-
 function RaidMaker_HandleSendRolesToRaidButton()
 
    local tankList = "";
    local healList = "";
-   local dpslist = "";
+   local mDpslist = "";
+   local rDpslist = "";
    local tankCount = 0;
    local healCount = 0;
-   local dpsCount = 0;
+   local mDpsCount = 0;
+   local rDpsCount = 0;
    
 
    for rowIndex=1,#playerSortedList do
@@ -2302,6 +2342,7 @@ function RaidMaker_HandleSendRolesToRaidButton()
          end
          tankList = tankList..charName
          tankCount = tankCount + 1;
+         UnitSetRole(charName,"TANK");
       end
       if ( raidPlayerDatabase.playerInfo[charName].heals == 1 ) then
          if ( healCount ~= 0 ) then
@@ -2309,21 +2350,31 @@ function RaidMaker_HandleSendRolesToRaidButton()
          end
          healList = healList..charName
          healCount = healCount + 1;
+         UnitSetRole(charName,"HEALER");
       end
-      if ( raidPlayerDatabase.playerInfo[charName].mDps == 1) or
-         ( raidPlayerDatabase.playerInfo[charName].rDps == 1) then
-         if ( dpsCount ~= 0 ) then
-            dpslist = dpslist..", ";
+      if ( raidPlayerDatabase.playerInfo[charName].mDps == 1 ) then
+         if ( mDpsCount ~= 0 ) then
+            mDpslist = mDpslist..", ";
          end
-         dpslist = dpslist..charName
-         dpsCount = dpsCount + 1;
+         mDpslist = mDpslist..charName
+         mDpsCount = mDpsCount + 1;
+         UnitSetRole(charName,"DAMAGER");
+      end
+      if ( raidPlayerDatabase.playerInfo[charName].rDps == 1 ) then
+         if ( rDpsCount ~= 0 ) then
+            rDpslist = rDpslist..", ";
+         end
+         rDpslist = rDpslist..charName
+         rDpsCount = rDpsCount + 1;
+         UnitSetRole(charName,"DAMAGER");
       end
    end
    
    SendChatMessage("Roles for the raid are:", "RAID" );
    SendChatMessage("   Tanks: "..tankList , "RAID" );
    SendChatMessage("   Healers: "..healList , "RAID" );
-   SendChatMessage("   DPS: "..dpslist , "RAID" );
+   SendChatMessage("   Melee DPS: "..mDpslist , "RAID" );
+   SendChatMessage("   Ranged DPS: "..rDpslist , "RAID" );
    
 end
 
