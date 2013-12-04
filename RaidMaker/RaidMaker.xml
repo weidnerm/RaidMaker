@@ -11,6 +11,11 @@
             this:RegisterEvent("GUILD_ROSTER_UPDATE"); 
             this:RegisterEvent("PARTY_MEMBERS_CHANGED");
             this:RegisterEvent("CALENDAR_OPEN_EVENT");
+            this:RegisterEvent("CHAT_MSG_LOOT");
+            this:RegisterEvent("LOOT_OPENED");
+            this:RegisterEvent("CHAT_MSG_SYSTEM");
+--            this:RegisterEvent("CHAT_MSG_EMOTE");
+            
          </OnLoad> 
          <OnEvent> 
             if (event == "VARIABLES_LOADED") then 
@@ -21,6 +26,14 @@
                RaidMaker_handle_PARTY_MEMBERS_CHANGED(); 
             elseif (event == "CALENDAR_OPEN_EVENT") then 
                RaidMaker_handle_CALENDAR_OPEN_EVENT(...); 
+            elseif (event == "CHAT_MSG_LOOT") then 
+               RaidMaker_handle_CHAT_MSG_LOOT(...); 
+            elseif (event == "LOOT_OPENED") then 
+               RaidMaker_handle_LOOT_OPENED(...); 
+            elseif (event == "CHAT_MSG_SYSTEM") then 
+               RaidMaker_handle_CHAT_MSG_SYSTEM(...); 
+--            elseif (event == "CHAT_MSG_EMOTE") then 
+--               RaidMaker_handle_CHAT_MSG_EMOTE(...); 
             end 
          </OnEvent> 
       </Scripts> 

@@ -1083,8 +1083,61 @@ function RaidMaker_ClickHandler_GroupedStateHeader()
       RaidMaker_TextTableUpdate(RaidMaker_VSlider:GetValue());
 end
 
+function RaidMaker_handle_CHAT_MSG_LOOT(message, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter)
+   local startIndex,endIndex,playerName,itemLink
 
+--CHAT_MSG_LOOT
+--   You receive loot: [link].
+--   Flapjacckk receive loot: [link].
 
+   -- Check if another player won something
+   startIndex,endIndex,playerName,itemLink = strfind(message, "(%a+) receives loot: (.*)." );
+   if (playerName == nil ) then
+      -- wasnt someone else getting loot. check if it was us.
+      startIndex,endIndex,itemLink = strfind(message, "You receive loot: (.*)." );
+      if (itemLink ~= nil ) then
+         playerName = GetUnitName("player",true);
+      end
+   end
+
+   if (playerName ~= nil ) then
+      local startIndex,endIndex,itemID = strfind(arg1, "(%d+):")
+      local name, link, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(itemID);
+      if ( quality == 4 ) then
+         -- epic loot found event.
+         print(red.."Player="..playerName..white.." got "..green.." itemID="..itemID.." link="..itemLink);
+      end
+   end
+end
+
+function RaidMaker_handle_LOOT_OPENED(autoloot)
+--print("LOOT_OPENED event: autoloot="..autoloot);
+end
+
+--function RaidMaker_handle_CHAT_MSG_EMOTE(autoloot)
+--print("EMOTE event: sender="..sender.." msg="..message.." target="..target);
+--end
+
+function RaidMaker_handle_CHAT_MSG_SYSTEM(message, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter)
+----print("SYSTEM event: sender="..sender.." msg="..message.." target="..target);
+--
+--   -- "Bebhearley rolls 2 (1-100)
+----   local startIndex,endIndex,playerName = strfind(message, "%a+ rolls %d+ (1-100)");
+--   local startIndex,endIndex,playerName = strfind(arg1, "^%a+ rolls ");
+----   print ("startIndex="..startIndex.." endIndex="..endIndex.." playerName="..playerName.." rollValue="..rollValue);
+--   print ("startIndex="..startIndex.." endIndex="..endIndex.." playerName="..playerName);
+
+-- Lotusblossem has gone offline
+-- You receive loot: [link].
+-- [Lotusblossem] has come online.
+
+   startIndex,endIndex,playerName,rollValue = strfind(message, "^(%a+) rolls (%d+)" );
+   if ( rollValue ~= nil ) then
+      -- roll event detected.
+      print(white.."Roll of "..red..rollValue..white.." done by "..green..playerName);
+   end
+
+end
 
 function RaidMaker_handle_CALENDAR_OPEN_EVENT(selection)
    if ( selection == "PLAYER" ) then
