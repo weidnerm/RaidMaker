@@ -1693,8 +1693,29 @@ function RaidMaker_UpdatePlayerAttendanceLog()
         
          if ( title ~= nil ) then -- only continue if there is an open calendar entry.
          
-            currentIndex = #RaidMaker_RaidParticipantLog+1;
-            RaidMaker_RaidParticipantLog[currentIndex] = {}; -- create the structure
+         
+         
+            if ( #RaidMaker_RaidParticipantLog == 0 ) then
+               -- its a new raid event. we havent logged it before. make a new entry.
+               currentIndex = #RaidMaker_RaidParticipantLog+1;
+               RaidMaker_RaidParticipantLog[currentIndex] = {}; -- create the structure
+            else
+               if ( RaidMaker_RaidParticipantLog[#RaidMaker_RaidParticipantLog].year    ~= year   ) or
+                  ( RaidMaker_RaidParticipantLog[#RaidMaker_RaidParticipantLog].month   ~= month  ) or
+                  ( RaidMaker_RaidParticipantLog[#RaidMaker_RaidParticipantLog].day     ~= day    ) or
+                  ( RaidMaker_RaidParticipantLog[#RaidMaker_RaidParticipantLog].hour    ~= hour   ) or
+                  ( RaidMaker_RaidParticipantLog[#RaidMaker_RaidParticipantLog].minute  ~= minute ) or
+                  ( RaidMaker_RaidParticipantLog[#RaidMaker_RaidParticipantLog].title   ~= title  ) or
+                  ( RaidMaker_RaidParticipantLog[#RaidMaker_RaidParticipantLog].weekday ~= weekday) then
+                  -- its a new raid event. we havent logged it before. make a new entry.
+                  currentIndex = #RaidMaker_RaidParticipantLog+1;
+                  RaidMaker_RaidParticipantLog[currentIndex] = {}; -- create the structure
+               else
+                  currentIndex = #RaidMaker_RaidParticipantLog;
+               end
+            end
+         
+         
          
             RaidMaker_RaidParticipantLog[currentIndex].title = title;
             
