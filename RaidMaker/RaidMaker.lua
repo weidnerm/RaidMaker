@@ -33,7 +33,8 @@ local raidLootTypeArmedFlag = false;
 local numMembersToPromoteToAssist = 0;
 local guildRankAssistThreshold = 3;  -- 0=Guild Master. 1=Officer; 2=Lieutenant; etc...  Controls if officers get assist.
                                      -- set to 0 for no promote. 1 for GM only, 2 for Officers, GM, etc
-local scan_button
+local raidMakerLaunchCalEditButton
+local raidMakerLaunchCalViewButton
 
 
 -- change to use the array instead of these locals
@@ -117,7 +118,10 @@ function RaidMaker_Handler(msg)
       else
          RaidMaker_MainForm:Show();
       end
-      
+   elseif (msg == "show") then
+      RaidMaker_MainForm:Show();
+   elseif (msg == "hide") then
+      RaidMaker_MainForm:Hide();
    elseif (msg == "text") then
       -- for testing purposes. can be deleted.
       RaidMaker_TabPage1_SampleTextTab1_GroupedState_1:SetText(red.."not");
@@ -129,18 +133,18 @@ function RaidMaker_Handler(msg)
       RaidMaker_TabPage1_SampleTextTab1_DpsFlag_1:SetText(yellow.."X");
       RaidMaker_TabPage1_SampleTextTab1_Class_1:SetText(yellow.."DRUID");
 
-   scan_button:SetParent(TradeSkillFrame)
---   scan_button:SetParent(RaidMaker_MainForm)
---   scan_parent = scan_button:GetParent()
+   raidMakerLaunchCalEditButton:SetParent(TradeSkillFrame)
+--   raidMakerLaunchCalEditButton:SetParent(RaidMaker_MainForm)
+--   scan_parent = raidMakerLaunchCalEditButton:GetParent()
 
-   scan_button:ClearAllPoints()
+   raidMakerLaunchCalEditButton:ClearAllPoints()
       
-   scan_button:SetPoint("RIGHT", TradeSkillFrameCloseButton, "LEFT",4,0)
---   scan_button:SetPoint("TOPLEFT", RaidMaker_MainForm, "TOPRIGHT",5,-4)
-   scan_button:SetWidth(scan_button:GetTextWidth() + 10)
+   raidMakerLaunchCalEditButton:SetPoint("RIGHT", TradeSkillFrameCloseButton, "LEFT",4,0)
+--   raidMakerLaunchCalEditButton:SetPoint("TOPLEFT", RaidMaker_MainForm, "TOPRIGHT",5,-4)
+   raidMakerLaunchCalEditButton:SetWidth(raidMakerLaunchCalEditButton:GetTextWidth() + 10)
 
---   scan_button:Enable()
-   scan_button:Show()
+--   raidMakerLaunchCalEditButton:Enable()
+   raidMakerLaunchCalEditButton:Show()
 
 
 
@@ -1082,6 +1086,26 @@ end
 
 
 
+function RaidMaker_handle_CALENDAR_OPEN_EVENT(selection)
+   if ( selection == "PLAYER" ) then
+   
+      raidMakerLaunchCalEditButton:SetParent(CalendarCreateEventFrame)
+      raidMakerLaunchCalEditButton:ClearAllPoints()
+      raidMakerLaunchCalEditButton:SetPoint("RIGHT", CalendarCreateEventCloseButton, "LEFT",4,0)
+      raidMakerLaunchCalEditButton:SetWidth(raidMakerLaunchCalEditButton:GetTextWidth() + 10)
+      raidMakerLaunchCalEditButton:Enable()
+      raidMakerLaunchCalEditButton:Show()
+      
+      
+      raidMakerLaunchCalViewButton:SetParent(CalendarViewEventFrame)
+      raidMakerLaunchCalViewButton:ClearAllPoints()
+      raidMakerLaunchCalViewButton:SetPoint("RIGHT", CalendarViewEventCloseButton, "LEFT",4,0)
+      raidMakerLaunchCalViewButton:SetWidth(raidMakerLaunchCalViewButton:GetTextWidth() + 10)
+      raidMakerLaunchCalViewButton:Enable()
+      raidMakerLaunchCalViewButton:Show()
+   end
+end
+
 function RaidMaker_handle_PARTY_MEMBERS_CHANGED()
 
    if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
@@ -1202,7 +1226,6 @@ function RaidMaker_handle_PARTY_MEMBERS_CHANGED()
       end
    end
 end
-
 
 function RaidMaker_HandleSendInvitesButton()
    local selfName = GetUnitName("player",true); -- get the raid leader name (one running this)
@@ -1460,11 +1483,12 @@ function RaidMaker_SetUpClassIcons()
    -------------------------------------------------------------------------------
    -- Create the scan button
    -------------------------------------------------------------------------------
-   scan_button = CreateFrame("Button", nil, UIParent, "UIPanelButtonTemplate")
-   scan_button:SetHeight(20)
+   -- create the button for the Raid Edit screen
+   raidMakerLaunchCalEditButton = CreateFrame("Button", nil, UIParent, "UIPanelButtonTemplate")
+   raidMakerLaunchCalEditButton:SetHeight(20)
 
-   scan_button:RegisterForClicks("LeftButtonUp")
-   scan_button:SetScript("OnClick",
+   raidMakerLaunchCalEditButton:RegisterForClicks("LeftButtonUp")
+   raidMakerLaunchCalEditButton:SetScript("OnClick",
                function(self, button, down)
 
                   if RaidMaker_MainForm:IsVisible() then
@@ -1474,34 +1498,40 @@ function RaidMaker_SetUpClassIcons()
                   end
                end)
 
-   scan_button:SetScript("OnEnter",
+   raidMakerLaunchCalEditButton:SetScript("OnEnter",
                function(this)
                   GameTooltip_SetDefaultAnchor(GameTooltip, this)
-                  GameTooltip:SetText("show RaidMaker gui")
+                  GameTooltip:SetText("show RaidMaker gui. Same as /rm toggle")
                   GameTooltip:Show()
                end)
-   scan_button:SetScript("OnLeave", function() GameTooltip:Hide() end)
-   scan_button:SetText("Mike")
+   raidMakerLaunchCalEditButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+   raidMakerLaunchCalEditButton:SetText("RM")
+   
+   
+   -- create the button for the Raid Viewer screen
+   raidMakerLaunchCalViewButton = CreateFrame("Button", nil, UIParent, "UIPanelButtonTemplate")
+   raidMakerLaunchCalViewButton:SetHeight(20)
 
+   raidMakerLaunchCalViewButton:RegisterForClicks("LeftButtonUp")
+   raidMakerLaunchCalViewButton:SetScript("OnClick",
+               function(self, button, down)
 
+                  if RaidMaker_MainForm:IsVisible() then
+                     RaidMaker_MainForm:Hide()
+                  else
+                     RaidMaker_MainForm:Show()
+                  end
+               end)
 
-
-
-
---end
-
---function RaidMaker:OnEnable()
-   scan_button:SetParent(TradeSkillFrame)
---   scan_button:SetParent(RaidMaker_MainForm)
---   scan_parent = scan_button:GetParent()
-
-   scan_button:ClearAllPoints()
-      
-   scan_button:SetPoint("RIGHT", TradeSkillFrameCloseButton, "LEFT",4,0)
---   scan_button:SetPoint("TOPLEFT", RaidMaker_MainForm, "TOPRIGHT",5,-4)
-   scan_button:SetWidth(scan_button:GetTextWidth() + 10)
-
---   scan_button:Enable()
-   scan_button:Show()
+   raidMakerLaunchCalViewButton:SetScript("OnEnter",
+               function(this)
+                  GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                  GameTooltip:SetText("show RaidMaker gui. Same as /rm toggle")
+                  GameTooltip:Show()
+               end)
+   raidMakerLaunchCalViewButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+   raidMakerLaunchCalViewButton:SetText("RM")
+   -- must wait for the CALENDAR_OPEN_EVENT event to complete the initialization.
+   
 end
 

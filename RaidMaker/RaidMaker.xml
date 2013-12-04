@@ -9,7 +9,8 @@
          <OnLoad> 
             this:RegisterEvent("VARIABLES_LOADED"); 
             this:RegisterEvent("GUILD_ROSTER_UPDATE"); 
-            this:RegisterEvent("PARTY_MEMBERS_CHANGED"); 
+            this:RegisterEvent("PARTY_MEMBERS_CHANGED");
+            this:RegisterEvent("CALENDAR_OPEN_EVENT");
          </OnLoad> 
          <OnEvent> 
             if (event == "VARIABLES_LOADED") then 
@@ -18,6 +19,8 @@
                RaidMaker_GuildRosterUpdate(flag); 
             elseif (event == "PARTY_MEMBERS_CHANGED") then 
                RaidMaker_handle_PARTY_MEMBERS_CHANGED(); 
+            elseif (event == "CALENDAR_OPEN_EVENT") then 
+               RaidMaker_handle_CALENDAR_OPEN_EVENT(...); 
             end 
          </OnEvent> 
       </Scripts> 
