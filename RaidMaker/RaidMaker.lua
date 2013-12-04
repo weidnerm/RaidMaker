@@ -1125,7 +1125,7 @@ end
 
 function RaidMaker_addLootEntryToLootLog(playerName, itemId, itemLink)
    local loggedEntryIndex;
-   local startIndex,endIndex,itemName strfind(itemLink,"%[([%a ]+)%]");
+   local startIndex,endIndex,itemName strfind(itemLink,"%[(.*)%]");
 
    loggedEntryIndex = #RaidMaker_lootLogData+1;
    RaidMaker_lootLogData[loggedEntryIndex] = {};  -- make it a structure so we can put some fields in.
@@ -1318,12 +1318,29 @@ function RaidMaker_DisplayRollsDatabase()
             rollAgeColor = mediumGrey;
          end
          
-         RaidMaker_LogTab_Rolls_FieldPlayerNames[index+1]:SetText(playerNameColor..RaidMaker_RollLog[indexToDisplay].playerName);
-         if ( RaidMaker_RollLog[indexToDisplay].rollValue == 0 ) then
-            RaidMaker_LogTab_Rolls_FieldRollValues[index+1]:SetText(rollValueColor.."pass");
-         else
-            RaidMaker_LogTab_Rolls_FieldRollValues[index+1]:SetText(rollValueColor..RaidMaker_RollLog[indexToDisplay].rollValue);
+         if ( RaidMaker_RollLog[indexToDisplay].preceedingRolls ~= 0 ) then -- roll is a duplicate color the entry grey
+            playerNameColor = mediumGrey;
+            rollValueColor = mediumGrey;
+            rollAgeColor = mediumGrey;
          end
+         
+         -- display player name
+         RaidMaker_LogTab_Rolls_FieldPlayerNames[index+1]:SetText(playerNameColor..RaidMaker_RollLog[indexToDisplay].playerName);
+
+         -- display roll value
+         local rollText;
+         if ( RaidMaker_RollLog[indexToDisplay].rollValue == 0 ) then
+            rollText = "pass";
+         else
+            rollText = RaidMaker_RollLog[indexToDisplay].rollValue;
+         end
+         if ( RaidMaker_RollLog[indexToDisplay].preceedingRolls ~= 0 ) then
+            local rollCount = RaidMaker_RollLog[indexToDisplay].preceedingRolls+1;
+            rollText = rollText.." #"..rollCount;
+         end
+         RaidMaker_LogTab_Rolls_FieldRollValues[index+1]:SetText(rollValueColor..rollText);
+         
+         -- display roll age
          RaidMaker_LogTab_Rolls_FieldRollAges[index+1]:SetText(rollAgeColor.. RaidMaker_getAgeText(timeDeltaSeconds));
       else
          -- blank out the row
@@ -1338,21 +1355,15 @@ function RaidMaker_ResetRolls(maxAge)
    if ( RaidMaker_RollLog == nil ) then
       RaidMaker_RollLog = {}; -- start with a blank array.
    end
-   
+print("reseting rolls age "..maxAge);
    local readIndex;
    local writeIndex = 1;
    local timeCutoff = time()-maxAge;
    local newRaidMaker_RollLog = {}; -- create a blank array
    
-   RaidMaker_highestRoll = 0;
-
    for readIndex = 1,#RaidMaker_RollLog do
       if ( timeCutoff < RaidMaker_RollLog[readIndex].epocTime ) then
          newRaidMaker_RollLog[writeIndex] = RaidMaker_RollLog[readIndex]; -- copy over all the fields
-
-         if ( RaidMaker_highestRoll < RaidMaker_RollLog[readIndex].rollValue ) then
-            RaidMaker_highestRoll = RaidMaker_RollLog[readIndex].rollValue; -- we have a new highest.
-         end
          writeIndex = writeIndex + 1;
       end
    end
@@ -1376,24 +1387,48 @@ function RaidMaker_resortRollsList()
    RaidMaker_sortedRollList = {}; -- start with a blank array.
    
    for index = 1,#RaidMaker_RollLog do
-      RaidMaker_sortedRollList[index] = index; -- pre-fill the array 
+      RaidMaker_sortedRollList[index] = index; -- pre-fill the sorting array 
       
-      if ( RaidMaker_highestRoll < RaidMaker_RollLog[index].rollValue ) then
-         RaidMaker_highestRoll = RaidMaker_RollLog[index].rollValue; -- we have a new highest.
-      end
+      RaidMaker_RollLog[index].preceedingRolls = 0; -- clear out the scratch fields.
+      RaidMaker_RollLog[index].highestPrimaryRoll = 0; -- clear out the scratch fields.
    end
    
-   -- sort the table
-   if ( RaidMaker_sortRollAlgorithm_id == 1 ) then -- sort by roll
-      table.sort(RaidMaker_sortedRollList, RaidMaker_RollDisplay_descendRollOrder);
-   elseif ( RaidMaker_sortRollAlgorithm_id == 2 ) then -- sort by age
-      table.sort(RaidMaker_sortedRollList, RaidMaker_RollDisplay_ascendRollAgeOrder);
-   elseif ( RaidMaker_sortRollAlgorithm_id == 3 ) then -- sort by player name
+   if ( #RaidMaker_RollLog > 1 ) then -- only look for duplicates if there is more than one roll in the db.
+      
+      -- sort according to the player name and then roll age so we can figure out which is the primary roll for each person.
       table.sort(RaidMaker_sortedRollList, RaidMaker_RollDisplay_ascendPlayerNameOrder);
-   else
-      table.sort(RaidMaker_sortedRollList, RaidMaker_RollDisplay_descendRollOrder); -- default to roll value
-   end
+   
+      -- find all the duplicate rolls and number them.  table is sorted by player then roll age.
+      for index = 1,#RaidMaker_RollLog-1 do
+         if ( RaidMaker_RollLog[RaidMaker_sortedRollList[index+0]].playerName ==  
+              RaidMaker_RollLog[RaidMaker_sortedRollList[index+1]].playerName ) then
+            -- name matches, so there is a duplicate roll. 
+            RaidMaker_RollLog[RaidMaker_sortedRollList[index+1]].preceedingRolls = RaidMaker_RollLog[RaidMaker_sortedRollList[index+0]].preceedingRolls + 1;
+         end
+      end
+      
+      -- find the highest roll
+      RaidMaker_highestRoll = 0;
+      for index = 1,#RaidMaker_RollLog do
+         if ( RaidMaker_RollLog[index].preceedingRolls == 0 ) then -- only accept primary rolls
+            if ( RaidMaker_highestRoll < RaidMaker_RollLog[index].rollValue ) then
+               RaidMaker_highestRoll = RaidMaker_RollLog[index].rollValue; -- we have a new highest.
+            end
+         end
+      end
 
+      -- sort the table for presentation
+      if ( RaidMaker_sortRollAlgorithm_id == 1 ) then -- sort by roll
+         table.sort(RaidMaker_sortedRollList, RaidMaker_RollDisplay_descendRollOrder);
+      elseif ( RaidMaker_sortRollAlgorithm_id == 2 ) then -- sort by age
+         table.sort(RaidMaker_sortedRollList, RaidMaker_RollDisplay_ascendRollAgeOrder);
+      elseif ( RaidMaker_sortRollAlgorithm_id == 3 ) then -- sort by player name
+         table.sort(RaidMaker_sortedRollList, RaidMaker_RollDisplay_ascendPlayerNameOrder);
+      else
+         table.sort(RaidMaker_sortedRollList, RaidMaker_RollDisplay_descendRollOrder); -- default to roll value
+      end
+
+   end
 end
 
 
@@ -1442,8 +1477,19 @@ end
 
 function RaidMaker_RollDisplay_ascendPlayerNameOrder(a,b)
    -- a,b are indexes into the roll table.
+
+   if ( RaidMaker_RollLog[a].playerName < RaidMaker_RollLog[b].playerName ) then
+      return true;
+   elseif ( RaidMaker_RollLog[a].playerName > RaidMaker_RollLog[b].playerName ) then
+      return false;
+   end
    
-   return RaidMaker_RollLog[a].playerName < RaidMaker_RollLog[a].playerName;
+   if ( RaidMaker_RollLog[a].epocTime < RaidMaker_RollLog[b].epocTime ) then
+      return true;
+   elseif ( RaidMaker_RollLog[a].epocTime > RaidMaker_RollLog[b].epocTime ) then
+      return false;
+   end
+
 end
 
 
