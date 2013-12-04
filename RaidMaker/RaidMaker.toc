@@ -1,0 +1,8 @@
+## Interface: 30000
+## Title: RaidMaker 1.1
+## Notes: Raid Maker Addon.  Based on AddonTemplate
+## OptionalDeps:
+## Dependencies:
+RaidMaker.xml
+RaidMaker.lua
+secureFrame.xml
