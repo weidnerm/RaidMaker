@@ -1115,10 +1115,11 @@ function RaidMaker_handle_CHAT_MSG_LOOT(message, sender, language, channelString
    if (playerName ~= nil ) then
       local startIndex,endIndex,itemID = strfind(arg1, "(%d+):")
       local name, link, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(itemID);
-      if ( quality == 4  ) then -- epic(purple)=4;  superior(blue)=3;  green=2; white=1; grey=0
-         if ( GetNumRaidMembers() ~= 0 ) then -- only log it if we are in a raid. i.e. filter heroics
+--      if ( quality == 4  ) then -- epic(purple)=4;  superior(blue)=3;  green=2; white=1; grey=0
+      if ( quality >= 0  ) then -- epic(purple)=4;  superior(blue)=3;  green=2; white=1; grey=0
+--         if ( GetNumRaidMembers() ~= 0 ) then -- only log it if we are in a raid. i.e. filter heroics
             RaidMaker_addLootEntryToLootLog(playerName, itemID, itemLink);
-         end
+--         end
       end
    end
 end
@@ -1126,6 +1127,9 @@ end
 function RaidMaker_addLootEntryToLootLog(playerName, itemId, itemLink)
    local loggedEntryIndex;
    local startIndex,endIndex,itemName strfind(itemLink,"%[(.*)%]");
+   local startIndex,endIndex,itemName strfind(itemLink,"(%d+):");
+--print("itemLink="..itemLink)
+--print("itemName="..itemName)
 
    loggedEntryIndex = #RaidMaker_lootLogData+1;
    RaidMaker_lootLogData[loggedEntryIndex] = {};  -- make it a structure so we can put some fields in.
@@ -1146,8 +1150,8 @@ function RaidMaker_addLootEntryToLootLog(playerName, itemId, itemLink)
    end
    
    if ( #RaidMaker_lootLogData <= 10 ) then
-      RaidMaker_LootLog_Slider:SetMinMaxValues(1,1);
-      RaidMaker_LootLog_Slider:SetValue(1);
+      RaidMaker_LootLog_Slider:SetMinMaxValues(#RaidMaker_lootLogData-9,#RaidMaker_lootLogData-9);
+      RaidMaker_LootLog_Slider:SetValue(#RaidMaker_lootLogData-9);
    else
       RaidMaker_LootLog_Slider:SetMinMaxValues(1,#RaidMaker_lootLogData-9);
       RaidMaker_LootLog_Slider:SetValue(#RaidMaker_lootLogData-9);
@@ -1180,6 +1184,10 @@ function RaidMaker_DisplayLootDatabase()
          RaidMaker_LogTab_Loot_FieldRollValues[index+1]:SetText(" ");
          RaidMaker_LogTab_Loot_FieldRollAges[index+1]:SetText(" ");   
       else
+--         print("currentTime="..currentTime)
+--         print("indexToDisplay="..indexToDisplay)
+--         print("x[y].epocTime="..RaidMaker_lootLogData[indexToDisplay].epocTime);
+         
          timeDeltaSeconds = currentTime - RaidMaker_lootLogData[indexToDisplay].epocTime;
       
          if ( timeDeltaSeconds > 14400 ) then -- 4 hours = 4*60*60
@@ -1355,7 +1363,7 @@ function RaidMaker_ResetRolls(maxAge)
    if ( RaidMaker_RollLog == nil ) then
       RaidMaker_RollLog = {}; -- start with a blank array.
    end
-print("reseting rolls age "..maxAge);
+--print("reseting rolls age "..maxAge);
    local readIndex;
    local writeIndex = 1;
    local timeCutoff = time()-maxAge;
@@ -2315,8 +2323,8 @@ function RaidMaker_SetUpClassIcons()
 --   RaidMaker_LootLog_Slider:SetScript("OnMouseWheel", function(self,delta) RaidMaker_OnMouseWheelLootLog(self, delta) end );
 
    if ( #RaidMaker_lootLogData <= 10 ) then
-      RaidMaker_LootLog_Slider:SetMinMaxValues(1,1);
-      RaidMaker_LootLog_Slider:SetValue(1);
+      RaidMaker_LootLog_Slider:SetMinMaxValues(#RaidMaker_lootLogData-9,#RaidMaker_lootLogData-9);
+      RaidMaker_LootLog_Slider:SetValue(#RaidMaker_lootLogData-9);
    else
       RaidMaker_LootLog_Slider:SetMinMaxValues(1,#RaidMaker_lootLogData-9);
       RaidMaker_LootLog_Slider:SetValue(#RaidMaker_lootLogData-9);
