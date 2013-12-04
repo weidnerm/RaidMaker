@@ -26,6 +26,9 @@ local RaidMaker_sortedRollList = {};
 local RaidMaker_sortRollAlgorithm_id = 1;   -- 1=sort by roll value; 2=sort by time; 3=sort by playername
 local RaidMaker_highestRoll = 0;
 local RaidMaker_menu_playerName = "";
+local RaidMaker_appInstanceId = random(1,9999);
+local RaidMaker_msgSequenceNumber = random(1,9999);
+local RaidMaker_appMessagePrefix = "DbtRm";
 
 -- change to use the array instead of these locals
 local classColorDeathKnight   = "|c00C41F3B";
@@ -191,12 +194,12 @@ function RaidMaker_buildRaidList(origDatabase)
   
    if ( title ~= nil ) then
    
-
       newRaidDatabase.month  = month;
       newRaidDatabase.day    = day;
       newRaidDatabase.year   = year;
       newRaidDatabase.hour   = hour;
       newRaidDatabase.minute = minute;
+      newRaidDatabase.textureIndex = textureIndex;
 
       newRaidDatabase.title = title;
       
@@ -243,6 +246,8 @@ function RaidMaker_buildRaidList(origDatabase)
          newRaidDatabase.playerInfo[name].mDps = 0;
          newRaidDatabase.playerInfo[name].rDps = 0;
          newRaidDatabase.playerInfo[name].online = 0;
+         newRaidDatabase.playerInfo[name].indexInEvent = index;
+
          if ( copyRaidPlayerSettings == true ) then
             -- its the same calendar. copy the fields from the old one
             if ( origDatabase.playerInfo[name] ~= nil ) then
@@ -912,8 +917,10 @@ function RaidMaker_ClickHandler_TankFlag(clickedRow)
          -- toggle the selection
          if ( raidPlayerDatabase.playerInfo[clickedCharName].tank == 1 ) then
             raidPlayerDatabase.playerInfo[clickedCharName].tank = 0;
+            RaidMaker_sendUpdateToRemoteApps(clickedCharName, "t");
          else
             raidPlayerDatabase.playerInfo[clickedCharName].tank = 1;
+            RaidMaker_sendUpdateToRemoteApps(clickedCharName, "T");
          end
          
          RaidMaker_DisplayDatabase();
@@ -933,8 +940,10 @@ function RaidMaker_ClickHandler_HealFlag(clickedRow)
          -- toggle the selection
          if ( raidPlayerDatabase.playerInfo[clickedCharName].heals == 1 ) then
             raidPlayerDatabase.playerInfo[clickedCharName].heals = 0;
+            RaidMaker_sendUpdateToRemoteApps(clickedCharName, "h");
          else
             raidPlayerDatabase.playerInfo[clickedCharName].heals = 1;
+            RaidMaker_sendUpdateToRemoteApps(clickedCharName, "H");
          end
          
          RaidMaker_DisplayDatabase();
@@ -954,8 +963,10 @@ function RaidMaker_ClickHandler_mDpsFlag(clickedRow)
          -- toggle the selection
          if ( raidPlayerDatabase.playerInfo[clickedCharName].mDps == 1 ) then
             raidPlayerDatabase.playerInfo[clickedCharName].mDps = 0;
+            RaidMaker_sendUpdateToRemoteApps(clickedCharName, "m");
          else
             raidPlayerDatabase.playerInfo[clickedCharName].mDps = 1;
+            RaidMaker_sendUpdateToRemoteApps(clickedCharName, "M");
          end
          
          RaidMaker_DisplayDatabase();
@@ -975,8 +986,10 @@ function RaidMaker_ClickHandler_rDpsFlag(clickedRow)
          -- toggle the selection
          if ( raidPlayerDatabase.playerInfo[clickedCharName].rDps == 1 ) then
             raidPlayerDatabase.playerInfo[clickedCharName].rDps = 0;
+            RaidMaker_sendUpdateToRemoteApps(clickedCharName, "r");
          else
             raidPlayerDatabase.playerInfo[clickedCharName].rDps = 1;
+            RaidMaker_sendUpdateToRemoteApps(clickedCharName, "R");
          end
          
          RaidMaker_DisplayDatabase();
@@ -1136,6 +1149,183 @@ end
 
 function RaidMaker_handle_LOOT_OPENED(autoloot)
 --print("LOOT_OPENED event: autoloot="..autoloot);
+end
+
+
+
+
+function RaidMaker_handle_CHAT_MSG_ADDON(prefix, message, channel, sender)
+   local index,charName,charFields
+   
+   if ( prefix == RaidMaker_appMessagePrefix ) then -- make sure its not our message
+      if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
+         if ( raidPlayerDatabase.textureIndex ~= nil ) then
+
+            local raidId, msgFormat, rxDay, rxHour, rxMin, appId, msgSeqNum, remoteAction, remoteDataBase = strsplit(":",message, 9 );
+
+            if ( tonumber(RaidMaker_appInstanceId) ~= tonumber(appId) ) then -- only process messages from remote instances. Different id from ours.
+               if ( tonumber(raidPlayerDatabase.textureIndex) == tonumber(raidId) ) and -- make sure the remote person is on the same raid
+                  ( tonumber(raidPlayerDatabase.day         ) == tonumber(rxDay ) ) and -- and 
+                  ( tonumber(raidPlayerDatabase.hour        ) == tonumber(rxHour) ) and -- and 
+                  ( tonumber(raidPlayerDatabase.minute      ) == tonumber(rxMin ) ) then 
+print(prefix,message);
+            
+--                  if ( RaidMaker_msgSequenceNumber+1 == tonumber(msgSeqNum) ) or -- remote seq number is one more than ours. its a remote update of a click.
+                  if ( RaidMaker_msgSequenceNumber   == tonumber(msgSeqNum) ) then -- remote seq number matches ours. There was probably a collision. only accept the remote change. discard the database.
+print("updating.");                     
+
+                     local startIndex1,endIndex1,playerIndex,playerAction = strfind(remoteAction, "(%d+)(%a+)" );
+                 
+                     if ( playerIndex ~= nil ) and 
+                        ( playerAction ~= nil ) then
+                        local name, level, className, classFileName, inviteStatus, modStatus, inviteIsMine, inviteType = CalendarEventGetInvite(playerIndex);
+                     
+                        if ( name ~= nil ) then
+                           RaidMaker_processRemoteTransaction(name,playerAction)
+                        end
+                     end
+
+                     RaidMaker_msgSequenceNumber = tonumber(msgSeqNum);
+                  else 
+                     --
+                     -- remote number is totally different.  Sync up with them.
+                     --
+if ( remoteDataBase ~= nil ) then
+print("Syncing. our="..RaidMaker_msgSequenceNumber.." remote="..msgSeqNum.." transactions="..#remoteDataBase);                     
+end
+
+                     -- clear out our roles.
+                     for charName,charFields in pairs(raidPlayerDatabase.playerInfo) do
+                        raidPlayerDatabase.playerInfo[charName].tank = 0;
+                        raidPlayerDatabase.playerInfo[charName].heals = 0;
+                        raidPlayerDatabase.playerInfo[charName].mDps = 0;
+                        raidPlayerDatabase.playerInfo[charName].rDps = 0;
+                     end
+
+                     local workingDatabase = remoteDataBase;
+                     
+                     while true do
+                        local currentAction
+
+                        if ( workingDatabase == nil ) then
+                           break;
+                        end
+                        
+                        currentAction, workingDatabase = strsplit(":",workingDatabase, 2 );
+                        
+                        if ( currentAction == nil ) then
+                           break;
+                        else
+                           local startIndex1,endIndex1,playerIndex,playerAction = strfind(currentAction, "(%d+)(%a+)" );
+                       
+                           if ( playerIndex ~= nil ) and 
+                              ( playerAction ~= nil ) then
+                              local name, level, className, classFileName, inviteStatus, modStatus, inviteIsMine, inviteType = CalendarEventGetInvite(playerIndex);
+                           
+                              if ( name ~= nil ) then
+                                 RaidMaker_processRemoteTransaction(name,playerAction)
+                              end
+                           end
+                        end
+                     end
+
+                     -- set our local seq number to that in the message.
+                     RaidMaker_msgSequenceNumber = tonumber(msgSeqNum);
+                  end
+                  
+                  -- updates may have been made. update the display.
+                  RaidMaker_DisplayDatabase();
+                  
+               end
+            end
+         end
+      end
+   end
+end
+
+function RaidMaker_sendUpdateToRemoteApps(playerName, actionId)
+   RaidMaker_msgSequenceNumber = RaidMaker_msgSequenceNumber + 1; -- increment the global sequence number
+
+   if ( playerName ~= nil ) then
+      if ( raidPlayerDatabase ~= nil ) then
+         if ( raidPlayerDatabase.playerInfo ~= nil ) then
+            if ( raidPlayerDatabase.playerInfo[playerName] ~= nil ) then
+         
+               local txMsg = "";
+               
+               txMsg = txMsg..raidPlayerDatabase.textureIndex..":"; -- Raid Id
+               txMsg = txMsg.."1"..":";                          -- version
+               txMsg = txMsg..raidPlayerDatabase.day..":";
+               txMsg = txMsg..raidPlayerDatabase.hour..":";
+               txMsg = txMsg..raidPlayerDatabase.minute..":";
+               txMsg = txMsg..RaidMaker_appInstanceId..":";      -- id of this instance of the app
+               txMsg = txMsg..RaidMaker_msgSequenceNumber..":";
+               
+               txMsg = txMsg..raidPlayerDatabase.playerInfo[playerName].indexInEvent;
+               txMsg = txMsg..actionId
+   
+               for charName,charFields in pairs(raidPlayerDatabase.playerInfo) do
+                  if ( charFields.tank   == 1 ) or
+                     ( charFields.heals  == 1 ) or
+                     ( charFields.mDps   == 1 ) or
+                     ( charFields.rDps   == 1 ) then
+                        
+                     txMsg = txMsg..":"..raidPlayerDatabase.playerInfo[charName].indexInEvent;
+                        
+                     if ( charFields.tank   == 1 ) then
+                        txMsg = txMsg.."T";
+                     end
+                        
+                     if ( charFields.heals  == 1 ) then
+                        txMsg = txMsg.."H";
+                     end
+
+                     if ( charFields.mDps   == 1 ) then
+                        txMsg = txMsg.."M";
+                     end
+
+                     if ( charFields.rDps   == 1 ) then
+                        txMsg = txMsg.."R";
+                     end
+                  end
+               end
+               
+               SendAddonMessage(RaidMaker_appMessagePrefix, txMsg, "GUILD" );
+
+            end
+         end
+      end
+   end
+end
+
+
+
+function RaidMaker_processRemoteTransaction(name,playerAction)
+   local length, singleAction, index
+   
+   length = strlen(playerAction)
+   
+   for index = 1,10 do
+      singleAction = strsub(playerAction, index,index)
+      
+      if ( singleAction == "T" ) then
+         raidPlayerDatabase.playerInfo[name].tank = 1;
+      elseif ( singleAction == "t" ) then
+         raidPlayerDatabase.playerInfo[name].tank = 0;
+      elseif ( singleAction == "H" ) then
+         raidPlayerDatabase.playerInfo[name].heals = 1;
+      elseif ( singleAction == "h" ) then
+         raidPlayerDatabase.playerInfo[name].heals = 0;
+      elseif ( singleAction == "M" ) then
+         raidPlayerDatabase.playerInfo[name].mDps = 1;
+      elseif ( singleAction == "m" ) then
+         raidPlayerDatabase.playerInfo[name].mDps = 0;
+      elseif ( singleAction == "R" ) then
+         raidPlayerDatabase.playerInfo[name].rDps = 1;
+      elseif ( singleAction == "r" ) then
+         raidPlayerDatabase.playerInfo[name].rDps = 0;
+      end
+   end
 end
 
 

@@ -21,6 +21,7 @@
             this:RegisterEvent("CHAT_MSG_PARTY_LEADER");
             this:RegisterEvent("CHAT_MSG_RAID_LEADER");
             this:RegisterEvent("CHAT_MSG_RAID_WARNING");
+            this:RegisterEvent("CHAT_MSG_ADDON");
             
 --            this:RegisterEvent("CHAT_MSG_EMOTE");
          </OnLoad> 
@@ -53,6 +54,8 @@
                RaidMaker_handle_CHAT_MSG_RAID_LEADER(...); 
             elseif (event == "CHAT_MSG_RAID_WARNING") then 
                RaidMaker_handle_CHAT_MSG_RAID_WARNING(...); 
+            elseif (event == "CHAT_MSG_ADDON") then 
+               RaidMaker_handle_CHAT_MSG_ADDON(...); 
             end 
          </OnEvent> 
       </Scripts> 
