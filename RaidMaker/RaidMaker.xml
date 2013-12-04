@@ -2294,7 +2294,7 @@
        <!--Background Frame-->
             <Frames>               
                <Frame name="RaidMaker_GroupLootFrame">
-                  <Size><AbsDimension x="590" y="210" /></Size>
+                  <Size><AbsDimension x="570" y="210" /></Size>
                   <Anchors>
                      <Anchor point="TOPLEFT" relativeTo="$parent">
                         <Offset>
@@ -2309,7 +2309,7 @@
                   </Backdrop>
                </Frame>   
                <Frame name="RaidMaker_GroupRollFrame">
-                  <Size><AbsDimension x="440" y="210" /></Size>
+                  <Size><AbsDimension x="360" y="210" /></Size>
                   <Anchors>
                      <Anchor point="TOPLEFT" relativeTo="$parent">
                         <Offset>
@@ -2328,7 +2328,7 @@
                   <Anchors>
                      <Anchor point="TOPLEFT" relativePoint="TOPRIGHT"  relativeTo="RaidMaker_GroupRollFrame">
                          <Offset>
-                             <AbsDimension x="60" y="-10"/>
+                             <AbsDimension x="20" y="-10"/>
                          </Offset>
                      </Anchor>
                   </Anchors>

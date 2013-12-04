@@ -1091,11 +1091,10 @@ function RaidMaker_handle_CHAT_MSG_LOOT(message, sender, language, channelString
    if (playerName ~= nil ) then
       local startIndex,endIndex,itemID = strfind(arg1, "(%d+):")
       local name, link, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(itemID);
---      if ( quality == 4 ) or ( quality == 3 ) then -- epic(purple)=4;  superior(blue)=3;  green=2; white=1; grey=0
-      if ( quality == 4  ) or ( quality == 3 ) then -- epic(purple)=4;  superior(blue)=3;  green=2; white=1; grey=0
-         -- epic loot found event.
---         print(red.."Player="..playerName..white.." got "..green.." itemID="..itemID.." link="..itemLink);
-         RaidMaker_addLootEntryToLootLog(playerName, itemID, itemLink);
+      if ( quality == 4  ) then -- epic(purple)=4;  superior(blue)=3;  green=2; white=1; grey=0
+         if ( GetNumRaidMembers() ~= 0 ) then -- only log it if we are in a raid. i.e. filter heroics
+            RaidMaker_addLootEntryToLootLog(playerName, itemID, itemLink);
+         end
       end
    end
 end
