@@ -353,10 +353,10 @@
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
-               <Button name="RaidMaker_TabPage1_SampleTextTab1_DpsButton_0" text=" ">                                              
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_mDpsButton_0" text=" ">                                              
                 <Scripts>                                                                                                          
                    <OnClick>                                                                                                        
-                     RaidMaker_ClickHandler_DpsFlag(0);                                                                           
+                     RaidMaker_ClickHandler_mDpsFlag(0);                                                                           
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
@@ -374,10 +374,10 @@
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
-               <Button name="RaidMaker_TabPage1_SampleTextTab1_DpsButton_1" text=" ">                                              
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_mDpsButton_1" text=" ">                                              
                  <Scripts>                                                                                                          
                    <OnClick>                                                                                                        
-                     RaidMaker_ClickHandler_DpsFlag(1);                                                                           
+                     RaidMaker_ClickHandler_mDpsFlag(1);                                                                           
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
@@ -395,10 +395,10 @@
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
-               <Button name="RaidMaker_TabPage1_SampleTextTab1_DpsButton_2" text=" ">                                              
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_mDpsButton_2" text=" ">                                              
                  <Scripts>                                                                                                          
                    <OnClick>                                                                                                        
-                     RaidMaker_ClickHandler_DpsFlag(2);                                                                           
+                     RaidMaker_ClickHandler_mDpsFlag(2);                                                                           
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
@@ -416,10 +416,10 @@
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
-               <Button name="RaidMaker_TabPage1_SampleTextTab1_DpsButton_3" text=" ">                                              
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_mDpsButton_3" text=" ">                                              
                  <Scripts>                                                                                                          
                    <OnClick>                                                                                                        
-                     RaidMaker_ClickHandler_DpsFlag(3);                                                                           
+                     RaidMaker_ClickHandler_mDpsFlag(3);                                                                           
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
@@ -437,10 +437,10 @@
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
-               <Button name="RaidMaker_TabPage1_SampleTextTab1_DpsButton_4" text=" ">                                              
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_mDpsButton_4" text=" ">                                              
                  <Scripts>                                                                                                          
                    <OnClick>                                                                                                        
-                     RaidMaker_ClickHandler_DpsFlag(4);                                                                           
+                     RaidMaker_ClickHandler_mDpsFlag(4);                                                                           
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
@@ -458,10 +458,10 @@
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
-               <Button name="RaidMaker_TabPage1_SampleTextTab1_DpsButton_5" text=" ">                                              
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_mDpsButton_5" text=" ">                                              
                  <Scripts>                                                                                                          
                    <OnClick>                                                                                                        
-                     RaidMaker_ClickHandler_DpsFlag(5);                                                                           
+                     RaidMaker_ClickHandler_mDpsFlag(5);                                                                           
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
@@ -479,10 +479,10 @@
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
-               <Button name="RaidMaker_TabPage1_SampleTextTab1_DpsButton_6" text=" ">                                              
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_mDpsButton_6" text=" ">                                              
                  <Scripts>                                                                                                          
                    <OnClick>                                                                                                        
-                     RaidMaker_ClickHandler_DpsFlag(6);                                                                           
+                     RaidMaker_ClickHandler_mDpsFlag(6);                                                                           
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
@@ -500,10 +500,10 @@
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
-               <Button name="RaidMaker_TabPage1_SampleTextTab1_DpsButton_7" text=" ">                                              
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_mDpsButton_7" text=" ">                                              
                <Scripts>                                                                                                          
                    <OnClick>                                                                                                        
-                     RaidMaker_ClickHandler_DpsFlag(7);                                                                           
+                     RaidMaker_ClickHandler_mDpsFlag(7);                                                                           
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
@@ -521,10 +521,10 @@
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
-               <Button name="RaidMaker_TabPage1_SampleTextTab1_DpsButton_8" text=" ">                                              
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_mDpsButton_8" text=" ">                                              
                  <Scripts>                                                                                                          
                    <OnClick>                                                                                                        
-                     RaidMaker_ClickHandler_DpsFlag(8);                                                                           
+                     RaidMaker_ClickHandler_mDpsFlag(8);                                                                           
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
@@ -542,10 +542,10 @@
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
-               <Button name="RaidMaker_TabPage1_SampleTextTab1_DpsButton_9" text=" ">                                              
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_mDpsButton_9" text=" ">                                              
                  <Scripts>                                                                                                          
                    <OnClick>                                                                                                        
-                     RaidMaker_ClickHandler_DpsFlag(9);                                                                           
+                     RaidMaker_ClickHandler_mDpsFlag(9);                                                                           
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
@@ -563,10 +563,10 @@
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
-               <Button name="RaidMaker_TabPage1_SampleTextTab1_DpsButton_10" text=" ">                                              
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_mDpsButton_10" text=" ">                                              
                  <Scripts>                                                                                                          
                    <OnClick>                                                                                                        
-                     RaidMaker_ClickHandler_DpsFlag(10);                                                                           
+                     RaidMaker_ClickHandler_mDpsFlag(10);                                                                           
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
@@ -584,10 +584,10 @@
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
-               <Button name="RaidMaker_TabPage1_SampleTextTab1_DpsButton_11" text=" ">                                              
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_mDpsButton_11" text=" ">                                              
                  <Scripts>                                                                                                          
                    <OnClick>                                                                                                        
-                     RaidMaker_ClickHandler_DpsFlag(11);                                                                           
+                     RaidMaker_ClickHandler_mDpsFlag(11);                                                                           
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
@@ -605,10 +605,10 @@
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
-               <Button name="RaidMaker_TabPage1_SampleTextTab1_DpsButton_12" text=" ">                                              
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_mDpsButton_12" text=" ">                                              
                  <Scripts>                                                                                                          
                    <OnClick>                                                                                                        
-                     RaidMaker_ClickHandler_DpsFlag(12);                                                                           
+                     RaidMaker_ClickHandler_mDpsFlag(12);                                                                           
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
@@ -626,10 +626,10 @@
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
-               <Button name="RaidMaker_TabPage1_SampleTextTab1_DpsButton_13" text=" ">                                              
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_mDpsButton_13" text=" ">                                              
                  <Scripts>                                                                                                          
                    <OnClick>                                                                                                        
-                     RaidMaker_ClickHandler_DpsFlag(13);                                                                           
+                     RaidMaker_ClickHandler_mDpsFlag(13);                                                                           
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
@@ -647,10 +647,10 @@
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
-               <Button name="RaidMaker_TabPage1_SampleTextTab1_DpsButton_14" text=" ">                                              
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_mDpsButton_14" text=" ">                                              
                  <Scripts>                                                                                                          
                    <OnClick>                                                                                                        
-                     RaidMaker_ClickHandler_DpsFlag(14);                                                                           
+                     RaidMaker_ClickHandler_mDpsFlag(14);                                                                           
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
@@ -668,10 +668,10 @@
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
-               <Button name="RaidMaker_TabPage1_SampleTextTab1_DpsButton_15" text=" ">                                              
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_mDpsButton_15" text=" ">                                              
                  <Scripts>                                                                                                          
                    <OnClick>                                                                                                        
-                     RaidMaker_ClickHandler_DpsFlag(15);                                                                           
+                     RaidMaker_ClickHandler_mDpsFlag(15);                                                                           
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
@@ -689,10 +689,10 @@
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
-               <Button name="RaidMaker_TabPage1_SampleTextTab1_DpsButton_16" text=" ">                                              
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_mDpsButton_16" text=" ">                                              
                  <Scripts>                                                                                                          
                    <OnClick>                                                                                                        
-                     RaidMaker_ClickHandler_DpsFlag(16);                                                                           
+                     RaidMaker_ClickHandler_mDpsFlag(16);                                                                           
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
@@ -710,10 +710,10 @@
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
-               <Button name="RaidMaker_TabPage1_SampleTextTab1_DpsButton_17" text=" ">                                              
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_mDpsButton_17" text=" ">                                              
                  <Scripts>                                                                                                          
                    <OnClick>                                                                                                        
-                     RaidMaker_ClickHandler_DpsFlag(17);                                                                           
+                     RaidMaker_ClickHandler_mDpsFlag(17);                                                                           
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
@@ -731,10 +731,10 @@
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
-               <Button name="RaidMaker_TabPage1_SampleTextTab1_DpsButton_18" text=" ">                                              
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_mDpsButton_18" text=" ">                                              
                  <Scripts>                                                                                                          
                    <OnClick>                                                                                                        
-                     RaidMaker_ClickHandler_DpsFlag(18);                                                                           
+                     RaidMaker_ClickHandler_mDpsFlag(18);                                                                           
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
@@ -752,10 +752,10 @@
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
-               <Button name="RaidMaker_TabPage1_SampleTextTab1_DpsButton_19" text=" ">                                              
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_mDpsButton_19" text=" ">                                              
                  <Scripts>                                                                                                          
                    <OnClick>                                                                                                        
-                     RaidMaker_ClickHandler_DpsFlag(19);                                                                           
+                     RaidMaker_ClickHandler_mDpsFlag(19);                                                                           
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
@@ -773,14 +773,173 @@
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
-               <Button name="RaidMaker_TabPage1_SampleTextTab1_DpsButton_20" text=" ">                                              
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_mDpsButton_20" text=" ">                                              
                  <Scripts>                                                                                                          
                    <OnClick>                                                                                                        
-                     RaidMaker_ClickHandler_DpsFlag(20);                                                                           
+                     RaidMaker_ClickHandler_mDpsFlag(20);                                                                           
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_TankButton_21" text=" ">                                              
+               </Button>                                                                                                            
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_HealButton_21" text=" ">                                              
+               </Button>                                                                                                            
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_mDpsButton_21" text=" ">                                              
+               </Button>                                                                                                            
 
+
+
+
+
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_rDpsButton_0" text=" ">                                              
+                 <Scripts>                                                                                                          
+                   <OnClick>                                                                                                        
+                     RaidMaker_ClickHandler_rDpsFlag(0);                                                                           
+                   </OnClick>                                                                                                       
+                 </Scripts>                                                                                                         
+               </Button>                                                                                                            
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_rDpsButton_1" text=" ">                                              
+                 <Scripts>                                                                                                          
+                   <OnClick>                                                                                                        
+                     RaidMaker_ClickHandler_rDpsFlag(1);                                                                           
+                   </OnClick>                                                                                                       
+                 </Scripts>                                                                                                         
+               </Button>                                                                                                            
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_rDpsButton_2" text=" ">                                              
+                 <Scripts>                                                                                                          
+                   <OnClick>                                                                                                        
+                     RaidMaker_ClickHandler_rDpsFlag(2);                                                                           
+                   </OnClick>                                                                                                       
+                 </Scripts>                                                                                                         
+               </Button>                                                                                                            
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_rDpsButton_3" text=" ">                                              
+                 <Scripts>                                                                                                          
+                   <OnClick>                                                                                                        
+                     RaidMaker_ClickHandler_rDpsFlag(3);                                                                           
+                   </OnClick>                                                                                                       
+                 </Scripts>                                                                                                         
+               </Button>                                                                                                            
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_rDpsButton_4" text=" ">                                              
+                 <Scripts>                                                                                                          
+                   <OnClick>                                                                                                        
+                     RaidMaker_ClickHandler_rDpsFlag(4);                                                                           
+                   </OnClick>                                                                                                       
+                 </Scripts>                                                                                                         
+               </Button>                                                                                                            
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_rDpsButton_5" text=" ">                                              
+                 <Scripts>                                                                                                          
+                   <OnClick>                                                                                                        
+                     RaidMaker_ClickHandler_rDpsFlag(5);                                                                           
+                   </OnClick>                                                                                                       
+                 </Scripts>                                                                                                         
+               </Button>                                                                                                            
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_rDpsButton_6" text=" ">                                              
+                 <Scripts>                                                                                                          
+                   <OnClick>                                                                                                        
+                     RaidMaker_ClickHandler_rDpsFlag(6);                                                                           
+                   </OnClick>                                                                                                       
+                 </Scripts>                                                                                                         
+               </Button>                                                                                                            
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_rDpsButton_7" text=" ">                                              
+                 <Scripts>                                                                                                          
+                   <OnClick>                                                                                                        
+                     RaidMaker_ClickHandler_rDpsFlag(7);                                                                           
+                   </OnClick>                                                                                                       
+                 </Scripts>                                                                                                         
+               </Button>                                                                                                            
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_rDpsButton_8" text=" ">                                              
+                 <Scripts>                                                                                                          
+                   <OnClick>                                                                                                        
+                     RaidMaker_ClickHandler_rDpsFlag(8);                                                                           
+                   </OnClick>                                                                                                       
+                 </Scripts>                                                                                                         
+               </Button>                                                                                                            
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_rDpsButton_9" text=" ">                                              
+                 <Scripts>                                                                                                          
+                   <OnClick>                                                                                                        
+                     RaidMaker_ClickHandler_rDpsFlag(9);                                                                           
+                   </OnClick>                                                                                                       
+                 </Scripts>                                                                                                         
+               </Button>                                                                                                            
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_rDpsButton_10" text=" ">                                              
+                 <Scripts>                                                                                                          
+                   <OnClick>                                                                                                        
+                     RaidMaker_ClickHandler_rDpsFlag(10);                                                                           
+                   </OnClick>                                                                                                       
+                 </Scripts>                                                                                                         
+               </Button>                                                                                                            
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_rDpsButton_11" text=" ">                                              
+                 <Scripts>                                                                                                          
+                   <OnClick>                                                                                                        
+                     RaidMaker_ClickHandler_rDpsFlag(11);                                                                           
+                   </OnClick>                                                                                                       
+                 </Scripts>                                                                                                         
+               </Button>                                                                                                            
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_rDpsButton_12" text=" ">                                              
+                 <Scripts>                                                                                                          
+                   <OnClick>                                                                                                        
+                     RaidMaker_ClickHandler_rDpsFlag(12);                                                                           
+                   </OnClick>                                                                                                       
+                 </Scripts>                                                                                                         
+               </Button>                                                                                                            
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_rDpsButton_13" text=" ">                                              
+                 <Scripts>                                                                                                          
+                   <OnClick>                                                                                                        
+                     RaidMaker_ClickHandler_rDpsFlag(13);                                                                           
+                   </OnClick>                                                                                                       
+                 </Scripts>                                                                                                         
+               </Button>                                                                                                            
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_rDpsButton_14" text=" ">                                              
+                 <Scripts>                                                                                                          
+                   <OnClick>                                                                                                        
+                     RaidMaker_ClickHandler_rDpsFlag(14);                                                                           
+                   </OnClick>                                                                                                       
+                 </Scripts>                                                                                                         
+               </Button>                                                                                                            
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_rDpsButton_15" text=" ">                                              
+                 <Scripts>                                                                                                          
+                   <OnClick>                                                                                                        
+                     RaidMaker_ClickHandler_rDpsFlag(15);                                                                           
+                   </OnClick>                                                                                                       
+                 </Scripts>                                                                                                         
+               </Button>                                                                                                            
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_rDpsButton_16" text=" ">                                              
+                 <Scripts>                                                                                                          
+                   <OnClick>                                                                                                        
+                     RaidMaker_ClickHandler_rDpsFlag(16);                                                                           
+                   </OnClick>                                                                                                       
+                 </Scripts>                                                                                                         
+               </Button>                                                                                                            
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_rDpsButton_17" text=" ">                                              
+                 <Scripts>                                                                                                          
+                   <OnClick>                                                                                                        
+                     RaidMaker_ClickHandler_rDpsFlag(17);                                                                           
+                   </OnClick>                                                                                                       
+                 </Scripts>                                                                                                         
+               </Button>                                                                                                            
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_rDpsButton_18" text=" ">                                              
+                 <Scripts>                                                                                                          
+                   <OnClick>                                                                                                        
+                     RaidMaker_ClickHandler_rDpsFlag(18);                                                                           
+                   </OnClick>                                                                                                       
+                 </Scripts>                                                                                                         
+               </Button>                                                                                                            
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_rDpsButton_19" text=" ">                                              
+                 <Scripts>                                                                                                          
+                   <OnClick>                                                                                                        
+                     RaidMaker_ClickHandler_rDpsFlag(19);                                                                           
+                   </OnClick>                                                                                                       
+                 </Scripts>                                                                                                         
+               </Button>                                                                                                            
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_rDpsButton_20" text=" ">                                              
+                 <Scripts>                                                                                                          
+                   <OnClick>                                                                                                        
+                     RaidMaker_ClickHandler_rDpsFlag(20);                                                                           
+                   </OnClick>                                                                                                       
+                 </Scripts>                                                                                                         
+               </Button>                                                                                                            
+               <Button name="RaidMaker_TabPage1_SampleTextTab1_rDpsButton_21" text=" ">                                              
+               </Button>                                                                                                            
 
   
   

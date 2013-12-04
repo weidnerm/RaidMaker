@@ -93,6 +93,8 @@ function RaidMaker_Handler(msg)
       end
    elseif (msg == "show") then
       RaidMaker_MainForm:Show();
+   elseif (msg == "atlog") then
+      RaidMaker_UpdatePlayerAttendanceLog();
    elseif (msg == "hide") then
       RaidMaker_MainForm:Hide();
    elseif (msg == "center") then
@@ -140,9 +142,10 @@ function RaidMaker_Handler(msg)
       RaidMaker_TabPage1_SampleTextTab1_InviteStatus_1:SetText(green.."Accepted");
       RaidMaker_TabPage1_SampleTextTab1_PlayerName_1:SetText(white.."Cellifalas");
 --      RaidMaker_TabPage1_SampleTextTab1_PlayerName_1:SetText("|cffa335ee|Hitem:47813:0:0:0:0:0:0:640536288:80|h[Helmet of the Crypt Lord]|h|r");
-      RaidMaker_TabPage1_SampleTextTab1_TankFlag_1:SetText(yellow.."X");
-      RaidMaker_TabPage1_SampleTextTab1_HealFlag_1:SetText(yellow.."X");
-      RaidMaker_TabPage1_SampleTextTab1_DpsFlag_1:SetText(yellow.."X");
+      RaidMaker_TabPage1_SampleTextTab1_TankButton_1:SetText(yellow.."X");
+      RaidMaker_TabPage1_SampleTextTab1_HealButton_1:SetText(yellow.."X");
+      RaidMaker_TabPage1_SampleTextTab1_mDpsButton_1:SetText(yellow.."X");
+      RaidMaker_TabPage1_SampleTextTab1_rDpsButton_1:SetText(yellow.."X");
       RaidMaker_TabPage1_SampleTextTab1_Class_1:SetText(yellow.."DRUID");
 
 
@@ -164,6 +167,7 @@ function RaidMaker_Handler(msg)
       print(yellow.." toggle - "..white.."Toggles the main window.");
       print(yellow.." center - "..white.."Centers the main window.");
       print(yellow.." cal - "..white.."Fetches the most recently opened Calendar Event.");
+      print(yellow.." atlog - "..white.."Manually record log of online player zones.");
    end
    
    
@@ -236,14 +240,16 @@ function RaidMaker_buildRaidList(origDatabase)
          
          newRaidDatabase.playerInfo[name].tank = 0;
          newRaidDatabase.playerInfo[name].heals = 0;
-         newRaidDatabase.playerInfo[name].dps = 0;
+         newRaidDatabase.playerInfo[name].mDps = 0;
+         newRaidDatabase.playerInfo[name].rDps = 0;
          newRaidDatabase.playerInfo[name].online = 0;
          if ( copyRaidPlayerSettings == true ) then
             -- its the same calendar. copy the fields from the old one
             if ( origDatabase.playerInfo[name] ~= nil ) then
                newRaidDatabase.playerInfo[name].tank   = origDatabase.playerInfo[name].tank ;
                newRaidDatabase.playerInfo[name].heals  = origDatabase.playerInfo[name].heals;
-               newRaidDatabase.playerInfo[name].dps    = origDatabase.playerInfo[name].dps  ;
+               newRaidDatabase.playerInfo[name].mDps   = origDatabase.playerInfo[name].mDps ;
+               newRaidDatabase.playerInfo[name].rDps   = origDatabase.playerInfo[name].rDps ;
                newRaidDatabase.playerInfo[name].online = origDatabase.playerInfo[name].online;
             end
          end
@@ -267,7 +273,7 @@ function RaidMaker_buildRaidList(origDatabase)
       
       -- set up ourself as dps as a default.
       local selfName = GetUnitName("player",true);
-      newRaidDatabase.playerInfo[selfName].dps = 1;
+      newRaidDatabase.playerInfo[selfName].rDps = 1;
       
    
       GuildRoster(); -- trigger a GUILD_ROSTER_UPDATE event so we can get the online/offline status of players.
@@ -329,7 +335,8 @@ function RaidMaker_DisplayDatabase()
    local onlineCountForRaid = 0;
    local tankCountForRaid = 0;
    local healCountForRaid = 0;
-   local dpsCountForRaid = 0;
+   local mDpsCountForRaid = 0;
+   local rDpsCountForRaid = 0;
    local playerCountForRaid = 0;
    
    for className,colorValue in pairs(RAID_CLASS_COLORS) do
@@ -341,7 +348,8 @@ function RaidMaker_DisplayDatabase()
       
       if ( raidPlayerDatabase.playerInfo[charName].tank == 1 ) or
          ( raidPlayerDatabase.playerInfo[charName].heals == 1 ) or
-         ( raidPlayerDatabase.playerInfo[charName].dps == 1) then
+         ( raidPlayerDatabase.playerInfo[charName].mDps == 1 ) or
+         ( raidPlayerDatabase.playerInfo[charName].rDps == 1) then
 
          if ( raidPlayerDatabase.playerInfo[charName].online == 1 ) then
             onlineCountForRaid  = onlineCountForRaid + 1;
@@ -363,8 +371,12 @@ function RaidMaker_DisplayDatabase()
          healCountForRaid  = healCountForRaid + 1;
       end
 
-      if ( raidPlayerDatabase.playerInfo[charName].dps == 1 ) then
-         dpsCountForRaid  = dpsCountForRaid + 1;
+      if ( raidPlayerDatabase.playerInfo[charName].mDps == 1 ) then
+         mDpsCountForRaid  = mDpsCountForRaid + 1;
+      end
+
+      if ( raidPlayerDatabase.playerInfo[charName].rDps == 1 ) then
+         rDpsCountForRaid  = rDpsCountForRaid + 1;
       end
 
       if ( raidPlayerDatabase.playerInfo[charName].inGroup == 1 ) then
@@ -393,9 +405,10 @@ function RaidMaker_DisplayDatabase()
    else
       RaidMaker_TabPage1_SampleTextTab1_PlayerName_21:SetText(red..playerCountForRaid);
    end
-   RaidMaker_TabPage1_SampleTextTab1_TankFlag_21:SetText(tankCountForRaid);
-   RaidMaker_TabPage1_SampleTextTab1_HealFlag_21:SetText(healCountForRaid);
-   RaidMaker_TabPage1_SampleTextTab1_DpsFlag_21:SetText(dpsCountForRaid);
+   RaidMaker_TabPage1_SampleTextTab1_TankButton_21:SetText(tankCountForRaid);
+   RaidMaker_TabPage1_SampleTextTab1_HealButton_21:SetText(healCountForRaid);
+   RaidMaker_TabPage1_SampleTextTab1_mDpsButton_21:SetText(mDpsCountForRaid);
+   RaidMaker_TabPage1_SampleTextTab1_rDpsButton_21:SetText(rDpsCountForRaid);
    RaidMaker_TabPage1_SampleTextTab1_Class_21:SetText(" ");
    
    -- update class count totals
@@ -501,108 +514,170 @@ local inviteSortOrder =
 
 function RaidMaker_ascendInviteStatusOrder(a,b)
    -- a,b are player names.
-   local returnVal = false;
    
    if ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] < inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
-      returnVal = true;
-   elseif ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] == inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
---      if ( raidPlayerDatabase.playerInfo[a].online > raidPlayerDatabase.playerInfo[b].online ) then
---         returnVal = true;
---      elseif ( raidPlayerDatabase.playerInfo[a].online == raidPlayerDatabase.playerInfo[b].online ) then
---         returnVal = a<b;
---      end
-      returnVal = a<b;
+      return true;
+   elseif ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] > inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
+      return false;
    end
-
-   return returnVal;
+   
+   return a<b;
 end
 
 function RaidMaker_ascendTankOrder(a,b)
    -- a,b are player names.
-   local returnVal = false;
    
    if ( raidPlayerDatabase.playerInfo[a].tank > raidPlayerDatabase.playerInfo[b].tank ) then
       return true;
-   elseif ( raidPlayerDatabase.playerInfo[a].tank == raidPlayerDatabase.playerInfo[b].tank ) then
-      if ( raidPlayerDatabase.playerInfo[a].heals > raidPlayerDatabase.playerInfo[b].heals ) then
-         return true;
-      elseif ( raidPlayerDatabase.playerInfo[a].heals == raidPlayerDatabase.playerInfo[b].heals ) then
-         if ( raidPlayerDatabase.playerInfo[a].dps > raidPlayerDatabase.playerInfo[b].dps ) then
-            return true;
-         elseif ( raidPlayerDatabase.playerInfo[a].dps == raidPlayerDatabase.playerInfo[b].dps ) then
-            if ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] < inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
-               returnVal = true;
-            elseif ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] == inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
-               returnVal = a<b;
-            end
-         end
-      end
+   elseif ( raidPlayerDatabase.playerInfo[a].tank < raidPlayerDatabase.playerInfo[b].tank ) then
+      return false;
+   end
+      
+   if ( raidPlayerDatabase.playerInfo[a].heals > raidPlayerDatabase.playerInfo[b].heals ) then
+      return true;
+   elseif ( raidPlayerDatabase.playerInfo[a].heals < raidPlayerDatabase.playerInfo[b].heals ) then
+      return false;
+   end
+         
+   if ( raidPlayerDatabase.playerInfo[a].mDps > raidPlayerDatabase.playerInfo[b].mDps ) then
+      return true;
+   elseif ( raidPlayerDatabase.playerInfo[a].mDps < raidPlayerDatabase.playerInfo[b].mDps ) then
+      return false;
    end
 
-   return returnVal;
+   if ( raidPlayerDatabase.playerInfo[a].rDps > raidPlayerDatabase.playerInfo[b].rDps ) then 
+      return true;
+   elseif ( raidPlayerDatabase.playerInfo[a].rDps < raidPlayerDatabase.playerInfo[b].rDps ) then
+      return false;
+   end
+
+   if ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] < inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
+      return true;
+   elseif ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] > inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
+      return false;
+   end
+   
+   return a<b;
 end
 
 function RaidMaker_ascendHealOrder(a,b)
    -- a,b are player names.
-   local returnVal = false;
    
    if ( raidPlayerDatabase.playerInfo[a].heals > raidPlayerDatabase.playerInfo[b].heals ) then
       return true;
-   elseif ( raidPlayerDatabase.playerInfo[a].heals == raidPlayerDatabase.playerInfo[b].heals ) then
-      if ( raidPlayerDatabase.playerInfo[a].tank > raidPlayerDatabase.playerInfo[b].tank ) then
-         return true;
-      elseif ( raidPlayerDatabase.playerInfo[a].tank == raidPlayerDatabase.playerInfo[b].tank ) then
-         if ( raidPlayerDatabase.playerInfo[a].dps > raidPlayerDatabase.playerInfo[b].dps ) then
-            return true;
-         elseif ( raidPlayerDatabase.playerInfo[a].dps == raidPlayerDatabase.playerInfo[b].dps ) then
-            if ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] < inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
-               returnVal = true;
-            elseif ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] == inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
-               returnVal = a<b;
-            end
-         end
-      end
+   elseif ( raidPlayerDatabase.playerInfo[a].heals < raidPlayerDatabase.playerInfo[b].heals ) then
+      return false;
    end
 
-   return returnVal;
+   if ( raidPlayerDatabase.playerInfo[a].tank > raidPlayerDatabase.playerInfo[b].tank ) then
+      return true;
+   elseif ( raidPlayerDatabase.playerInfo[a].tank < raidPlayerDatabase.playerInfo[b].tank ) then
+      return false;
+   end
+         
+   if ( raidPlayerDatabase.playerInfo[a].mDps > raidPlayerDatabase.playerInfo[b].mDps ) then
+      return true;
+   elseif ( raidPlayerDatabase.playerInfo[a].mDps < raidPlayerDatabase.playerInfo[b].mDps ) then
+      return false;
+   end
+
+   if ( raidPlayerDatabase.playerInfo[a].rDps > raidPlayerDatabase.playerInfo[b].rDps ) then
+      return true;
+   elseif ( raidPlayerDatabase.playerInfo[a].rDps < raidPlayerDatabase.playerInfo[b].rDps ) then
+      return false;
+   end
+
+   if ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] < inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
+      return true;
+   elseif ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] > inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
+      return false;
+   end
+
+   return a<b;
 end
 
-function RaidMaker_ascendDpsOrder(a,b)
+function RaidMaker_ascend_mDpsOrder(a,b)
    -- a,b are player names.
-   local returnVal = false;
    
-   if ( raidPlayerDatabase.playerInfo[a].dps > raidPlayerDatabase.playerInfo[b].dps ) then
+   if ( raidPlayerDatabase.playerInfo[a].mDps > raidPlayerDatabase.playerInfo[b].mDps ) then
       return true;
-   elseif ( raidPlayerDatabase.playerInfo[a].dps == raidPlayerDatabase.playerInfo[b].dps ) then
-      if ( raidPlayerDatabase.playerInfo[a].tank > raidPlayerDatabase.playerInfo[b].tank ) then
-         return true;
-      elseif ( raidPlayerDatabase.playerInfo[a].tank == raidPlayerDatabase.playerInfo[b].tank ) then
-         if ( raidPlayerDatabase.playerInfo[a].heals > raidPlayerDatabase.playerInfo[b].heals ) then
-            return true;
-         elseif ( raidPlayerDatabase.playerInfo[a].heals == raidPlayerDatabase.playerInfo[b].heals ) then
-            if ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] < inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
-               returnVal = true;
-            elseif ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] == inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
-               returnVal = a<b;
-            end
-         end
-      end
+   elseif ( raidPlayerDatabase.playerInfo[a].mDps < raidPlayerDatabase.playerInfo[b].mDps ) then
+      return false;
    end
 
-   return returnVal;
+   if ( raidPlayerDatabase.playerInfo[a].rDps > raidPlayerDatabase.playerInfo[b].rDps ) then
+      return true;
+   elseif ( raidPlayerDatabase.playerInfo[a].rDps < raidPlayerDatabase.playerInfo[b].rDps ) then
+      return false;
+   end
+   
+   if ( raidPlayerDatabase.playerInfo[a].tank > raidPlayerDatabase.playerInfo[b].tank ) then
+      return true;
+   elseif ( raidPlayerDatabase.playerInfo[a].tank < raidPlayerDatabase.playerInfo[b].tank ) then
+      return false;
+   end
+   
+   if ( raidPlayerDatabase.playerInfo[a].heals > raidPlayerDatabase.playerInfo[b].heals ) then
+      return true;
+   elseif ( raidPlayerDatabase.playerInfo[a].heals < raidPlayerDatabase.playerInfo[b].heals ) then
+      return false;
+   end
+   
+   if ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] < inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
+      return true;
+   elseif ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] > inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
+      return false;
+   end
+
+   return a<b;
+end
+
+function RaidMaker_ascend_rDpsOrder(a,b)
+   -- a,b are player names.
+   
+   if ( raidPlayerDatabase.playerInfo[a].rDps > raidPlayerDatabase.playerInfo[b].rDps ) then
+      return true;
+   elseif ( raidPlayerDatabase.playerInfo[a].rDps < raidPlayerDatabase.playerInfo[b].rDps ) then
+      return false;
+   end
+   
+   if ( raidPlayerDatabase.playerInfo[a].mDps > raidPlayerDatabase.playerInfo[b].mDps ) then
+      return true;
+   elseif ( raidPlayerDatabase.playerInfo[a].mDps < raidPlayerDatabase.playerInfo[b].mDps ) then
+      return false;
+   end
+
+   if ( raidPlayerDatabase.playerInfo[a].tank > raidPlayerDatabase.playerInfo[b].tank ) then
+      return true;
+   elseif ( raidPlayerDatabase.playerInfo[a].tank < raidPlayerDatabase.playerInfo[b].tank ) then
+      return false;
+   end
+   
+   if ( raidPlayerDatabase.playerInfo[a].heals > raidPlayerDatabase.playerInfo[b].heals ) then
+      return true;
+   elseif ( raidPlayerDatabase.playerInfo[a].heals < raidPlayerDatabase.playerInfo[b].heals ) then
+      return false;
+   end
+   
+   if ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] < inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
+      return true;
+   elseif ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] > inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
+      return false;
+   end
+
+   return a<b;
 end
 
 function RaidMaker_ascendClassOrder(a,b)
    -- a,b are player names.
-   local returnVal = false;
    
    if ( raidPlayerDatabase.playerInfo[a].classFilename < raidPlayerDatabase.playerInfo[b].classFilename ) then
-      returnVal = true;
-   elseif ( raidPlayerDatabase.playerInfo[a].classFilename == raidPlayerDatabase.playerInfo[b].classFilename ) then
-      returnVal = a<b;
+      return true;
+   elseif ( raidPlayerDatabase.playerInfo[a].classFilename > raidPlayerDatabase.playerInfo[b].classFilename ) then
+      return false;
    end
-
-   return returnVal;
+   
+   return a<b;
 end
 
 function RaidMaker_ascendPlayerNameOrder(a,b)
@@ -612,34 +687,38 @@ end
 
 function RaidMaker_ascendOnlineStateOrder(a,b)
    -- a,b are player names.
-   local returnVal = false;
    
    if ( raidPlayerDatabase.playerInfo[a].online > raidPlayerDatabase.playerInfo[b].online ) then
       return true;
-   elseif ( raidPlayerDatabase.playerInfo[a].online == raidPlayerDatabase.playerInfo[b].online ) then
-      if ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] < inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
-         returnVal = true;
-      elseif ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] == inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
-         returnVal = a<b;
-      end
+   elseif ( raidPlayerDatabase.playerInfo[a].online < raidPlayerDatabase.playerInfo[b].online ) then
+      return false;
    end
-   return returnVal;
+
+   if ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] < inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
+      return true;
+   elseif ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] > inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
+      return false;
+   end
+
+   return a<b;
 end
 
 function RaidMaker_ascendGroupedStateOrder(a,b)
    -- a,b are player names.
-   local returnVal = false;
    
    if ( raidPlayerDatabase.playerInfo[a].inGroup > raidPlayerDatabase.playerInfo[b].inGroup ) then
       return true;
-   elseif ( raidPlayerDatabase.playerInfo[a].inGroup == raidPlayerDatabase.playerInfo[b].inGroup ) then
-      if ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] < inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
-         returnVal = true;
-      elseif ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] == inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
-         returnVal = a<b;
-      end
+   elseif ( raidPlayerDatabase.playerInfo[a].inGroup < raidPlayerDatabase.playerInfo[b].inGroup ) then
+      return false;
    end
-   return returnVal;
+
+   if ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] < inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
+      return true;
+   elseif ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] > inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
+      return false;
+   end
+
+   return a<b;
 end
 
 
@@ -725,22 +804,29 @@ function RaidMaker_TextTableUpdate()
       local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_PlayerName_"..currentRow);
       textBox:SetText(white..charName);
 
-      local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_TankFlag_"..currentRow);
+      local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_TankButton_"..currentRow);
       if ( raidPlayerDatabase.playerInfo[charName].tank == 0 ) then
          textBox:SetText(" ");
       else
          textBox:SetText(yellow.."X");
       end
 
-      local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_HealFlag_"..currentRow);
+      local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_HealButton_"..currentRow);
       if ( raidPlayerDatabase.playerInfo[charName].heals == 0 ) then
          textBox:SetText(" ");
       else
          textBox:SetText(yellow.."X");
       end
 
-      local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_DpsFlag_"..currentRow);
-      if ( raidPlayerDatabase.playerInfo[charName].dps == 0 ) then
+      local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_mDpsButton_"..currentRow);
+      if ( raidPlayerDatabase.playerInfo[charName].mDps == 0 ) then
+         textBox:SetText(" ");
+      else
+         textBox:SetText(yellow.."X");
+      end
+
+      local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_rDpsButton_"..currentRow);
+      if ( raidPlayerDatabase.playerInfo[charName].rDps == 0 ) then
          textBox:SetText(" ");
       else
          textBox:SetText(yellow.."X");
@@ -794,13 +880,16 @@ function RaidMaker_TextTableUpdate()
          local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_PlayerName_"..blankRowNum);
          textBox:SetText(" ");
          
-         local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_TankFlag_"..blankRowNum);
+         local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_TankButton_"..blankRowNum);
          textBox:SetText(" ");
          
-         local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_HealFlag_"..blankRowNum);
+         local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_HealButton_"..blankRowNum);
          textBox:SetText(" ");
          
-         local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_DpsFlag_"..blankRowNum);
+         local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_mDpsButton_"..blankRowNum);
+         textBox:SetText(" ");
+         
+         local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_rDpsButton_"..blankRowNum);
          textBox:SetText(" ");
          
          local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_Class_"..blankRowNum);
@@ -852,10 +941,10 @@ function RaidMaker_ClickHandler_HealFlag(clickedRow)
       end
    end
 end
-function RaidMaker_ClickHandler_DpsFlag(clickedRow)
+function RaidMaker_ClickHandler_mDpsFlag(clickedRow)
    if ( clickedRow == 0 ) then
       -- sort according to tank as primary.
-      table.sort(playerSortedList, RaidMaker_ascendDpsOrder);
+      table.sort(playerSortedList, RaidMaker_ascend_mDpsOrder);
       RaidMaker_TextTableUpdate(RaidMaker_VSlider:GetValue());
    else
       local actualRow = clickedRow + RaidMaker_VSlider:GetValue()-1;
@@ -863,10 +952,31 @@ function RaidMaker_ClickHandler_DpsFlag(clickedRow)
          local clickedCharName = playerSortedList[actualRow];
          
          -- toggle the selection
-         if ( raidPlayerDatabase.playerInfo[clickedCharName].dps == 1 ) then
-            raidPlayerDatabase.playerInfo[clickedCharName].dps = 0;
+         if ( raidPlayerDatabase.playerInfo[clickedCharName].mDps == 1 ) then
+            raidPlayerDatabase.playerInfo[clickedCharName].mDps = 0;
          else
-            raidPlayerDatabase.playerInfo[clickedCharName].dps = 1;
+            raidPlayerDatabase.playerInfo[clickedCharName].mDps = 1;
+         end
+         
+         RaidMaker_DisplayDatabase();
+      end
+   end
+end
+function RaidMaker_ClickHandler_rDpsFlag(clickedRow)
+   if ( clickedRow == 0 ) then
+      -- sort according to tank as primary.
+      table.sort(playerSortedList, RaidMaker_ascend_rDpsOrder);
+      RaidMaker_TextTableUpdate(RaidMaker_VSlider:GetValue());
+   else
+      local actualRow = clickedRow + RaidMaker_VSlider:GetValue()-1;
+      if ( actualRow <= #playerSortedList ) then
+         local clickedCharName = playerSortedList[actualRow];
+         
+         -- toggle the selection
+         if ( raidPlayerDatabase.playerInfo[clickedCharName].rDps == 1 ) then
+            raidPlayerDatabase.playerInfo[clickedCharName].rDps = 0;
+         else
+            raidPlayerDatabase.playerInfo[clickedCharName].rDps = 1;
          end
          
          RaidMaker_DisplayDatabase();
@@ -1499,7 +1609,8 @@ function RaidMaker_HandleSendInvitesButton()
 
          if ( raidPlayerDatabase.playerInfo[charName].tank == 1 ) or
             ( raidPlayerDatabase.playerInfo[charName].heals == 1 ) or
-            ( raidPlayerDatabase.playerInfo[charName].dps == 1) then
+            ( raidPlayerDatabase.playerInfo[charName].mDps == 1 ) or
+            ( raidPlayerDatabase.playerInfo[charName].rDps == 1) then
                
             if ( raidPlayerDatabase.playerInfo[charName].tank == 1 ) or -- prepare to promote them when they join group.
                (raidPlayerDatabase.playerInfo[charName].guildRankIndex < guildRankAssistThreshold ) then
@@ -1606,7 +1717,8 @@ function RaidMaker_UpdatePlayerAttendanceLog()
                   -- player has indicated acceptance of the raid.  add them to the log.
                   RaidMaker_RaidParticipantLog[currentIndex].playerInfo[charName] = {}; -- create the empty structure.
                   RaidMaker_RaidParticipantLog[currentIndex].playerInfo[charName].tank         = raidPlayerDatabase.playerInfo[charName].tank; 
-                  RaidMaker_RaidParticipantLog[currentIndex].playerInfo[charName].dps          = raidPlayerDatabase.playerInfo[charName].dps;
+                  RaidMaker_RaidParticipantLog[currentIndex].playerInfo[charName].mDps         = raidPlayerDatabase.playerInfo[charName].mDps;
+                  RaidMaker_RaidParticipantLog[currentIndex].playerInfo[charName].rDps         = raidPlayerDatabase.playerInfo[charName].rDps;
                   RaidMaker_RaidParticipantLog[currentIndex].playerInfo[charName].heals        = raidPlayerDatabase.playerInfo[charName].heals;
                   RaidMaker_RaidParticipantLog[currentIndex].playerInfo[charName].online       = raidPlayerDatabase.playerInfo[charName].online;
                   RaidMaker_RaidParticipantLog[currentIndex].playerInfo[charName].inviteStatus = raidPlayerDatabase.playerInfo[charName].inviteStatus
@@ -1670,7 +1782,8 @@ function RaidMaker_HandleSendRolesToRaidButton()
          healList = healList..charName
          healCount = healCount + 1;
       end
-      if ( raidPlayerDatabase.playerInfo[charName].dps == 1) then
+      if ( raidPlayerDatabase.playerInfo[charName].mDps == 1) or
+         ( raidPlayerDatabase.playerInfo[charName].rDps == 1) then
          if ( dpsCount ~= 0 ) then
             dpslist = dpslist..", ";
          end
@@ -1771,48 +1884,68 @@ function RaidMaker_SetUpGuiFields()
       RaidMaker_TabPage1_SampleTextTab1_PlayerName_Objects[index] = item;
    end
 
-   RaidMaker_TabPage1_SampleTextTab1_TankFlag_Objects = {};
+   RaidMaker_TabPage1_SampleTextTab1_TankFlag_ButtonObjects = {};
    for index=1,22 do
-      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_TankFlag_"..index-1, "OVERLAY", "GameFontNormalSmall" )
-      item:SetWidth(50);
-      item:SetHeight(18);
-      item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_InviteStatus_Objects[index], "TOPRIGHT", 100,0);
+      local myButton = getglobal("RaidMaker_TabPage1_SampleTextTab1_TankButton_"..index-1);
+      local myFontString = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_TankFlag_"..index-1, "OVERLAY", "GameFontNormalSmall" )
+      myButton:SetFontString( myFontString )
+      myButton:SetWidth(38);
+      myButton:SetHeight(18);
+      myButton:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_InviteStatus_Objects[index], "TOPRIGHT", 100,0);
       if ( index == 1 ) then
-         item:SetText("Tank");
+         myButton:SetText("Tank");
       else
-         item:SetText(" ");
+         myButton:SetText(" ");
       end
-      RaidMaker_TabPage1_SampleTextTab1_TankFlag_Objects[index] = item;
+      RaidMaker_TabPage1_SampleTextTab1_TankFlag_ButtonObjects[index] = myButton;
    end
 
-   RaidMaker_TabPage1_SampleTextTab1_HealFlag_Objects = {};
+   RaidMaker_TabPage1_SampleTextTab1_HealFlag_ButtonObjects = {};
    for index=1,22 do
-      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_HealFlag_"..index-1, "OVERLAY", "GameFontNormalSmall" )
-      item:SetWidth(50);
-      item:SetHeight(18);
+      local myButton = getglobal("RaidMaker_TabPage1_SampleTextTab1_HealButton_"..index-1);
+      local myFontString = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_HealFlag_"..index-1, "OVERLAY", "GameFontNormalSmall" )
+      myButton:SetFontString( myFontString )
+      myButton:SetWidth(38);
+      myButton:SetHeight(18);
+      myButton:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_TankFlag_ButtonObjects[index], "TOPRIGHT", 0,0);
       if ( index == 1 ) then
-         item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_TankFlag_Objects[1], "TOPRIGHT", 0,0);
-         item:SetText("Heal");
+         myButton:SetText("Heal");
       else
-         item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_HealFlag_Objects[index-1], "BOTTOMLEFT", 0,0);
-         item:SetText(" ");
+         myButton:SetText(" ");
       end
-      RaidMaker_TabPage1_SampleTextTab1_HealFlag_Objects[index] = item;
+      RaidMaker_TabPage1_SampleTextTab1_HealFlag_ButtonObjects[index] = myButton;
    end
 
-   RaidMaker_TabPage1_SampleTextTab1_DpsFlag_Objects = {};
+   RaidMaker_TabPage1_SampleTextTab1_mDpsFlag_ButtonObjects = {};
    for index=1,22 do
-      local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_DpsFlag_"..index-1, "OVERLAY", "GameFontNormalSmall" )
-      item:SetWidth(50);
-      item:SetHeight(18);
+      local myButton = getglobal("RaidMaker_TabPage1_SampleTextTab1_mDpsButton_"..index-1);
+      local myFontString = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_mDpsFlag_"..index-1, "OVERLAY", "GameFontNormalSmall" )
+      myButton:SetFontString( myFontString )
+      myButton:SetWidth(37);
+      myButton:SetHeight(18);
+      myButton:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_HealFlag_ButtonObjects[index], "TOPRIGHT", 0,0);
       if ( index == 1 ) then
-         item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_HealFlag_Objects[1], "TOPRIGHT", 0,0);
-         item:SetText("DPS");
+         myButton:SetText("mDPS");
       else
-         item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_DpsFlag_Objects[index-1], "BOTTOMLEFT", 0,0);
-         item:SetText(" ");
+         myButton:SetText(" ");
       end
-      RaidMaker_TabPage1_SampleTextTab1_DpsFlag_Objects[index] = item;
+      RaidMaker_TabPage1_SampleTextTab1_mDpsFlag_ButtonObjects[index] = myButton;
+   end
+
+   RaidMaker_TabPage1_SampleTextTab1_rDpsFlag_ButtonObjects = {};
+   for index=1,22 do
+      local myButton = getglobal("RaidMaker_TabPage1_SampleTextTab1_rDpsButton_"..index-1);
+      local myFontString = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_rDpsFlag_"..index-1, "OVERLAY", "GameFontNormalSmall" )
+      myButton:SetFontString( myFontString )
+      myButton:SetWidth(37);
+      myButton:SetHeight(18);
+      myButton:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_mDpsFlag_ButtonObjects[index], "TOPRIGHT", 0,0);
+      if ( index == 1 ) then
+         myButton:SetText("rDPS");
+      else
+         myButton:SetText(" ");
+      end
+      RaidMaker_TabPage1_SampleTextTab1_rDpsFlag_ButtonObjects[index] = myButton;
    end
 
    RaidMaker_TabPage1_SampleTextTab1_Class_Objects = {};
@@ -1820,11 +1953,10 @@ function RaidMaker_SetUpGuiFields()
       local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_Class_"..index-1, "OVERLAY", "GameFontNormalSmall" )
       item:SetWidth(75);
       item:SetHeight(18);
+      item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_rDpsFlag_ButtonObjects[index], "TOPRIGHT", 0,0);
       if ( index == 1 ) then
-         item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_DpsFlag_Objects[1], "TOPRIGHT", 0,0);
          item:SetText("Class");
       else
-         item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_Class_Objects[index-1], "BOTTOMLEFT", 0,0);
          item:SetText(" ");
       end
       RaidMaker_TabPage1_SampleTextTab1_Class_Objects[index] = item;
@@ -2067,22 +2199,6 @@ function RaidMaker_SetUpGuiFields()
    local localButton = getglobal("RaidMaker_FetchCalendarButton");
    localButton:SetPoint("TOPLEFT", "RaidMaker_TabPage1_SampleTextTab1_GroupedState_21", "BOTTOMLEFT", 0,-12)
 
-   for index=1,21 do
-      local localButton = getglobal("RaidMaker_TabPage1_SampleTextTab1_TankButton_"..index-1);
-      localButton:SetPoint("TOPLEFT", "RaidMaker_TabPage1_SampleTextTab1_TankFlag_"..index-1, "TOPLEFT", 0,0)
-      localButton:SetWidth(50)
-      localButton:SetHeight(18)
-   
-      local localButton = getglobal("RaidMaker_TabPage1_SampleTextTab1_HealButton_"..index-1);
-      localButton:SetPoint("TOPLEFT", "RaidMaker_TabPage1_SampleTextTab1_HealFlag_"..index-1, "TOPLEFT", 0,0)
-      localButton:SetWidth(50)
-      localButton:SetHeight(18)
-   
-      local localButton = getglobal("RaidMaker_TabPage1_SampleTextTab1_DpsButton_"..index-1);
-      localButton:SetPoint("TOPLEFT", "RaidMaker_TabPage1_SampleTextTab1_DpsFlag_"..index-1, "TOPLEFT", 0,0)
-      localButton:SetWidth(50)
-      localButton:SetHeight(18)
-   end
 
 
    -- 
@@ -2242,7 +2358,15 @@ function RaidMaker_SetUpGuiFields()
                end)
    RaidMaker_TabPage1_SampleTextTab1_HealButton_0:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-   RaidMaker_TabPage1_SampleTextTab1_DpsButton_0:SetScript("OnEnter",
+   RaidMaker_TabPage1_SampleTextTab1_mDpsButton_0:SetScript("OnEnter",
+               function(this)
+                  GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                  GameTooltip:SetText("Sort by DPS status; Tank status; Healer status; Player Name.");
+                  GameTooltip:Show()
+               end)
+   RaidMaker_RollResetButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+   RaidMaker_TabPage1_SampleTextTab1_rDpsButton_0:SetScript("OnEnter",
                function(this)
                   GameTooltip_SetDefaultAnchor(GameTooltip, this)
                   GameTooltip:SetText("Sort by DPS status; Tank status; Healer status; Player Name.");
@@ -2408,22 +2532,8 @@ function RaidMaker_SetUpGuiFields()
 
       RaidMaker_LogTab_Loot_FieldItemLinkButton[index] = myButton;
       RaidMaker_LogTab_Loot_FieldItemLink[index] = myFontString;
-
-
-
-
-
-
-
-
-
-
-
-      
-      
-      
-      
    end
+   
    for index=1,11 do
       local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_RollValue"..index-1, "OVERLAY", "GameFontNormalSmall" )
       item:SetWidth(100);
