@@ -113,6 +113,9 @@ function RaidMaker_OnLoad()
    RaidMaker_DisplayLootDatabase();
    
    RaidMaker_UpdateOldLootLogs();
+   
+   RaidMaker_SetUpSync();
+   
 end
 
 
@@ -243,6 +246,16 @@ function RaidMaker_Handler(msg)
 
 
 
+end
+
+function RaidMaker_SetUpSync()
+   local result = true;
+   
+   result = RegisterAddonMessagePrefix(RaidMaker_appMessagePrefix)
+   
+   if ( result == false ) then
+      print(red.."RaidMaker Error:"..white.." unable to register Sync prefix.");
+   end
 end
 
 function RaidMaker_UpdateOldLootLogs()

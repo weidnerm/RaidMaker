@@ -1,6 +1,6 @@
-## Interface: 40000
+## Interface: 40100
 ## Title: RaidMaker
-## Version: 0.0.80
+## Version: 0.0.81
 ## Notes: Raid forming tool with event calendar and guild roster information in workspace
 ## OptionalDeps:
 ## Dependencies:
