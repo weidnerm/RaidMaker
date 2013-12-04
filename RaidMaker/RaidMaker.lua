@@ -139,6 +139,7 @@ function RaidMaker_Handler(msg)
       RaidMaker_TabPage1_SampleTextTab1_OnlineState_1:SetText(green.."online");
       RaidMaker_TabPage1_SampleTextTab1_InviteStatus_1:SetText(green.."Accepted");
       RaidMaker_TabPage1_SampleTextTab1_PlayerName_1:SetText(white.."Cellifalas");
+--      RaidMaker_TabPage1_SampleTextTab1_PlayerName_1:SetText("|cffa335ee|Hitem:47813:0:0:0:0:0:0:640536288:80|h[Helmet of the Crypt Lord]|h|r");
       RaidMaker_TabPage1_SampleTextTab1_TankFlag_1:SetText(yellow.."X");
       RaidMaker_TabPage1_SampleTextTab1_HealFlag_1:SetText(yellow.."X");
       RaidMaker_TabPage1_SampleTextTab1_DpsFlag_1:SetText(yellow.."X");
@@ -983,7 +984,7 @@ function RaidMaker_DisplayLootDatabase()
 
       if ( indexToDisplay<1 ) or ( #RaidMaker_lootLogData == 0 ) then
          RaidMaker_LogTab_Loot_FieldNames[index+1]:SetText(" ");
-         RaidMaker_LogTab_Loot_FieldItemLink[index+1]:SetText(" ");
+         RaidMaker_LogTab_Loot_FieldItemLinkButton[index+1]:SetText(" ");
          RaidMaker_LogTab_Loot_FieldRollValues[index+1]:SetText(" ");
          RaidMaker_LogTab_Loot_FieldRollAges[index+1]:SetText(" ");   
       else
@@ -996,7 +997,7 @@ function RaidMaker_DisplayLootDatabase()
          end      
       
          RaidMaker_LogTab_Loot_FieldNames[index+1]:SetText(playerNameColor..RaidMaker_lootLogData[indexToDisplay].playerName);
-         RaidMaker_LogTab_Loot_FieldItemLink[index+1]:SetText(RaidMaker_lootLogData[indexToDisplay].itemLink);
+         RaidMaker_LogTab_Loot_FieldItemLinkButton[index+1]:SetText(RaidMaker_lootLogData[indexToDisplay].itemLink);
          RaidMaker_LogTab_Loot_FieldRollValues[index+1]:SetText(rollValueColor..RaidMaker_lootLogData[indexToDisplay].rollValue);
          RaidMaker_LogTab_Loot_FieldRollAges[index+1]:SetText(rollAgeColor.. RaidMaker_getAgeText(timeDeltaSeconds) );   
       end
@@ -1875,7 +1876,10 @@ function RaidMaker_SetUpGuiFields()
          end
       end)
 
+
       RaidMaker_PlayerName_Button_Objects[index] = item;
+      
+      
    end
 
 
@@ -2358,6 +2362,7 @@ function RaidMaker_SetUpGuiFields()
    RaidMaker_LogTab_Loot_FieldRollValues = {}
    RaidMaker_LogTab_Loot_FieldRollAges = {}
    RaidMaker_LogTab_Loot_FieldItemLink = {}
+   RaidMaker_LogTab_Loot_FieldItemLinkButton = {}
    for index=1,11 do
       local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_FieldNamesField"..index-1, "OVERLAY", "GameFontNormalSmall" )
       item:SetWidth(100);
@@ -2371,25 +2376,60 @@ function RaidMaker_SetUpGuiFields()
       end
       RaidMaker_LogTab_Loot_FieldNames[index] = item;
    end
+   
+   
+   
+   
    for index=1,11 do
-      local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_ItemLink"..index-1, "OVERLAY", "GameFontNormalSmall" )
-      item:SetWidth(200);
-      item:SetHeight(18);
+      local myFontString = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_ItemLink"..index-1, "OVERLAY", "GameFontNormalSmall" )
+
+      local myButton = CreateFrame("Button", "RaidMaker_LogTab_Loot_ItemLinkButton_"..index-1, RaidMaker_GroupRollFrame )
+      myButton:SetFontString( myFontString )
+      myButton:SetWidth(200);
+      myButton:SetHeight(18);
       if ( index == 1 ) then
-         item:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldNames[1], "TOPRIGHT", 0,0);
-         item:SetText("Item Name");
+         myButton:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldNames[1], "TOPRIGHT", 0,0);
+         myButton:SetText("Item Name");
       else
-         item:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldItemLink[index-1], "BOTTOMLEFT", 0,0);
-         item:SetText(" ");
+         myButton:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldItemLinkButton[index-1], "BOTTOMLEFT", 0,0);
+         myButton:SetText(" ");
+         myButton:SetScript("OnEnter",
+                  function(this)
+                     GameTooltip_SetDefaultAnchor(GameTooltip, this)
+                     local myText = this:GetText();
+                     local startIndex,endIndex,itemID = strfind(myText, "(%d+):")
+                     if ( itemID ~= nil ) then
+                        GameTooltip:SetHyperlink(myText);
+                        GameTooltip:Show()
+                     end
+                  end)
+         myButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
       end
-      RaidMaker_LogTab_Loot_FieldItemLink[index] = item;
+
+      RaidMaker_LogTab_Loot_FieldItemLinkButton[index] = myButton;
+      RaidMaker_LogTab_Loot_FieldItemLink[index] = myFontString;
+
+
+
+
+
+
+
+
+
+
+
+      
+      
+      
+      
    end
    for index=1,11 do
       local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_RollValue"..index-1, "OVERLAY", "GameFontNormalSmall" )
       item:SetWidth(100);
       item:SetHeight(18);
       if ( index == 1 ) then
-         item:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldItemLink[1], "TOPRIGHT", 0,0);
+         item:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldItemLinkButton[1], "TOPRIGHT", 0,0);
          item:SetText("Roll Value");
       else
          item:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldRollValues[index-1], "BOTTOMLEFT", 0,0);
@@ -2452,7 +2492,6 @@ function RaidMaker_SetUpGuiFields()
 
    RaidMaker_RollLog_Slider:SetMinMaxValues(1,1);
    RaidMaker_RollLog_Slider:SetValue(1);
-
 
 
 
