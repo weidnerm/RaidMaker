@@ -38,6 +38,8 @@ local raidMakerLaunchCalViewButton
 RaidMaker_testData = {};
 local RaidMaker_testTrialNum = 1;
 local RaidMaker_RollLog = {};
+local RaidMaker_sortedRollList = {};
+local RaidMaker_sortRollAlgorithm_id = 1;   -- 1=sort by roll value; 2=sort by time; 3=sort by playername
 
 -- change to use the array instead of these locals
 local classColorDeathKnight   = "|c00C41F3B";
@@ -1127,30 +1129,30 @@ end
 
 
 function RaidMaker_handle_CHAT_MSG_GUILD(message, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter)
-   RaidMaker_parse_for_pass(message);
+   RaidMaker_parse_for_pass(message, sender);
 end
 
 function RaidMaker_handle_CHAT_MSG_RAID(message, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter)
-   RaidMaker_parse_for_pass(message);
+   RaidMaker_parse_for_pass(message, sender);
 end
 
 function RaidMaker_handle_CHAT_MSG_SAY(message, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter)
-   RaidMaker_parse_for_pass(message);
+   RaidMaker_parse_for_pass(message, sender);
 end
 
 function RaidMaker_handle_CHAT_MSG_PARTY(message, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter)
-   RaidMaker_parse_for_pass(message);
+   RaidMaker_parse_for_pass(message, sender);
 end
 
-function RaidMaker_parse_for_pass(message)
+function RaidMaker_parse_for_pass(message, playerName)
    local lowerCaseMessage = string.lower(message);
+RaidMaker_testData[RaidMaker_testTrialNum]=playerName..message; --for testing. delete me.
+RaidMaker_testTrialNum = RaidMaker_testTrialNum +1; --for testing. delete me.
 
---   startIndex,endIndex = strfind(lowerCaseMessage, "pass" );
---   if ( startIndex ~= nil ) then
-   startIndex,endIndex,playerName = strfind(message, "(%a+)]|h.*pass" );
-   if ( playerName ~= nil ) then
+   startIndex,endIndex = strfind(lowerCaseMessage, "pass" );
+   if ( startIndex ~= nil ) then
 print(yellow.."Pass found by "..red..playerName);
-      RaidMaker_addRollEntryToRollLog(playerName, 0);
+      RaidMaker_addRollEntryToRollLog(playerName, "0");
    end
 end
 
@@ -1161,26 +1163,27 @@ function RaidMaker_addRollEntryToRollLog(playerName, rollValue)
    RaidMaker_RollLog[loggedEntryIndex] = {};  -- make it a structure so we can put some fields in.
    RaidMaker_RollLog[loggedEntryIndex].rollValue = rollValue;
    RaidMaker_RollLog[loggedEntryIndex].playerName = playerName;
-   RaidMaker_RollLog[loggedEntryIndex].epocTime = os.time();
+   RaidMaker_RollLog[loggedEntryIndex].epocTime = time();
 
--- fixme. need to resort and redisplay
-   RaidMaker_displayRollsDatabase();
+   -- need to resort and redisplay
+   RaidMaker_resortRollsList();
+   RaidMaker_DisplayRollsDatabase();
 
 end
 
-function RaidMaker_displayRollsDatabase()
+function RaidMaker_DisplayRollsDatabase()
    
    local indexToDisplay;
    local playerNameColor;
    local rollValueColor;
    local rollAgeColor;
-   local currentTime = os.time();
+   local currentTime = time();
    local timeDeltaSeconds;
    
-   RaidMaker_resortRollsList()
-   
    for index = 1,10 do
-      indexToDisplay = index; -- eventually make this the sorted index.
+--      indexToDisplay = index; -- eventually make this the sorted index starting at the scroll bar position.
+      indexToDisplay = RaidMaker_sortedRollList[index]; -- eventually make this the sorted index starting at the scroll bar position.
+
       if ( index <= #RaidMaker_RollLog ) then
          -- It will fit on the screen and we are not past the end of the list.
          
@@ -1188,7 +1191,7 @@ function RaidMaker_displayRollsDatabase()
          rollValueColor = yellow;
          rollAgeColor = yellow;
          
-         timeDeltaSeconds = RaidMaker_RollLog[indexToDisplay].epocTime - currentTime;
+         timeDeltaSeconds = currentTime - RaidMaker_RollLog[indexToDisplay].epocTime;
          
          if ( timeDeltaSeconds > (2*60) ) then -- roll is old. color the entry grey
             playerNameColor = mediumGrey;
@@ -1196,22 +1199,89 @@ function RaidMaker_displayRollsDatabase()
             rollAgeColor = mediumGrey;
          end
          
-         RaidMaker_LogTab_Rolls_FieldPlayerNames[index+1]SetText(playerNameColor..RaidMaker_RollLog[indexToDisplay].playerName);
-         RaidMaker_LogTab_Rolls_FieldRollValues[index+1]SetText(rollValueColor..RaidMaker_RollLog[indexToDisplay].rollValue);
+         RaidMaker_LogTab_Rolls_FieldPlayerNames[index+1]:SetText(playerNameColor..RaidMaker_RollLog[indexToDisplay].playerName);
+         RaidMaker_LogTab_Rolls_FieldRollValues[index+1]:SetText(rollValueColor..RaidMaker_RollLog[indexToDisplay].rollValue);
          RaidMaker_LogTab_Rolls_FieldRollAges[index+1]:SetText(rollAgeColor..timeDeltaSeconds);
       else
          -- blank out the row
-         RaidMaker_LogTab_Rolls_FieldPlayerNames[index+1]SetText(" ");
-         RaidMaker_LogTab_Rolls_FieldRollValues[index+1]SetText(" ");
+         RaidMaker_LogTab_Rolls_FieldPlayerNames[index+1]:SetText(" ");
+         RaidMaker_LogTab_Rolls_FieldRollValues[index+1]:SetText(" ");
          RaidMaker_LogTab_Rolls_FieldRollAges[index+1]:SetText(" ");
       end
    end
 end
 
 function RaidMaker_resortRollsList()
-   -- fixme
+   local index
+
+   RaidMaker_sortedRollList = {}; -- start with a blank array.
+   
+   for index = 1,#RaidMaker_RollLog do -- pre-fill the array 
+      RaidMaker_sortedRollList[index] = index;
+   end
+   
+   -- sort the table
+   if ( RaidMaker_sortRollAlgorithm_id == 1 ) then -- sort by roll
+      table.sort(RaidMaker_sortedRollList, RaidMaker_RollDisplay_descendRollOrder);
+   elseif ( RaidMaker_sortRollAlgorithm_id == 2 ) then -- sort by age
+      table.sort(RaidMaker_sortedRollList, RaidMaker_RollDisplay_ascendRollAgeOrder);
+   elseif ( RaidMaker_sortRollAlgorithm_id == 3 ) then -- sort by player name
+      table.sort(RaidMaker_sortedRollList, RaidMaker_RollDisplay_ascendPlayerNameOrder);
+   else
+      table.sort(RaidMaker_sortedRollList, RaidMaker_RollDisplay_descendRollOrder); -- default to roll value
+   end
+
 end
 
+
+function RaidMaker_RollDisplay_descendRollOrder(a,b)
+   -- a,b are indexes into the roll table.
+   
+   -- primary sort key
+   if ( RaidMaker_RollLog[a].rollValue > RaidMaker_RollLog[b].rollValue ) then
+      return true;
+   elseif ( RaidMaker_RollLog[a].rollValue < RaidMaker_RollLog[b].rollValue ) then
+      return false;
+   end
+
+   -- secondary sort key
+   if ( RaidMaker_RollLog[a].epocTime < RaidMaker_RollLog[b].epocTime ) then
+      return true;
+   elseif ( RaidMaker_RollLog[a].epocTime > RaidMaker_RollLog[b].epocTime ) then
+      return false;
+   end
+   
+   -- third level sort key
+   return RaidMaker_RollLog[a].playerName < RaidMaker_RollLog[a].playerName;
+end
+
+function RaidMaker_RollDisplay_ascendRollAgeOrder(a,b)
+   -- a,b are indexes into the roll table.
+   
+   -- primary sort key
+   if ( RaidMaker_RollLog[a].epocTime < RaidMaker_RollLog[b].epocTime ) then
+      return true;
+   elseif ( RaidMaker_RollLog[a].epocTime > RaidMaker_RollLog[b].epocTime ) then
+      return false;
+   end
+
+   -- secondary sort key
+   if ( RaidMaker_RollLog[a].rollValue > RaidMaker_RollLog[b].rollValue ) then
+      return true;
+   elseif ( RaidMaker_RollLog[a].rollValue < RaidMaker_RollLog[b].rollValue ) then
+      return false;
+   end
+   
+   -- third level sort key
+   return RaidMaker_RollLog[a].playerName < RaidMaker_RollLog[a].playerName;
+
+end
+
+function RaidMaker_RollDisplay_ascendPlayerNameOrder(a,b)
+   -- a,b are indexes into the roll table.
+   
+   return RaidMaker_RollLog[a].playerName < RaidMaker_RollLog[a].playerName;
+end
 
 
 function RaidMaker_handle_CHAT_MSG_SYSTEM(message, sender, language, channelString, target, flags, unknown1, channelNumber, channelName, unknown2, counter)
@@ -1516,7 +1586,7 @@ function RaidMaker_HandleSendRolesToRaidButton()
 end
 
 function RaidMaker_SetUpClassIcons()
-
+   local index;
 
    -- 
    -- Set up the Class Icons.
@@ -1783,17 +1853,17 @@ function RaidMaker_SetUpClassIcons()
          item:SetPoint("TOPLEFT", RaidMaker_GroupLootFrame, "TOPLEFT", 5,-5);
          item:SetText("Player");
       else
-         item:SetPoint("TOPLEFT", RaidMaker_LogTab_Rolls_FieldPlayerNames[index-1], "BOTTOMLEFT", 0,0);
+         item:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldNames[index-1], "BOTTOMLEFT", 0,0);
          item:SetText(" ");
       end
-      RaidMaker_LogTab_Rolls_FieldPlayerNames[index] = item;
+      RaidMaker_LogTab_Loot_FieldNames[index] = item;
    end
    for index=1,11 do
       local item = RaidMaker_GroupRollFrame:CreateFontString("RaidMaker_LogTab_Loot_ItemLink"..index-1, "ARTWORK", "GameFontNormalSmall" )
       item:SetWidth(200);
       item:SetHeight(18);
       if ( index == 1 ) then
-         item:SetPoint("TOPLEFT", RaidMaker_LogTab_Rolls_FieldPlayerNames[1], "TOPRIGHT", 0,0);
+         item:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldNames[1], "TOPRIGHT", 0,0);
          item:SetText("Item Name");
       else
          item:SetPoint("TOPLEFT", RaidMaker_LogTab_Loot_FieldItemLink[index-1], "BOTTOMLEFT", 0,0);
