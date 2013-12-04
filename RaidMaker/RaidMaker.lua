@@ -1451,99 +1451,107 @@ function RaidMaker_HandleSendRolesToRaidButton()
 end
 
 function RaidMaker_SetUpClassIcons()
-      -- take the Blizzard UI graphic with a grid of 4x4 class icons and crop out the desired class one at a time.
-      
-      -- Warrior
-      CreateFrame("Frame", "RaidMaker_WarriorClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
-      RaidMaker_WarriorClassPicture:SetWidth(25)
-      RaidMaker_WarriorClassPicture:SetHeight(25)
-      RaidMaker_WarriorClassPicture:SetPoint("TOPRIGHT", RaidMaker_WarriorCount, "TOPLEFT", 0,3)
-      RaidMaker_WarriorClassPicture:CreateTexture("RaidMaker_WarriorClassPictureTexture")
-      RaidMaker_WarriorClassPictureTexture:SetAllPoints()
-      RaidMaker_WarriorClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
-      RaidMaker_WarriorClassPictureTexture:SetTexCoord(0,0.25,0,0.25)
-      -- mage
-      CreateFrame("Frame", "RaidMaker_MageClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
-      RaidMaker_MageClassPicture:SetWidth(25)
-      RaidMaker_MageClassPicture:SetHeight(25)
-      RaidMaker_MageClassPicture:SetPoint("TOPRIGHT", RaidMaker_MageCount, "TOPLEFT", 0,3)
-      RaidMaker_MageClassPicture:CreateTexture("RaidMaker_MageClassPictureTexture")
-      RaidMaker_MageClassPictureTexture:SetAllPoints()
-      RaidMaker_MageClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
-      RaidMaker_MageClassPictureTexture:SetTexCoord(.25,0.5,0,0.25)
-      -- rogue
-      CreateFrame("Frame", "RaidMaker_RogueClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
-      RaidMaker_RogueClassPicture:SetWidth(25)
-      RaidMaker_RogueClassPicture:SetHeight(25)
-      RaidMaker_RogueClassPicture:SetPoint("TOPRIGHT", RaidMaker_RogueCount, "TOPLEFT", 0,3)
-      RaidMaker_RogueClassPicture:CreateTexture("RaidMaker_RogueClassPictureTexture")
-      RaidMaker_RogueClassPictureTexture:SetAllPoints()
-      RaidMaker_RogueClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
-      RaidMaker_RogueClassPictureTexture:SetTexCoord(0.5,0.75,0,0.25)
-      -- druid
-      CreateFrame("Frame", "RaidMaker_DruidClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
-      RaidMaker_DruidClassPicture:SetWidth(25)
-      RaidMaker_DruidClassPicture:SetHeight(25)
-      RaidMaker_DruidClassPicture:SetPoint("TOPRIGHT", RaidMaker_DruidCount, "TOPLEFT", 0,3)
-      RaidMaker_DruidClassPicture:CreateTexture("RaidMaker_DruidClassPictureTexture")
-      RaidMaker_DruidClassPictureTexture:SetAllPoints()
-      RaidMaker_DruidClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
-      RaidMaker_DruidClassPictureTexture:SetTexCoord(0.75,1.0,0,0.25)
-      -- hunter
-      CreateFrame("Frame", "RaidMaker_HunterClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
-      RaidMaker_HunterClassPicture:SetWidth(25)
-      RaidMaker_HunterClassPicture:SetHeight(25)
-      RaidMaker_HunterClassPicture:SetPoint("TOPRIGHT", RaidMaker_HunterCount, "TOPLEFT", 0,3)
-      RaidMaker_HunterClassPicture:CreateTexture("RaidMaker_HunterClassPictureTexture")
-      RaidMaker_HunterClassPictureTexture:SetAllPoints()
-      RaidMaker_HunterClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
-      RaidMaker_HunterClassPictureTexture:SetTexCoord(0,0.25,0.25,0.5)
-      -- shaman
-      CreateFrame("Frame", "RaidMaker_ShamanClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
-      RaidMaker_ShamanClassPicture:SetWidth(25)
-      RaidMaker_ShamanClassPicture:SetHeight(25)
-      RaidMaker_ShamanClassPicture:SetPoint("TOPRIGHT", RaidMaker_ShamanCount, "TOPLEFT", 0,3)
-      RaidMaker_ShamanClassPicture:CreateTexture("RaidMaker_ShamanClassPictureTexture")
-      RaidMaker_ShamanClassPictureTexture:SetAllPoints()
-      RaidMaker_ShamanClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
-      RaidMaker_ShamanClassPictureTexture:SetTexCoord(.25,0.5,0.25,0.5)
-      -- priest
-      CreateFrame("Frame", "RaidMaker_PriestClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
-      RaidMaker_PriestClassPicture:SetWidth(25)
-      RaidMaker_PriestClassPicture:SetHeight(25)
-      RaidMaker_PriestClassPicture:SetPoint("TOPRIGHT", RaidMaker_PriestCount, "TOPLEFT", 0,3)
-      RaidMaker_PriestClassPicture:CreateTexture("RaidMaker_PriestClassPictureTexture")
-      RaidMaker_PriestClassPictureTexture:SetAllPoints()
-      RaidMaker_PriestClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
-      RaidMaker_PriestClassPictureTexture:SetTexCoord(0.5,0.75,0.25,0.5)
-      -- warlock
-      CreateFrame("Frame", "RaidMaker_WarlockClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
-      RaidMaker_WarlockClassPicture:SetWidth(25)
-      RaidMaker_WarlockClassPicture:SetHeight(25)
-      RaidMaker_WarlockClassPicture:SetPoint("TOPRIGHT", RaidMaker_WarlockCount, "TOPLEFT", 0,3)
-      RaidMaker_WarlockClassPicture:CreateTexture("RaidMaker_WarlockClassPictureTexture")
-      RaidMaker_WarlockClassPictureTexture:SetAllPoints()
-      RaidMaker_WarlockClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
-      RaidMaker_WarlockClassPictureTexture:SetTexCoord(0.75,1.0,0.25,0.5)
-      --   paladin
-      CreateFrame("Frame", "RaidMaker_PaladinClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
-      RaidMaker_PaladinClassPicture:SetWidth(25)
-      RaidMaker_PaladinClassPicture:SetHeight(25)
-      RaidMaker_PaladinClassPicture:SetPoint("TOPRIGHT", RaidMaker_PaladinCount, "TOPLEFT", 0,3)
-      RaidMaker_PaladinClassPicture:CreateTexture("RaidMaker_PaladinClassPictureTexture")
-      RaidMaker_PaladinClassPictureTexture:SetAllPoints()
-      RaidMaker_PaladinClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
-      RaidMaker_PaladinClassPictureTexture:SetTexCoord(0,0.25,0.5,0.75)
-      --   deathknight
-      CreateFrame("Frame", "RaidMaker_DeathKnightClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
-      RaidMaker_DeathKnightClassPicture:SetWidth(25)
-      RaidMaker_DeathKnightClassPicture:SetHeight(25)
-      RaidMaker_DeathKnightClassPicture:SetPoint("TOPRIGHT", RaidMaker_DeathknightCount, "TOPLEFT", 0,3)
-      RaidMaker_DeathKnightClassPicture:CreateTexture("RaidMaker_DeathKnightClassPictureTexture")
-      RaidMaker_DeathKnightClassPictureTexture:SetAllPoints()
-      RaidMaker_DeathKnightClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
-      RaidMaker_DeathKnightClassPictureTexture:SetTexCoord(.25,0.5,0.5,0.75)
 
+
+   -- 
+   -- Set up the Class Icons.
+   --
+   
+   -- take the Blizzard UI graphic with a grid of 4x4 class icons and crop out the desired class one at a time.
+   -- Warrior
+   CreateFrame("Frame", "RaidMaker_WarriorClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
+   RaidMaker_WarriorClassPicture:SetWidth(25)
+   RaidMaker_WarriorClassPicture:SetHeight(25)
+   RaidMaker_WarriorClassPicture:SetPoint("TOPRIGHT", RaidMaker_WarriorCount, "TOPLEFT", 0,3)
+   RaidMaker_WarriorClassPicture:CreateTexture("RaidMaker_WarriorClassPictureTexture")
+   RaidMaker_WarriorClassPictureTexture:SetAllPoints()
+   RaidMaker_WarriorClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
+   RaidMaker_WarriorClassPictureTexture:SetTexCoord(0,0.25,0,0.25)
+   -- mage
+   CreateFrame("Frame", "RaidMaker_MageClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
+   RaidMaker_MageClassPicture:SetWidth(25)
+   RaidMaker_MageClassPicture:SetHeight(25)
+   RaidMaker_MageClassPicture:SetPoint("TOPRIGHT", RaidMaker_MageCount, "TOPLEFT", 0,3)
+   RaidMaker_MageClassPicture:CreateTexture("RaidMaker_MageClassPictureTexture")
+   RaidMaker_MageClassPictureTexture:SetAllPoints()
+   RaidMaker_MageClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
+   RaidMaker_MageClassPictureTexture:SetTexCoord(.25,0.5,0,0.25)
+   -- rogue
+   CreateFrame("Frame", "RaidMaker_RogueClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
+   RaidMaker_RogueClassPicture:SetWidth(25)
+   RaidMaker_RogueClassPicture:SetHeight(25)
+   RaidMaker_RogueClassPicture:SetPoint("TOPRIGHT", RaidMaker_RogueCount, "TOPLEFT", 0,3)
+   RaidMaker_RogueClassPicture:CreateTexture("RaidMaker_RogueClassPictureTexture")
+   RaidMaker_RogueClassPictureTexture:SetAllPoints()
+   RaidMaker_RogueClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
+   RaidMaker_RogueClassPictureTexture:SetTexCoord(0.5,0.75,0,0.25)
+   -- druid
+   CreateFrame("Frame", "RaidMaker_DruidClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
+   RaidMaker_DruidClassPicture:SetWidth(25)
+   RaidMaker_DruidClassPicture:SetHeight(25)
+   RaidMaker_DruidClassPicture:SetPoint("TOPRIGHT", RaidMaker_DruidCount, "TOPLEFT", 0,3)
+   RaidMaker_DruidClassPicture:CreateTexture("RaidMaker_DruidClassPictureTexture")
+   RaidMaker_DruidClassPictureTexture:SetAllPoints()
+   RaidMaker_DruidClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
+   RaidMaker_DruidClassPictureTexture:SetTexCoord(0.75,1.0,0,0.25)
+   -- hunter
+   CreateFrame("Frame", "RaidMaker_HunterClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
+   RaidMaker_HunterClassPicture:SetWidth(25)
+   RaidMaker_HunterClassPicture:SetHeight(25)
+   RaidMaker_HunterClassPicture:SetPoint("TOPRIGHT", RaidMaker_HunterCount, "TOPLEFT", 0,3)
+   RaidMaker_HunterClassPicture:CreateTexture("RaidMaker_HunterClassPictureTexture")
+   RaidMaker_HunterClassPictureTexture:SetAllPoints()
+   RaidMaker_HunterClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
+   RaidMaker_HunterClassPictureTexture:SetTexCoord(0,0.25,0.25,0.5)
+   -- shaman
+   CreateFrame("Frame", "RaidMaker_ShamanClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
+   RaidMaker_ShamanClassPicture:SetWidth(25)
+   RaidMaker_ShamanClassPicture:SetHeight(25)
+   RaidMaker_ShamanClassPicture:SetPoint("TOPRIGHT", RaidMaker_ShamanCount, "TOPLEFT", 0,3)
+   RaidMaker_ShamanClassPicture:CreateTexture("RaidMaker_ShamanClassPictureTexture")
+   RaidMaker_ShamanClassPictureTexture:SetAllPoints()
+   RaidMaker_ShamanClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
+   RaidMaker_ShamanClassPictureTexture:SetTexCoord(.25,0.5,0.25,0.5)
+   -- priest
+   CreateFrame("Frame", "RaidMaker_PriestClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
+   RaidMaker_PriestClassPicture:SetWidth(25)
+   RaidMaker_PriestClassPicture:SetHeight(25)
+   RaidMaker_PriestClassPicture:SetPoint("TOPRIGHT", RaidMaker_PriestCount, "TOPLEFT", 0,3)
+   RaidMaker_PriestClassPicture:CreateTexture("RaidMaker_PriestClassPictureTexture")
+   RaidMaker_PriestClassPictureTexture:SetAllPoints()
+   RaidMaker_PriestClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
+   RaidMaker_PriestClassPictureTexture:SetTexCoord(0.5,0.75,0.25,0.5)
+   -- warlock
+   CreateFrame("Frame", "RaidMaker_WarlockClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
+   RaidMaker_WarlockClassPicture:SetWidth(25)
+   RaidMaker_WarlockClassPicture:SetHeight(25)
+   RaidMaker_WarlockClassPicture:SetPoint("TOPRIGHT", RaidMaker_WarlockCount, "TOPLEFT", 0,3)
+   RaidMaker_WarlockClassPicture:CreateTexture("RaidMaker_WarlockClassPictureTexture")
+   RaidMaker_WarlockClassPictureTexture:SetAllPoints()
+   RaidMaker_WarlockClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
+   RaidMaker_WarlockClassPictureTexture:SetTexCoord(0.75,1.0,0.25,0.5)
+   --   paladin
+   CreateFrame("Frame", "RaidMaker_PaladinClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
+   RaidMaker_PaladinClassPicture:SetWidth(25)
+   RaidMaker_PaladinClassPicture:SetHeight(25)
+   RaidMaker_PaladinClassPicture:SetPoint("TOPRIGHT", RaidMaker_PaladinCount, "TOPLEFT", 0,3)
+   RaidMaker_PaladinClassPicture:CreateTexture("RaidMaker_PaladinClassPictureTexture")
+   RaidMaker_PaladinClassPictureTexture:SetAllPoints()
+   RaidMaker_PaladinClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
+   RaidMaker_PaladinClassPictureTexture:SetTexCoord(0,0.25,0.5,0.75)
+   --   deathknight
+   CreateFrame("Frame", "RaidMaker_DeathKnightClassPicture", RaidMaker_TabPage1_SampleTextTab1 )
+   RaidMaker_DeathKnightClassPicture:SetWidth(25)
+   RaidMaker_DeathKnightClassPicture:SetHeight(25)
+   RaidMaker_DeathKnightClassPicture:SetPoint("TOPRIGHT", RaidMaker_DeathknightCount, "TOPLEFT", 0,3)
+   RaidMaker_DeathKnightClassPicture:CreateTexture("RaidMaker_DeathKnightClassPictureTexture")
+   RaidMaker_DeathKnightClassPictureTexture:SetAllPoints()
+   RaidMaker_DeathKnightClassPictureTexture:SetTexture("Interface\\Glues\\CharacterCreate\\UI-CharacterCreate-Classes")
+   RaidMaker_DeathKnightClassPictureTexture:SetTexCoord(.25,0.5,0.5,0.75)
+
+   -- 
+   -- Set up the tooltips for the buttons.
+   --
    RaidMaker_FetchCalendarButton:SetScript("OnEnter",
                function(this)
                   GameTooltip_SetDefaultAnchor(GameTooltip, this)
@@ -1592,9 +1600,11 @@ function RaidMaker_SetUpClassIcons()
                end)
    RaidMaker_ButtonRefresh:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-   -------------------------------------------------------------------------------
-   -- Create the scan button
-   -------------------------------------------------------------------------------
+
+   --
+   -- Set up the RM button on the blizzard calendar event and calendar view screens.
+   --
+   
    -- create the button for the Raid Edit screen
    raidMakerLaunchCalEditButton = CreateFrame("Button", nil, UIParent, "UIPanelButtonTemplate")
    raidMakerLaunchCalEditButton:SetHeight(20)
@@ -1645,9 +1655,11 @@ function RaidMaker_SetUpClassIcons()
    raidMakerLaunchCalViewButton:SetText("RM")
    -- must wait for the CALENDAR_OPEN_EVENT event to complete the initialization.
    
+   
    --
-   -- Set up text fields from the Roll Log area
+   -- Set up FontString fields from the Roll Log area
    --
+   
    RaidMaker_LogTab_Rolls_FieldPlayerNames = {}
    RaidMaker_LogTab_Rolls_FieldRollValues = {}
    RaidMaker_LogTab_Rolls_FieldRollAges = {}
