@@ -67,7 +67,7 @@
 <!--code to create GUI template frames, to remove delete lines 18 - 243...-->
    <!--Main Frame-->
    <Frame name="RaidMaker_MainForm" enableMouse="true" movable="true" hidden="true" parent="RaidMaker">
-      <Size><AbsDimension x="629" y="540" /></Size>
+      <Size><AbsDimension x="679" y="540" /></Size>
       <Anchors>
          <Anchor point="CENTER" relativeTo="UIParent">
             <Offset><AbsDimension x="0" y="0" /></Offset>
@@ -148,7 +148,7 @@
             <Frames>               
 
                <Frame name="$parentGroupFrame">
-                  <Size><AbsDimension x="590" y="420" /></Size>
+                  <Size><AbsDimension x="640" y="420" /></Size>
                   <Anchors>
                      <Anchor point="TOPLEFT" relativeTo="$parent">
                         <Offset>

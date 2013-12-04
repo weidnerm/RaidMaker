@@ -180,7 +180,6 @@ function RaidMaker_Handler(msg)
       RaidMaker_TabPage1_SampleTextTab1_rDpsButton_1:SetText(yellow.."X");
       RaidMaker_TabPage1_SampleTextTab1_Class_1:SetText(yellow.."DRUID");
 
-
 --   elseif (msg == "secure on") then 
 --      RaidMaker_BuffFrame:Show();
 --   elseif (msg == "secure off") then 
@@ -192,6 +191,35 @@ function RaidMaker_Handler(msg)
 --   elseif (msg ~= "") then
 --      AT_buffname = msg;
 --      DEFAULT_CHAT_FRAME:AddMessage(yellow.."RaidMaker: will check for "..AT_buffname..".");
+   elseif (msg == "test") then
+      local tempPlayerName;
+      local tempOnlineText;
+      
+      tempPlayerName = "Artera";
+      tempOnlineText = RaidMaker_GetOnlineStatusText(tempPlayerName);
+      print(white..tempPlayerName.." is "..tempOnlineText);
+      
+      tempPlayerName = "Sanydrewstg";
+      tempOnlineText = RaidMaker_GetOnlineStatusText(tempPlayerName);
+      print(white..tempPlayerName.." is "..tempOnlineText);
+      
+      tempPlayerName = "Tyrlidd";
+      tempOnlineText = RaidMaker_GetOnlineStatusText(tempPlayerName);
+      print(white..tempPlayerName.." is "..tempOnlineText);
+      
+      tempPlayerName = "Cherdrion";
+      tempOnlineText = RaidMaker_GetOnlineStatusText(tempPlayerName);
+      print(white..tempPlayerName.." is "..tempOnlineText);
+      
+      tempPlayerName = "Falfurien";
+      tempOnlineText = RaidMaker_GetOnlineStatusText(tempPlayerName);
+      print(white..tempPlayerName.." is "..tempOnlineText);
+      
+      
+      
+   elseif ( msg ~= nil ) then
+      local tempOnlineText = RaidMaker_GetOnlineStatusText(msg);
+      print(tempOnlineText);
    else 
       print(green.."RaidMaker:"..white.." Arguments to "..yellow.."/rm");
       print(yellow.." show - "..white.."Shows the main window.");
@@ -318,7 +346,7 @@ function RaidMaker_buildRaidList(origDatabase)
          newRaidDatabase.playerInfo[name].heals = 0;
          newRaidDatabase.playerInfo[name].mDps = 0;
          newRaidDatabase.playerInfo[name].rDps = 0;
-         newRaidDatabase.playerInfo[name].online = 0;
+         newRaidDatabase.playerInfo[name].online = "";
          newRaidDatabase.playerInfo[name].syncIndex = 0;
          
          local su_weekday, su_month, su_day, su_year, su_hour, su_minute = CalendarEventGetInviteResponseTime(index);
@@ -394,8 +422,8 @@ end
 function RaidMaker_GuildRosterUpdate(flag)
    -- timestamp the update.
    previousGuildRosterUpdateTime = time();
-   local guildRosterInformation = {}
-
+   guildRosterInformation = {}
+   
    if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
       if ( raidPlayerDatabase.playerInfo ~= nil ) then
             
@@ -409,41 +437,56 @@ function RaidMaker_GuildRosterUpdate(flag)
             local startIndex,endIndex,nameOfMainChar = strfind(note, "%((.*)%)" );
             guildRosterInformation[name] = {}
             guildRosterInformation[name].rankIndex = rankIndex
+            if ( online == 1 ) then
+               guildRosterInformation[name].online = 1;
+            else
+               guildRosterInformation[name].online = 0;
+            end
             guildRosterInformation[name].nameOfMainChar = nameOfMainChar
             
             -- update the raid database with this guild member information
             if ( raidPlayerDatabase.playerInfo[name] ~= nil ) then
-               -- player is included in calendar list. lets look them up.
-               if ( online == 1 ) then
-                  raidPlayerDatabase.playerInfo[name].online = 1;
-               else
-                  raidPlayerDatabase.playerInfo[name].online = 0;
-               end
-               
                raidPlayerDatabase.playerInfo[name].zone           = zone;
                raidPlayerDatabase.playerInfo[name].guildRankIndex = rankIndex;
-
             end
          end
 
+         -- make pass through roster updating alt information and officer information.
          local charName,charFields;
-         for charName,charFields in pairs(raidPlayerDatabase.playerInfo) do
+         for charName,charFields in pairs(guildRosterInformation) do
             if ( guildRosterInformation[charName] ~= nil ) then -- make sure the player is in the guild
                local nameOfMainChar = guildRosterInformation[charName].nameOfMainChar
                
                if ( nameOfMainChar ~= nil ) then -- make sure the char has a main.
                   if ( guildRosterInformation[nameOfMainChar] ~= nil ) then -- make sure the main is in the guild (might be some other text)
-                     if ( guildRosterInformation[nameOfMainChar].rankIndex ~= nil ) then
+
+                     -- Update the rank field to be that of the main
+                     if ( guildRosterInformation[nameOfMainChar].rankIndex ~= nil ) and
+                        ( raidPlayerDatabase.playerInfo[charName] ~= nil ) and
+                        ( raidPlayerDatabase.playerInfo[charName].guildRankIndex ~= nil ) then
                         if ( guildRosterInformation[nameOfMainChar].rankIndex < raidPlayerDatabase.playerInfo[charName].guildRankIndex ) then
                            -- update the database with the main's rank.
                            raidPlayerDatabase.playerInfo[charName].guildRankIndex = guildRosterInformation[nameOfMainChar].rankIndex;
                         end
                      end
+
+                     -- Add the alt to the alt-list of the main.
+                     if ( guildRosterInformation[nameOfMainChar].nameOfAlts == nil ) then
+                        guildRosterInformation[nameOfMainChar].nameOfAlts = {}; -- guarantee that we have a structure to place our field
+                     end
+                     guildRosterInformation[nameOfMainChar].nameOfAlts[charName] = true;
+                     
                   end
                end
             end
          end
          
+         -- update online status text.
+         for charName,charFields in pairs(raidPlayerDatabase.playerInfo) do
+            raidPlayerDatabase.playerInfo[charName].online = RaidMaker_GetOnlineStatusText(charName);
+         end
+
+         -- refresh screen         
          RaidMaker_DisplayDatabase();
 
       end
@@ -452,11 +495,68 @@ function RaidMaker_GuildRosterUpdate(flag)
 
 end
 
+function RaidMaker_GetOnlineStatusText(player)
+   
+--( raidPlayerDatabase ~= nil ) and
+--      ( raidPlayerDatabase.playerInfo ~= nil ) and
+--      ( raidPlayerDatabase.playerInfo[player] ~= nil ) and
+--         
+   
+   if ( guildRosterInformation ~= nil ) and
+      ( guildRosterInformation[player] ~= nil ) then
+      -- check if player to be checked is online (GREEN)
+      if ( guildRosterInformation[player].online == 1 ) then
+         return green.."online";
+      end
+      
+      -- check if player to be checked is on main (yellow)
+      local nameOfMainChar = guildRosterInformation[player].nameOfMainChar
+      if ( nameOfMainChar ~= nil ) then -- make sure the char has a main.
+         if ( guildRosterInformation[nameOfMainChar] ~= nil ) then -- make sure the main is in the guild (might be some other text)
+            if ( guildRosterInformation[nameOfMainChar].online == 1 ) then
+               return yellow.."on "..nameOfMainChar;
+            end
+         end
+      end
+   
+      -- check if player to be checked is alt logged in on alt (yellow)
+      if ( guildRosterInformation[player] ~= nil ) then -- make sure the main is in the guild (might be some other text)
+         if ( guildRosterInformation[player].nameOfAlts ~= nil ) then
+            local altName,charFields;
+            for altName,charFields in pairs(guildRosterInformation[player].nameOfAlts) do
+               if ( guildRosterInformation[altName].online == 1 ) then
+                  return yellow.."on "..altName;
+               end
+            end
+         end
+      end
+      
+      -- check if player to be checked is alt logged in on alt (yellow)
+      local nameOfMainChar = guildRosterInformation[player].nameOfMainChar
+      if ( nameOfMainChar ~= nil ) then -- make sure the char has a main.
+         if ( guildRosterInformation[nameOfMainChar] ~= nil ) then -- make sure the main is in the guild (might be some other text)
+   
+            if ( guildRosterInformation[nameOfMainChar].nameOfAlts ~= nil ) then
+               local altName,charFields;
+               for altName,charFields in pairs(guildRosterInformation[nameOfMainChar].nameOfAlts) do
+                  if ( guildRosterInformation[altName].online == 1 ) then
+                     return yellow.."on "..altName;
+                  end
+               end
+            end
+         end
+      end
+   end
+   
+   return mediumGrey.."offline";
+end 
+
+
 function RaidMaker_DisplayDatabase()
 
    local currentRow = 1;
    local charName;
-   
+
    if ( raidPlayerDatabase.title ~= nil ) then
       RaidMaker_TabPage1_RaidIdText:SetText(white..raidPlayerDatabase.title);
    end
@@ -484,7 +584,8 @@ function RaidMaker_DisplayDatabase()
          ( raidPlayerDatabase.playerInfo[charName].mDps == 1 ) or
          ( raidPlayerDatabase.playerInfo[charName].rDps == 1) then
 
-         if ( raidPlayerDatabase.playerInfo[charName].online == 1 ) then
+         if ( guildRosterInformation[charName] ~= nil ) and
+            ( guildRosterInformation[charName].online == 1 ) then
             onlineCountForRaid  = onlineCountForRaid + 1;
          end
 
@@ -851,11 +952,22 @@ end
 function RaidMaker_ascendOnlineStateOrder(a,b)
    -- a,b are player names.
    
-   if ( raidPlayerDatabase.playerInfo[a].online > raidPlayerDatabase.playerInfo[b].online ) then
-      return true;
-   elseif ( raidPlayerDatabase.playerInfo[a].online < raidPlayerDatabase.playerInfo[b].online ) then
-      return false;
-   end
+--   if ( guildRosterInformation[a] ~= nil ) and
+--      ( guildRosterInformation[b] ~= nil ) then
+   local status_a = strsub(raidPlayerDatabase.playerInfo[a].online, 10 ); -- sort without the color information.
+   local status_b = strsub(raidPlayerDatabase.playerInfo[b].online, 10 )
+   
+      if ( status_a > status_b ) then
+         return true;
+      elseif ( status_a < status_b ) then
+         return false;
+      end
+--      if ( raidPlayerDatabase.playerInfo[a].online > raidPlayerDatabase.playerInfo[b].online ) then
+--         return true;
+--      elseif ( raidPlayerDatabase.playerInfo[a].online < raidPlayerDatabase.playerInfo[b].online ) then
+--         return false;
+--      end
+--   end
 
    if ( inviteSortOrder[raidPlayerDatabase.playerInfo[a].inviteStatus] < inviteSortOrder[raidPlayerDatabase.playerInfo[b].inviteStatus] ) then
       return true;
@@ -923,7 +1035,7 @@ function RaidMaker_TextTableUpdate()
    local currentRow = 1;
    local charName;
    local startRow = RaidMaker_VSlider:GetValue();
-   
+
    for rowIndex=startRow,#playerSortedList do
       charName = playerSortedList[rowIndex];
 
@@ -935,10 +1047,10 @@ function RaidMaker_TextTableUpdate()
       end
       
       local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_OnlineState_"..currentRow);
-      if ( raidPlayerDatabase.playerInfo[charName].online == 0 ) then
-         textBox:SetText(mediumGrey.."offline");
+      if ( raidPlayerDatabase.playerInfo[charName].online ~= nil ) then
+         textBox:SetText(raidPlayerDatabase.playerInfo[charName].online);
       else
-         textBox:SetText(green.."online");
+         textBox:SetText(mediumGrey.."offline");
       end
       
       local textBox = getglobal("RaidMaker_TabPage1_SampleTextTab1_InviteStatus_"..currentRow);
@@ -1894,31 +2006,31 @@ function RaidMaker_handle_CHAT_MSG_SYSTEM(message, sender, language, channelStri
       RaidMaker_addRollEntryToRollLog(playerName, tonumber(rollValue) );
    end
    
-   startIndex,endIndex,playerName = strfind(message, "%[(.*)%]|h has come online." );
-   if ( playerName ~= nil ) then
-      -- player online status.
-      if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
-         if ( raidPlayerDatabase.playerInfo ~= nil ) then
-            if ( raidPlayerDatabase.playerInfo[playerName] ~= nil ) then
-               raidPlayerDatabase.playerInfo[playerName].online = 1;
-               RaidMaker_DisplayDatabase();
-            end
-         end
-      end
-   end
-   
-   startIndex,endIndex,playerName = strfind(message, "^(.*) has gone offline." );
-   if ( playerName ~= nil ) then
-      -- player offline status.
-      if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
-         if ( raidPlayerDatabase.playerInfo ~= nil ) then
-            if ( raidPlayerDatabase.playerInfo[playerName] ~= nil ) then
-               raidPlayerDatabase.playerInfo[playerName].online = 0;
-               RaidMaker_DisplayDatabase();
-            end
-         end
-      end
-   end
+--   startIndex,endIndex,playerName = strfind(message, "%[(.*)%]|h has come online." );
+--   if ( playerName ~= nil ) then
+--      -- player online status.
+--      if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
+--         if ( raidPlayerDatabase.playerInfo ~= nil ) then
+--            if ( raidPlayerDatabase.playerInfo[playerName] ~= nil ) then
+--               raidPlayerDatabase.playerInfo[playerName].online = 1;
+--               RaidMaker_DisplayDatabase();
+--            end
+--         end
+--      end
+--   end
+--   
+--   startIndex,endIndex,playerName = strfind(message, "^(.*) has gone offline." );
+--   if ( playerName ~= nil ) then
+--      -- player offline status.
+--      if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
+--         if ( raidPlayerDatabase.playerInfo ~= nil ) then
+--            if ( raidPlayerDatabase.playerInfo[playerName] ~= nil ) then
+--               raidPlayerDatabase.playerInfo[playerName].online = 0;
+--               RaidMaker_DisplayDatabase();
+--            end
+--         end
+--      end
+--   end
    
 end
 
@@ -2046,22 +2158,18 @@ function RaidMaker_handle_PARTY_MEMBERS_CHANGED()
                   
                   if ( raidPlayerDatabase.playerInfo[name].tank == 1 ) and 
                      ( role ~= "TANK" ) then
-print("Setting "..name.." to TANK"); -- debug. take out.
                      UnitSetRole(name,"TANK");
                      allRolesCorrect = 0;
                   elseif ( raidPlayerDatabase.playerInfo[name].heals == 1 ) and 
                          ( role ~= "HEALER" ) then
-print("Setting "..name.." to HEALER"); -- debug. take out.
                      UnitSetRole(name,"HEALER");
                      allRolesCorrect = 0;
                   elseif ( raidPlayerDatabase.playerInfo[name].mDps == 1 ) and 
                          ( role ~= "DAMAGER" ) then
-print("Setting "..name.." to DAMAGER was "..role); -- debug. take out.
                      UnitSetRole(name,"DAMAGER");
                      allRolesCorrect = 0;
                   elseif ( raidPlayerDatabase.playerInfo[name].rDps == 1 ) and 
                          ( role ~= "DAMAGER" ) then
-print("Setting "..name.." to DAMAGER was "..role); -- debug. take out.
                      UnitSetRole(name,"DAMAGER");
                      allRolesCorrect = 0;
                   end
@@ -2069,7 +2177,6 @@ print("Setting "..name.." to DAMAGER was "..role); -- debug. take out.
                
                if ( allRolesCorrect == 1 ) and
                   ( numRaidMembers == numMembersWithRoles ) then -- make sure all roles are set and raid is fully present
-print("All roles set. disarming role assignment");
                   isRoleUpdateArmed = false; 
                end
             
@@ -2103,11 +2210,11 @@ print("All roles set. disarming role assignment");
             local name, rank, subgroup, level, class, fileName, zone, online, isDead, role, isML = GetRaidRosterInfo(memberIndex);
             -- udpate status.
             if ( raidPlayerDatabase.playerInfo[name] ~= nil ) then
-               if ( online == 1 ) then
-                  raidPlayerDatabase.playerInfo[name].online = 1;
-               else
-                  raidPlayerDatabase.playerInfo[name].online = 0;
-               end
+--               if ( online == 1 ) then
+--                  raidPlayerDatabase.playerInfo[name].online = 1;
+--               else
+--                  raidPlayerDatabase.playerInfo[name].online = 0;
+--               end
                raidPlayerDatabase.playerInfo[name].inGroup = 1;
             end
          end
@@ -2179,7 +2286,8 @@ function RaidMaker_UpdatePlayerAttendanceLog()
       RaidMaker_RaidParticipantLog = {}
    end
 
-   if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
+   if ( raidPlayerDatabase ~= nil ) and -- only process if there is a database to parse.
+      ( guildRosterInformation ~= nil ) then -- only process if there is a database to parse.
       if ( raidPlayerDatabase.playerInfo ~= nil ) then
    
          -- get the raid date and other info
@@ -2245,7 +2353,7 @@ function RaidMaker_UpdatePlayerAttendanceLog()
                   (raidPlayerDatabase.playerInfo[charName].mDps  == 1 ) or
                   (raidPlayerDatabase.playerInfo[charName].rDps  == 1 ) or
                   (raidPlayerDatabase.playerInfo[charName].heals == 1 ) or
-                  (raidPlayerDatabase.playerInfo[charName].online == 1 ) then
+                  ( (guildRosterInformation[charName] ~= nil ) and (guildRosterInformation[charName].online == 1 )) then
                   
                   -- player has indicated acceptance of the raid.  add them to the log.
                   RaidMaker_RaidParticipantLog[currentIndex].playerInfo[charName] = {}; -- create the empty structure.
@@ -2400,11 +2508,12 @@ function RaidMaker_SetUpGuiFields()
       RaidMaker_TabPage1_SampleTextTab1_GroupedState_Objects[index] = item;
    end
 
+   -- Set up row separators
    RaidMaker_RaidBuilder_row_frame_Objects = {};
    RaidMaker_RaidBuilder_row_frameTexture_Objects = {};
    for index=1,10 do
       local myFrame = CreateFrame("Frame", "RaidMaker_RaidBuilder_row_frame"..index, RaidMaker_TabPage1_SampleTextTab1 )
-      myFrame:SetWidth(496)
+      myFrame:SetWidth(546)
       local frameLevel = myFrame:GetFrameLevel();
       myFrame:SetFrameLevel(frameLevel -1);
       myFrame:SetHeight(18)
@@ -2420,7 +2529,7 @@ function RaidMaker_SetUpGuiFields()
    RaidMaker_TabPage1_SampleTextTab1_OnlineState_Objects = {};
    for index=1,22 do
       local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_OnlineState_"..index-1, "OVERLAY", "GameFontNormalSmall" )
-      item:SetWidth(50);
+      item:SetWidth(100);
       item:SetHeight(18);
       if ( index == 1 ) then
          item:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_GroupedState_Objects[1], "TOPRIGHT", 0,0);
