@@ -2470,22 +2470,26 @@ function RaidMaker_handle_PARTY_MEMBERS_CHANGED()
                   local role = UnitGroupRolesAssigned(name)
 
                   if ( raidPlayerDatabase.playerInfo[name] ~= nil ) then
-                     if ( raidPlayerDatabase.playerInfo[name].tank == 1 ) and
-                        ( role ~= "TANK" ) then
-                        UnitSetRole(name,"TANK");
-                        allRolesCorrect = 0;
-                     elseif ( raidPlayerDatabase.playerInfo[name].heals == 1 ) and
-                            ( role ~= "HEALER" ) then
-                        UnitSetRole(name,"HEALER");
-                        allRolesCorrect = 0;
-                     elseif ( raidPlayerDatabase.playerInfo[name].mDps == 1 ) and
-                            ( role ~= "DAMAGER" ) then
-                        UnitSetRole(name,"DAMAGER");
-                        allRolesCorrect = 0;
-                     elseif ( raidPlayerDatabase.playerInfo[name].rDps == 1 ) and
-                            ( role ~= "DAMAGER" ) then
-                        UnitSetRole(name,"DAMAGER");
-                        allRolesCorrect = 0;
+                     if ( raidPlayerDatabase.playerInfo[name].tank == 1 ) then
+                        if ( role ~= "TANK" ) then
+                           UnitSetRole(name,"TANK");
+                           allRolesCorrect = 0;
+                        end
+                     elseif ( raidPlayerDatabase.playerInfo[name].heals == 1 ) then
+                        if ( role ~= "HEALER" ) then
+                           UnitSetRole(name,"HEALER");
+                           allRolesCorrect = 0;
+                        end
+                     elseif ( raidPlayerDatabase.playerInfo[name].mDps == 1 ) then
+                        if ( role ~= "DAMAGER" ) then
+                           UnitSetRole(name,"DAMAGER");
+                           allRolesCorrect = 0;
+                        end
+                     elseif ( raidPlayerDatabase.playerInfo[name].rDps == 1 ) then
+                        if ( role ~= "DAMAGER" ) then
+                           UnitSetRole(name,"DAMAGER");
+                           allRolesCorrect = 0;
+                        end
                      end
                   end
                end
@@ -2773,24 +2777,24 @@ function RaidMaker_HandleSendRolesToRaidButton()
             tankList = tankList..charName
             tankCount = tankCount + 1;
             UnitSetRole(charName,"TANK");
-         end
-         if ( raidPlayerDatabase.playerInfo[charName].heals == 1 ) then
+            
+         elseif ( raidPlayerDatabase.playerInfo[charName].heals == 1 ) then
             if ( healCount ~= 0 ) then
                healList = healList..", ";
             end
             healList = healList..charName
             healCount = healCount + 1;
             UnitSetRole(charName,"HEALER");
-         end
-         if ( raidPlayerDatabase.playerInfo[charName].mDps == 1 ) then
+            
+         elseif ( raidPlayerDatabase.playerInfo[charName].mDps == 1 ) then
             if ( mDpsCount ~= 0 ) then
                mDpslist = mDpslist..", ";
             end
             mDpslist = mDpslist..charName
             mDpsCount = mDpsCount + 1;
             UnitSetRole(charName,"DAMAGER");
-         end
-         if ( raidPlayerDatabase.playerInfo[charName].rDps == 1 ) then
+            
+         elseif ( raidPlayerDatabase.playerInfo[charName].rDps == 1 ) then
             if ( rDpsCount ~= 0 ) then
                rDpslist = rDpslist..", ";
             end
