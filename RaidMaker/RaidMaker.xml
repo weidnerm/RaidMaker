@@ -9,7 +9,7 @@
          <OnLoad> 
             RaidMaker:RegisterEvent("VARIABLES_LOADED"); 
             RaidMaker:RegisterEvent("GUILD_ROSTER_UPDATE"); 
-            RaidMaker:RegisterEvent("PARTY_MEMBERS_CHANGED");
+            RaidMaker:RegisterEvent("GROUP_ROSTER_UPDATE");
             RaidMaker:RegisterEvent("CALENDAR_OPEN_EVENT");
             RaidMaker:RegisterEvent("CHAT_MSG_LOOT");
             RaidMaker:RegisterEvent("LOOT_OPENED");
@@ -30,8 +30,9 @@
                RaidMaker_OnLoad(); 
             elseif (event == "GUILD_ROSTER_UPDATE") then 
                RaidMaker_GuildRosterUpdate(flag); 
-            elseif (event == "PARTY_MEMBERS_CHANGED") then 
-               RaidMaker_handle_PARTY_MEMBERS_CHANGED(); 
+--            elseif (event == "PARTY_MEMBERS_CHANGED") then 
+            elseif (event == "GROUP_ROSTER_UPDATE") then 
+               RaidMaker_handle_GROUP_ROSTER_UPDATE(); 
             elseif (event == "CALENDAR_OPEN_EVENT") then 
                RaidMaker_handle_CALENDAR_OPEN_EVENT(...); 
             elseif (event == "CHAT_MSG_LOOT") then 
@@ -249,7 +250,7 @@
                    </OnClick>                                                                                                       
                  </Scripts>                                                                                                         
                </Button>                                                                                                            
-               <Button name="RaidMaker_FetchCalendarButton" inherits="UIPanelButtonTemplate2" text="Fetch Cal">
+               <Button name="RaidMaker_FetchCalendarButton" inherits="UIPanelButtonTemplate" text="Fetch Cal">
                   <Size><AbsDimension x="80" y="22"/></Size>
                   <Scripts>
                      <OnClick>
@@ -257,7 +258,7 @@
                      </OnClick>
                   </Scripts>
                </Button>
-               <Button name="RaidMaker_ClearAllRolesButton" inherits="UIPanelButtonTemplate2" text="Reset">
+               <Button name="RaidMaker_ClearAllRolesButton" inherits="UIPanelButtonTemplate" text="Reset">
                   <Size><AbsDimension x="80" y="22"/></Size>
                   <Anchors>
                      <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT"  relativeTo="RaidMaker_FetchCalendarButton">
@@ -273,7 +274,7 @@
                   </Scripts>
                </Button>
                
-               <Button name="RaidMaker_SendAnnouncementButton" inherits="UIPanelButtonTemplate2" text="Announce">
+               <Button name="RaidMaker_SendAnnouncementButton" inherits="UIPanelButtonTemplate" text="Announce">
                   <Size><AbsDimension x="80" y="22"/></Size>
                   <Anchors>
                      <Anchor point="TOPLEFT" relativePoint="TOPRIGHT"  relativeTo="RaidMaker_FetchCalendarButton">
@@ -288,7 +289,7 @@
                      </OnClick>
                   </Scripts>
                </Button>
-               <Button name="RaidMaker_SendInvitesButton" inherits="UIPanelButtonTemplate2" text="Invite">
+               <Button name="RaidMaker_SendInvitesButton" inherits="UIPanelButtonTemplate" text="Invite">
                   <Size><AbsDimension x="80" y="22"/></Size>
                   <Anchors>
                      <Anchor point="TOPLEFT" relativePoint="TOPRIGHT"  relativeTo="RaidMaker_SendAnnouncementButton">
@@ -303,7 +304,7 @@
                      </OnClick>
                   </Scripts>
                </Button>
-               <Button name="RaidMaker_SendInvDoneMsgButton" inherits="UIPanelButtonTemplate2" text="Ann Invites">
+               <Button name="RaidMaker_SendInvDoneMsgButton" inherits="UIPanelButtonTemplate" text="Ann Invites">
                   <Size><AbsDimension x="80" y="22"/></Size>
                   <Anchors>
                      <Anchor point="TOPLEFT" relativePoint="TOPRIGHT"  relativeTo="RaidMaker_SendInvitesButton">
@@ -318,7 +319,7 @@
                      </OnClick>
                   </Scripts>
                </Button>
-               <Button name="RaidMaker_SendRolesButton" inherits="UIPanelButtonTemplate2" text="Ann. Roles">
+               <Button name="RaidMaker_SendRolesButton" inherits="UIPanelButtonTemplate" text="Ann. Roles">
                   <Size><AbsDimension x="80" y="22"/></Size>
                   <Anchors>
                      <Anchor point="TOPLEFT" relativePoint="TOPRIGHT"  relativeTo="RaidMaker_SendInvDoneMsgButton">
@@ -333,7 +334,7 @@
                      </OnClick>
                   </Scripts>
                </Button>
-               <Button name="RaidMaker_ButtonRefresh" inherits="UIPanelButtonTemplate2" text="Refresh">
+               <Button name="RaidMaker_ButtonRefresh" inherits="UIPanelButtonTemplate" text="Refresh">
                   <Size><AbsDimension x="80" y="22"/></Size>
                   <Anchors>
                      <Anchor point="TOPLEFT" relativePoint="TOPRIGHT"  relativeTo="RaidMaker_SendRolesButton">
@@ -1023,7 +1024,7 @@
                      <EdgeSize><AbsValue val="16" /></EdgeSize>
                   </Backdrop>
                </Frame>   
-               <Button name="RaidMaker_RollResetButton4" inherits="UIPanelButtonTemplate2" text="4 mins">
+               <Button name="RaidMaker_RollResetButton4" inherits="UIPanelButtonTemplate" text="4 mins">
                   <Size><AbsDimension x="80" y="22"/></Size>
                   <Anchors>
                      <Anchor point="TOPLEFT" relativePoint="TOPRIGHT"  relativeTo="RaidMaker_GroupRollFrame">
@@ -1038,7 +1039,7 @@
                      </OnClick>
                   </Scripts>
                </Button>
-               <Button name="RaidMaker_RollResetButton3" inherits="UIPanelButtonTemplate2" text="3 mins">
+               <Button name="RaidMaker_RollResetButton3" inherits="UIPanelButtonTemplate" text="3 mins">
                   <Size><AbsDimension x="80" y="22"/></Size>
                   <Anchors>
                      <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT"  relativeTo="RaidMaker_RollResetButton4">
@@ -1053,7 +1054,7 @@
                      </OnClick>
                   </Scripts>
                </Button>
-               <Button name="RaidMaker_RollResetButton2" inherits="UIPanelButtonTemplate2" text="2 mins">
+               <Button name="RaidMaker_RollResetButton2" inherits="UIPanelButtonTemplate" text="2 mins">
                   <Size><AbsDimension x="80" y="22"/></Size>
                   <Anchors>
                      <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT"  relativeTo="RaidMaker_RollResetButton3">
@@ -1068,7 +1069,7 @@
                      </OnClick>
                   </Scripts>
                </Button>
-               <Button name="RaidMaker_RollResetButton1" inherits="UIPanelButtonTemplate2" text="1 min">
+               <Button name="RaidMaker_RollResetButton1" inherits="UIPanelButtonTemplate" text="1 min">
                   <Size><AbsDimension x="80" y="22"/></Size>
                   <Anchors>
                      <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT"  relativeTo="RaidMaker_RollResetButton2">
@@ -1083,7 +1084,7 @@
                      </OnClick>
                   </Scripts>
                </Button>
-               <Button name="RaidMaker_RollResetButton" inherits="UIPanelButtonTemplate2" text="Reset">
+               <Button name="RaidMaker_RollResetButton" inherits="UIPanelButtonTemplate" text="Reset">
                   <Size><AbsDimension x="80" y="22"/></Size>
                   <Anchors>
                      <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT"  relativeTo="RaidMaker_RollResetButton1">

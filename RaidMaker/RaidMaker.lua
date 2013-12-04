@@ -447,12 +447,12 @@ function RaidMaker_buildRaidList(origDatabase)
             end
          end
 
-         if ( GetNumRaidMembers() == 0 ) then
-            if (UnitInParty(name) ) then
+         if ( UnitInRaid("player") ) then
+            if (UnitInRaid(name) ) then
                newRaidDatabase.playerInfo[name].inGroup = 1;
             end
          else
-            if (UnitInRaid(name) ) then
+            if (UnitInParty(name) ) then
                newRaidDatabase.playerInfo[name].inGroup = 1;
             end
          end
@@ -1641,7 +1641,7 @@ function RaidMaker_handle_CHAT_MSG_LOOT(message, sender, language, channelString
       local startIndex,endIndex,itemID = strfind(itemLink, "(%d+):")
       local name, link, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(itemID);
       if ( quality == 4  ) then -- epic(purple)=4;  superior(blue)=3;  green=2; white=1; grey=0
-         if ( GetNumRaidMembers() ~= 0 ) then -- only log it if we are in a raid. i.e. filter heroics
+         if ( UnitInRaid("player") ) then
             if ( itemID ~= "49426" ) and  -- filter Emblem of Frost
                ( itemID ~= "22450" ) and -- filter Void Crystal
                ( itemID ~= "34057" ) and -- filter Abyss Crystal
@@ -2434,7 +2434,7 @@ function RaidMaker_handle_CALENDAR_OPEN_EVENT(selection)
    end
 end
 
-function RaidMaker_handle_PARTY_MEMBERS_CHANGED()
+function RaidMaker_handle_GROUP_ROSTER_UPDATE()
 
    if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
       if ( raidPlayerDatabase.playerInfo ~= nil ) then
@@ -2446,13 +2446,13 @@ function RaidMaker_handle_PARTY_MEMBERS_CHANGED()
             local numRaidMembers
 
             lootMethod, partyMaster, raidMaster = GetLootMethod()
-            numRaidMembers = GetNumRaidMembers()
+            numRaidMembers = GetNumGroupMembers()
             lootThreshold = GetLootThreshold()
 
-            if ( numRaidMembers == 0 ) then
+            if not UnitInRaid("player") then
                -- we are not in a raid. might need to convert it to one
 
-               if ( GetNumPartyMembers() > 0 ) then
+               if ( numRaidMembers > 0 ) then
                   -- we are in a party. lets convert it to a raid.
                   ConvertToRaid();
                end
@@ -2494,9 +2494,9 @@ function RaidMaker_handle_PARTY_MEMBERS_CHANGED()
 
          if ( numMembersToPromoteToAssist > 0 ) then -- do we have some assists left to promote
 
-            local numRaidMembers = GetNumRaidMembers();
+            local numRaidMembers = GetNumGroupMembers();
 
-            if ( numRaidMembers > 0 ) then -- make sure we are in a raid already.
+            if UnitInRaid("player") then
 
                -- loop through the raid members, promoting any tanks.
                for memberIndex=1,numRaidMembers do
@@ -2521,9 +2521,9 @@ function RaidMaker_handle_PARTY_MEMBERS_CHANGED()
 
          if ( isRoleUpdateArmed == true ) then -- do we have some assists left to promote
 
-            local numRaidMembers = GetNumRaidMembers();
+            local numRaidMembers = GetNumGroupMembers();
 
-            if ( numRaidMembers > 0 ) then -- make sure we are in a raid already.
+            if ( UnitInRaid("player") ) then -- make sure we are in a raid already.
                local allRolesCorrect = 1;
 
                -- loop through the raid members, promoting any tanks.
@@ -2575,9 +2575,9 @@ function RaidMaker_handle_PARTY_MEMBERS_CHANGED()
             end
          end
 
-         local numRaidMembers = GetNumRaidMembers();
+         local numRaidMembers = GetNumGroupMembers();
 
-         if ( numRaidMembers == 0 ) then -- make sure we are in a raid already.
+         if ( UnitInRaid("player") ) then -- make sure we are in a raid already.
             -- we are by ourself. set our flag only.
             local selfName = GetUnitName("player",true); -- get the raid leader name (one running this)
             if ( raidPlayerDatabase.playerInfo[selfName] ~= nil ) then
@@ -2611,7 +2611,7 @@ function RaidMaker_HandleSendInvitesButton()
    local selfName = GetUnitName("player",true); -- get the raid leader name (one running this)
    numMembersToPromoteToAssist = 0;
    numMembersWithRoles = 0;
-   local numInvitesToSendHere = 4 - GetNumPartyMembers();
+   local numInvitesToSendHere = 4 - GetNumGroupMembers();
    local rowIndex;
    local charName;
 
@@ -2869,9 +2869,9 @@ function RaidMaker_HandleSendRolesToRaidButton()
       end
    end
 
-   local numRaidMembers = GetNumRaidMembers();
+   local numRaidMembers = GetNumGroupMembers();
    local chatDestination = "PARTY"
-   if ( numRaidMembers > 0 ) then -- check if its actaully a raid.
+   if ( UnitInRaid("player") ) then -- check if its actaully a raid.
       chatDestination = "RAID";
    end
       
