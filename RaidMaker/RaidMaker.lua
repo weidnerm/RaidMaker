@@ -1100,11 +1100,10 @@ function RaidMaker_LootLog_ascendRollValue(a,b)
       return false;
    end
 
-   return true;
+   return false;
 end
 
 function RaidMaker_LootLog_ascendRollTime(a,b)
-   -- a,b are log index.
 
    if ( RaidMaker_lootLogData[a].epocTime < RaidMaker_lootLogData[b].epocTime ) then
       return true;
@@ -1112,8 +1111,17 @@ function RaidMaker_LootLog_ascendRollTime(a,b)
       return false;
    end
 
-   return true;
+   if ( RaidMaker_lootLogData[a].itemName < RaidMaker_lootLogData[b].itemName ) then
+      return true;
+   elseif ( RaidMaker_lootLogData[a].itemName > RaidMaker_lootLogData[b].itemName ) then
+      return false;
+   end
+
+   return false;
+
 end
+
+
 
 function RaidMaker_LootLog_ascendPlayerName(a,b)
    -- a,b are log index.
@@ -1142,7 +1150,7 @@ function RaidMaker_LootLog_ascendPlayerName(a,b)
       return false;
    end
 
-   return true;
+   return false;
 end
 
 function RaidMaker_LootLog_ascendItemName(a,b)
@@ -1172,7 +1180,7 @@ function RaidMaker_LootLog_ascendItemName(a,b)
       return false;
    end
 
-   return true;
+   return false;
 end
 
 
@@ -1525,7 +1533,7 @@ function RaidMaker_LootLog_ClickHandler_RollValue()
 end
 
 function RaidMaker_LootLog_ClickHandler_RollAge()
-   table.sort(RaidMaker_lootLogSortList, RaidMaker_LootLog_ascendRollTime);
+   table.sort(RaidMaker_lootLogSortList, RaidMaker_LootLog_ascendRollTime );
    RaidMaker_DisplayLootDatabase();
 end
 
@@ -1593,6 +1601,7 @@ function RaidMaker_addLootEntryToLootLog(playerName, itemId, itemLink)
       end
    end
 
+
    if ( #RaidMaker_lootLogData <= 10 ) then
       RaidMaker_LootLog_Slider:SetMinMaxValues(#RaidMaker_lootLogData-9,#RaidMaker_lootLogData-9);
       RaidMaker_LootLog_Slider:SetValue(#RaidMaker_lootLogData-9);
@@ -1600,6 +1609,10 @@ function RaidMaker_addLootEntryToLootLog(playerName, itemId, itemLink)
       RaidMaker_LootLog_Slider:SetMinMaxValues(1,#RaidMaker_lootLogData-9);
       RaidMaker_LootLog_Slider:SetValue(#RaidMaker_lootLogData-9);
    end
+   
+   RaidMaker_InitLootSortList(); -- resort the database according to the default sort criteria.
+   table.sort(RaidMaker_lootLogSortList, RaidMaker_LootLog_ascendRollTime );
+
    RaidMaker_DisplayLootDatabase();
    RaidMaker_ResetRolls(0);
 end
