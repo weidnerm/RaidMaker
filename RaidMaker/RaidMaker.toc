@@ -1,4 +1,4 @@
-## Interface: 30300
+## Interface: 40000
 ## Title: RaidMaker
 ## Notes: Raid forming tool with event calendar and guild roster information in workspace
 ## OptionalDeps:

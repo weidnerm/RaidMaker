@@ -1197,11 +1197,11 @@ function RaidMaker_handle_CHAT_MSG_LOOT(message, sender, language, channelString
 
    -- if someone won something, parse the details.
    if (playerName ~= nil ) then
-      local startIndex,endIndex,itemID = strfind(arg1, "(%d+):")
+      local startIndex,endIndex,itemID = strfind(itemLink, "(%d+):")
       local name, link, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(itemID);
       if ( quality == 4  ) then -- epic(purple)=4;  superior(blue)=3;  green=2; white=1; grey=0
          if ( GetNumRaidMembers() ~= 0 ) then -- only log it if we are in a raid. i.e. filter heroics
-            if ( itemID ~= 49426 ) then -- filter Emblem of Frost
+            if ( itemID ~= "49426" ) then -- filter Emblem of Frost
                RaidMaker_addLootEntryToLootLog(playerName, itemID, itemLink);
             end
          end
@@ -2209,6 +2209,36 @@ function RaidMaker_UpdatePlayerAttendanceLog()
    end
 end
 
+
+
+function RaidMaker_HandleClearAllRolesButton()
+   if ( raidPlayerDatabase ~= nil ) then
+      if ( raidPlayerDatabase.playerInfo ~= nil ) then
+         
+         local charName,charFields
+         for charName,charFields in pairs(raidPlayerDatabase.playerInfo) do
+            if ( raidPlayerDatabase.playerInfo[charName].tank == 1 ) then
+               raidPlayerDatabase.playerInfo[charName].tank = 0;
+               RaidMaker_sendUpdateToRemoteApps(charName, "t");
+            end
+            if ( raidPlayerDatabase.playerInfo[charName].heals == 1 ) then
+               raidPlayerDatabase.playerInfo[charName].heals = 0;
+               RaidMaker_sendUpdateToRemoteApps(charName, "h");
+            end
+            if ( raidPlayerDatabase.playerInfo[charName].mDps == 1 ) then
+               raidPlayerDatabase.playerInfo[charName].mDps = 0;
+               RaidMaker_sendUpdateToRemoteApps(charName, "m");
+            end
+            if ( raidPlayerDatabase.playerInfo[charName].rDps == 1 ) then
+               raidPlayerDatabase.playerInfo[charName].rDps = 0;
+               RaidMaker_sendUpdateToRemoteApps(charName, "r");
+            end
+         end
+         
+         RaidMaker_DisplayDatabase();
+      end
+   end
+end
 
 function RaidMaker_HandleFetchCalButton()
    raidPlayerDatabase = RaidMaker_buildRaidList(raidPlayerDatabase);
