@@ -2323,18 +2323,78 @@
                      <EdgeSize><AbsValue val="16" /></EdgeSize>
                   </Backdrop>
                </Frame>   
-               <Button name="RaidMaker_RollResetButton" inherits="UIPanelButtonTemplate2" text="Reset">
+               <Button name="RaidMaker_RollResetButton4" inherits="UIPanelButtonTemplate2" text="4 mins">
                   <Size><AbsDimension x="80" y="22"/></Size>
                   <Anchors>
                      <Anchor point="TOPLEFT" relativePoint="TOPRIGHT"  relativeTo="RaidMaker_GroupRollFrame">
                          <Offset>
-                             <AbsDimension x="30" y="-10"/>
+                             <AbsDimension x="60" y="-10"/>
                          </Offset>
                      </Anchor>
                   </Anchors>
                   <Scripts>
                      <OnClick>
-                        RaidMaker_ResetRolls();
+                        RaidMaker_ResetRolls(240);
+                     </OnClick>
+                  </Scripts>
+               </Button>
+               <Button name="RaidMaker_RollResetButton3" inherits="UIPanelButtonTemplate2" text="3 mins">
+                  <Size><AbsDimension x="80" y="22"/></Size>
+                  <Anchors>
+                     <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT"  relativeTo="RaidMaker_RollResetButton4">
+                         <Offset>
+                             <AbsDimension x="0" y="-10"/>
+                         </Offset>
+                     </Anchor>
+                  </Anchors>
+                  <Scripts>
+                     <OnClick>
+                        RaidMaker_ResetRolls(180);
+                     </OnClick>
+                  </Scripts>
+               </Button>
+               <Button name="RaidMaker_RollResetButton2" inherits="UIPanelButtonTemplate2" text="2 mins">
+                  <Size><AbsDimension x="80" y="22"/></Size>
+                  <Anchors>
+                     <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT"  relativeTo="RaidMaker_RollResetButton3">
+                         <Offset>
+                             <AbsDimension x="0" y="-10"/>
+                         </Offset>
+                     </Anchor>
+                  </Anchors>
+                  <Scripts>
+                     <OnClick>
+                        RaidMaker_ResetRolls(120);
+                     </OnClick>
+                  </Scripts>
+               </Button>
+               <Button name="RaidMaker_RollResetButton1" inherits="UIPanelButtonTemplate2" text="1 min">
+                  <Size><AbsDimension x="80" y="22"/></Size>
+                  <Anchors>
+                     <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT"  relativeTo="RaidMaker_RollResetButton2">
+                         <Offset>
+                             <AbsDimension x="0" y="-10"/>
+                         </Offset>
+                     </Anchor>
+                  </Anchors>
+                  <Scripts>
+                     <OnClick>
+                        RaidMaker_ResetRolls(60);
+                     </OnClick>
+                  </Scripts>
+               </Button>
+               <Button name="RaidMaker_RollResetButton" inherits="UIPanelButtonTemplate2" text="Reset">
+                  <Size><AbsDimension x="80" y="22"/></Size>
+                  <Anchors>
+                     <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT"  relativeTo="RaidMaker_RollResetButton1">
+                         <Offset>
+                             <AbsDimension x="0" y="-10"/>
+                         </Offset>
+                     </Anchor>
+                  </Anchors>
+                  <Scripts>
+                     <OnClick>
+                        RaidMaker_ResetRolls(0);
                      </OnClick>
                   </Scripts>
                </Button>

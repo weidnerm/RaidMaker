@@ -1077,7 +1077,7 @@ function RaidMaker_handle_CHAT_MSG_LOOT(message, sender, language, channelString
    --   Flapjacckk receive loot: [link].
 
    -- Check if another player won something
-   startIndex,endIndex,playerName,itemLink = strfind(message, "(%a+) receives loot: (.*)." );
+   startIndex,endIndex,playerName,itemLink = strfind(message, "^(.*) receives loot: (.*)." );
    if (playerName == nil ) then
 
       -- wasnt someone else getting loot. check if it was us.
@@ -1102,6 +1102,7 @@ end
 
 function RaidMaker_addLootEntryToLootLog(playerName, itemId, itemLink)
    local loggedEntryIndex;
+   local startIndex,endIndex,itemName strfind(itemLink,"%[([%a ]+)%]");
 
    loggedEntryIndex = #RaidMaker_lootLogData+1;
    RaidMaker_lootLogData[loggedEntryIndex] = {};  -- make it a structure so we can put some fields in.
@@ -1109,7 +1110,7 @@ function RaidMaker_addLootEntryToLootLog(playerName, itemId, itemLink)
    RaidMaker_lootLogData[loggedEntryIndex].playerName = playerName;
    RaidMaker_lootLogData[loggedEntryIndex].epocTime = time();
    RaidMaker_lootLogData[loggedEntryIndex].itemId = tonumber( itemId );
-   RaidMaker_lootLogData[loggedEntryIndex].itemName = "fixme";
+   RaidMaker_lootLogData[loggedEntryIndex].itemName = itemName;
    RaidMaker_lootLogData[loggedEntryIndex].rollValue = 0;
 --   RaidMaker_lootLogData[loggedEntryIndex].rollLog = RaidMaker_RollLog;
    
@@ -1121,18 +1122,47 @@ function RaidMaker_addLootEntryToLootLog(playerName, itemId, itemLink)
       end
    end
    
-   local timeDeltaSeconds = time() - RaidMaker_lootLogData[loggedEntryIndex].epocTime;
-   
-   RaidMaker_LogTab_Loot_FieldNames[2]:SetText(playerName);
-   RaidMaker_LogTab_Loot_FieldItemLink[2]:SetText(itemLink);
-   RaidMaker_LogTab_Loot_FieldRollValues[2]:SetText(rollValue);
-   RaidMaker_LogTab_Loot_FieldRollAges[2]:SetText(timeDeltaSeconds);   
-   
-   
-   
-
+   RaidMaker_DisplayLootDatabase();
+   RaidMaker_ResetRolls(0);
 end
 
+
+function RaidMaker_DisplayLootDatabase();
+   local timeDeltaSeconds;
+   local indexToDisplay;
+   local playerNameColor;
+   local rollValueColor;
+   local rollAgeColor;
+   local currentTime = time();
+   
+   for index = 1,10 do
+      indexToDisplay = index+#RaidMaker_lootLogData-10; -- eventually make this the sorted index starting at the scroll bar position.
+
+      playerNameColor = white;
+      rollValueColor = yellow;
+      rollAgeColor = yellow;
+
+      if ( indexToDisplay<1 ) then
+         RaidMaker_LogTab_Loot_FieldNames[index+1]:SetText(" ");
+         RaidMaker_LogTab_Loot_FieldItemLink[index+1]:SetText(" ");
+         RaidMaker_LogTab_Loot_FieldRollValues[index+1]:SetText(" ");
+         RaidMaker_LogTab_Loot_FieldRollAges[index+1]:SetText(" ");   
+      else
+         timeDeltaSeconds = currentTime - RaidMaker_lootLogData[indexToDisplay].epocTime;
+      
+         if ( timeDeltaSeconds > 14400 ) then -- 4 hours = 4*60*60
+            playerNameColor = mediumGrey;
+            rollValueColor = mediumGrey;
+            rollAgeColor = mediumGrey;
+         end      
+      
+         RaidMaker_LogTab_Loot_FieldNames[index+1]:SetText(playerNameColor..RaidMaker_lootLogData[indexToDisplay].playerName);
+         RaidMaker_LogTab_Loot_FieldItemLink[index+1]:SetText(RaidMaker_lootLogData[indexToDisplay].itemLink);
+         RaidMaker_LogTab_Loot_FieldRollValues[index+1]:SetText(rollValueColor..RaidMaker_lootLogData[indexToDisplay].rollValue);
+         RaidMaker_LogTab_Loot_FieldRollAges[index+1]:SetText(rollAgeColor..timeDeltaSeconds);   
+      end
+   end
+end
 
 
 function RaidMaker_handle_LOOT_OPENED(autoloot)
@@ -1246,9 +1276,31 @@ function RaidMaker_DisplayRollsDatabase()
    end
 end
 
-function RaidMaker_ResetRolls()
-   RaidMaker_RollLog = {}; -- start with a blank array.
+function RaidMaker_ResetRolls(maxAge)
+   if ( RaidMaker_RollLog == nil ) then
+      RaidMaker_RollLog = {}; -- start with a blank array.
+   end
+   
+   local readIndex;
+   local writeIndex = 1;
+   local timeCutoff = time()-maxAge;
+   local newRaidMaker_RollLog = {}; -- create a blank array
+   
    RaidMaker_highestRoll = 0;
+
+   for readIndex = 1,#RaidMaker_RollLog do
+      if ( timeCutoff < RaidMaker_RollLog[readIndex].epocTime ) then
+         newRaidMaker_RollLog[writeIndex] = RaidMaker_RollLog[readIndex]; -- copy over all the fields
+
+         if ( RaidMaker_highestRoll < RaidMaker_RollLog[readIndex].rollValue ) then
+            RaidMaker_highestRoll = RaidMaker_RollLog[readIndex].rollValue; -- we have a new highest.
+         end
+         writeIndex = writeIndex + 1;
+      end
+   end
+
+   RaidMaker_RollLog = newRaidMaker_RollLog; -- replace the roll log with the new shortened one.
+
    RaidMaker_DisplayRollsDatabase();
 end
 
@@ -1334,13 +1386,13 @@ function RaidMaker_handle_CHAT_MSG_SYSTEM(message, sender, language, channelStri
    -- Lotusblossem has gone offline
    -- [Lotusblossem] has come online.
 
-   startIndex,endIndex,playerName,rollValue = strfind(message, "^(%a+) rolls (%d+) .*1-100%)" );
+   startIndex,endIndex,playerName,rollValue = strfind(message, "^(.*) rolls (%d+) .*1-100%)" );
    if ( rollValue ~= nil ) then
       -- roll event detected.
       RaidMaker_addRollEntryToRollLog(playerName, tonumber(rollValue) );
    end
    
-   startIndex,endIndex,playerName = strfind(message, "(%a+)]|h has come online." );
+   startIndex,endIndex,playerName = strfind(message, "%[(.*)%]|h has come online." );
    if ( playerName ~= nil ) then
       -- player online status.
       if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
@@ -1353,7 +1405,7 @@ function RaidMaker_handle_CHAT_MSG_SYSTEM(message, sender, language, channelStri
       end
    end
    
-   startIndex,endIndex,playerName = strfind(message, "^(%a+) has gone offline." );
+   startIndex,endIndex,playerName = strfind(message, "^(.*) has gone offline." );
    if ( playerName ~= nil ) then
       -- player offline status.
       if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
