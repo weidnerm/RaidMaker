@@ -36,6 +36,7 @@ local guildRankAssistThreshold = 3;  -- 0=Guild Master. 1=Officer; 2=Lieutenant;
 local raidMakerLaunchCalEditButton
 local raidMakerLaunchCalViewButton
 RaidMaker_lootLogData = {};
+RaidMaker_RaidParticipantLog = {};
 local RaidMaker_testTrialNum = 1;
 local RaidMaker_RollLog = {};
 local RaidMaker_sortedRollList = {};
@@ -494,6 +495,7 @@ function RaidMaker_GuildRosterUpdate(flag)
                   raidPlayerDatabase.playerInfo[name].online = 0;
                end
                
+               raidPlayerDatabase.playerInfo[name].zone           = zone;
                raidPlayerDatabase.playerInfo[name].guildRankIndex = rankIndex;
             end
          end
@@ -1632,7 +1634,8 @@ function RaidMaker_HandleSendInvitesButton()
    local selfName = GetUnitName("player",true); -- get the raid leader name (one running this)
    numMembersToPromoteToAssist = 0;
    local numInvitesToSendHere = 4 - GetNumPartyMembers();
---   local numInvitesToSendHere = 1;
+   local rowIndex;
+   local charName;
    
    for rowIndex=1,#playerSortedList do
       charName = playerSortedList[rowIndex];
@@ -1668,7 +1671,80 @@ function RaidMaker_HandleSendInvitesButton()
    end
    raidConvertArmedFlag = true; -- indicate that on subsequent party change event we might need to convert to raid and configure looting.
    
- end
+   RaidMaker_UpdatePlayerAttendanceLog();
+   
+end
+
+function RaidMaker_UpdatePlayerAttendanceLog()
+
+   local rowIndex;
+   local charName;
+   local currentIndex;
+   
+   if ( RaidMaker_RaidParticipantLog == nil ) then -- create the database if it doesnt exist
+      RaidMaker_RaidParticipantLog = {}
+   end
+
+   if ( raidPlayerDatabase ~= nil ) then -- only process if there is a database to parse.
+      if ( raidPlayerDatabase.playerInfo ~= nil ) then
+   
+         -- get the raid date and other info
+         local title, description, creator, eventType, repeatOption, maxSize, textureIndex, weekday, month, day, year, hour, minute, lockoutWeekday, lockoutMonth, lockoutDay, lockoutYear, lockoutHour, lockoutMinute, locked, autoApprove, pendingInvite, inviteStatus, inviteType, calendarType = CalendarGetEventInfo();
+        
+         if ( title ~= nil ) then -- only continue if there is an open calendar entry.
+         
+            currentIndex = #RaidMaker_RaidParticipantLog+1;
+            RaidMaker_RaidParticipantLog[currentIndex] = {}; -- create the structure
+         
+            RaidMaker_RaidParticipantLog[currentIndex].title = title;
+            
+            if ( eventType == 1 ) or ( eventType == 2 ) then -- 1=Raid dungeon; 2=Five-player dungeon
+               local raidName, icon, expansion, players= select(1+4*(textureIndex-1), CalendarEventGetTextures(eventType));
+               RaidMaker_RaidParticipantLog[currentIndex].zone = raidName.."("..players..")";
+            end
+   
+            RaidMaker_RaidParticipantLog[currentIndex].year    = year;
+            RaidMaker_RaidParticipantLog[currentIndex].month   = month;
+            RaidMaker_RaidParticipantLog[currentIndex].day     = day;
+            RaidMaker_RaidParticipantLog[currentIndex].hour    = hour;
+            RaidMaker_RaidParticipantLog[currentIndex].minute  = minute;
+            RaidMaker_RaidParticipantLog[currentIndex].weekday = weekday;
+      
+            RaidMaker_RaidParticipantLog[currentIndex].playerInfo = {}; -- create the structure
+   
+            local charFields;
+            for charName,charFields in pairs(raidPlayerDatabase.playerInfo) do
+
+--            for rowIndex=1,#playerSortedList do
+--               charName = playerSortedList[rowIndex];
+        
+               local inviteStatus;
+               inviteStatus = raidPlayerDatabase.playerInfo[charName].inviteStatus;
+   
+               if (inviteStatus == 2 ) or   -- ACCEPTED     
+                  (inviteStatus == 4 ) or   -- CONFIRMED    
+                  (inviteStatus == 6 ) or   -- STANDBY      
+                  (inviteStatus == 7 ) or   -- SIGNEDUP     
+                  (inviteStatus == 9 ) or   -- TENTATIVE    
+                  (raidPlayerDatabase.playerInfo[charName].online == 1 ) then
+                  
+                  -- player has indicated acceptance of the raid.  add them to the log.
+                  RaidMaker_RaidParticipantLog[currentIndex].playerInfo[charName] = {}; -- create the empty structure.
+                  RaidMaker_RaidParticipantLog[currentIndex].playerInfo[charName].tank         = raidPlayerDatabase.playerInfo[charName].tank; 
+                  RaidMaker_RaidParticipantLog[currentIndex].playerInfo[charName].dps          = raidPlayerDatabase.playerInfo[charName].dps;
+                  RaidMaker_RaidParticipantLog[currentIndex].playerInfo[charName].heals        = raidPlayerDatabase.playerInfo[charName].heals;
+                  RaidMaker_RaidParticipantLog[currentIndex].playerInfo[charName].online       = raidPlayerDatabase.playerInfo[charName].online;
+                  RaidMaker_RaidParticipantLog[currentIndex].playerInfo[charName].inviteStatus = raidPlayerDatabase.playerInfo[charName].inviteStatus
+                  RaidMaker_RaidParticipantLog[currentIndex].playerInfo[charName].zone         = raidPlayerDatabase.playerInfo[charName].zone;
+   
+               end
+            end
+         end
+      end
+   end
+end
+
+
 
 function RaidMaker_HandleFetchCalButton()
    raidPlayerDatabase = RaidMaker_buildRaidList(raidPlayerDatabase);
