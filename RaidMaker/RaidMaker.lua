@@ -1111,11 +1111,10 @@ function RaidMaker_handle_CHAT_MSG_LOOT(message, sender, language, channelString
    if (playerName ~= nil ) then
       local startIndex,endIndex,itemID = strfind(arg1, "(%d+):")
       local name, link, quality, iLevel, reqLevel, class, subclass, maxStack, equipSlot, texture, vendorPrice = GetItemInfo(itemID);
---      if ( quality == 4  ) then -- epic(purple)=4;  superior(blue)=3;  green=2; white=1; grey=0
-      if ( quality >= 0  ) then -- epic(purple)=4;  superior(blue)=3;  green=2; white=1; grey=0
---         if ( GetNumRaidMembers() ~= 0 ) then -- only log it if we are in a raid. i.e. filter heroics
+      if ( quality == 4  ) then -- epic(purple)=4;  superior(blue)=3;  green=2; white=1; grey=0
+         if ( GetNumRaidMembers() ~= 0 ) then -- only log it if we are in a raid. i.e. filter heroics
             RaidMaker_addLootEntryToLootLog(playerName, itemID, itemLink);
---         end
+         end
       end
    end
 end
@@ -1898,6 +1897,23 @@ function RaidMaker_SetUpGuiFields()
       RaidMaker_TabPage1_SampleTextTab1_GroupedState_Objects[index] = item;
    end
 
+   RaidMaker_RaidBuilder_row_frame_Objects = {};
+   RaidMaker_RaidBuilder_row_frameTexture_Objects = {};
+   for index=1,10 do
+      local myFrame = CreateFrame("Frame", "RaidMaker_RaidBuilder_row_frame"..index, RaidMaker_TabPage1_SampleTextTab1 )
+      myFrame:SetWidth(496)
+      local frameLevel = myFrame:GetFrameLevel();
+      myFrame:SetFrameLevel(frameLevel -1);
+      myFrame:SetHeight(18)
+      myFrame:SetPoint("TOPLEFT", RaidMaker_TabPage1_SampleTextTab1_GroupedState_Objects[2*index], "TOPLEFT", 0,0)
+      local myTexture = myFrame:CreateTexture("RaidMaker_RaidBuilder_row_frameTexture"..index, "BACKGROUND")
+      myTexture:SetAllPoints()
+      myTexture:SetTexture(0.1, 0.1, 0.1, .25);
+      RaidMaker_RaidBuilder_row_frame_Objects[index] = myFrame;
+      RaidMaker_RaidBuilder_row_frameTexture_Objects[index] = myTexture;
+   end
+
+
    RaidMaker_TabPage1_SampleTextTab1_OnlineState_Objects = {};
    for index=1,22 do
       local item = RaidMaker_TabPage1_SampleTextTab1:CreateFontString("RaidMaker_TabPage1_SampleTextTab1_OnlineState_"..index-1, "ARTWORK", "GameFontNormalSmall" )
@@ -2177,7 +2193,6 @@ function RaidMaker_SetUpGuiFields()
    RaidMaker_DeathKnightClassPictureTexture:SetTexCoord(.25,0.5,0.5,0.75)
 
 
-
    --
    -- Position the raid maker buttons.
    --
@@ -2216,6 +2231,11 @@ function RaidMaker_SetUpGuiFields()
       localButton:SetWidth(50)
       localButton:SetHeight(18)
    end
+
+
+
+
+
 
    -- 
    -- Set up the tooltips for the buttons.
@@ -2324,6 +2344,7 @@ function RaidMaker_SetUpGuiFields()
                   GameTooltip:Show()
                end)
    RaidMaker_TabPage1_SampleTextTab1_GroupedStateHeaderButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
 
    RaidMaker_TabPage1_SampleTextTab1_OnlineStateHeaderButton:SetScript("OnEnter",
                function(this)
